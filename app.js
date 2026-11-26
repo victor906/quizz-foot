@@ -968,9 +968,16 @@
     const ped = $("room-pedestal");
     const won = !!unlocked["cr7-ultime"];
     ped.className = `room-pedestal${won ? " won" : " locked"}`;
-    ped.innerHTML = `<div class="rp-spot"></div>
-      <div class="rp-cup">${LegendReveal.miniSvg()}${won ? "" : '<span class="rp-veil">?</span>'}</div>
-      <div class="rp-base"><span>${won ? "Trophée CR7 Ultime" : "Emplacement réservé"}</span></div>
+    ped.innerHTML = `<div class="hped room-hped">
+        <span class="hped-beam b1"></span><span class="hped-beam b2"></span><span class="hped-beam b3"></span><span class="hped-pool"></span>
+        <div class="bell">
+          <div class="bell-cup">${LegendReveal.miniSvg()}${won ? "" : '<span class="st-veil">?</span>'}</div>
+          <span class="bell-glass"></span><span class="bell-knob"></span><span class="bell-ring"></span>
+        </div>
+        <div class="hped-cap"></div>
+        <div class="hped-col"><span class="hped-plate">${won ? "Trophée CR7 Ultime" : "Emplacement réservé"}</span></div>
+        <div class="hped-step s1"></div><div class="hped-step s2"></div>
+      </div>
       <div class="rp-hint">${won ? "✨ Touche pour le voir sortir de la malle" : `🔒 Débloque les 5 trophées Superfan (${CR7_TROPHY_IDS.filter((id) => unlocked[id]).length} / 5)`}</div>`;
     ped.onclick = () => openLegend(won);
 
@@ -991,8 +998,15 @@
         b.className = `niche tier-${t.tier}${done ? " lit" : " dark"}`;
         b.setAttribute("aria-label", done ? t.name : `${t.name} (à débloquer)`);
         const art = trophyArt(t.tier, done ? t.icon : "");
-        b.innerHTML = `<span class="n-light"></span><span class="n-art">${art.svg}</span>${done ? "" : '<span class="n-lock">🔒</span>'}<span class="n-name"></span>`;
-        b.querySelector(".n-name").textContent = done ? t.name : "???";
+        // Piédestal en bois sous un spot (vide tant que le trophée n'est pas gagné)
+        b.innerHTML = `<div class="ped">
+            <span class="ped-beam"></span><span class="ped-pool"></span>
+            <div class="ped-show">${done ? `<span class="st-art">${art.svg}</span>` : '<span class="ped-empty">?</span>'}</div>
+            <div class="ped-top"></div>
+            <div class="ped-col"><span class="ped-plate"></span></div>
+            <div class="ped-foot"></div>
+          </div>`;
+        b.querySelector(".ped-plate").textContent = done ? t.name : "???";
         b.onclick = () => showRoomDetail(t);
         grid.appendChild(b);
       });

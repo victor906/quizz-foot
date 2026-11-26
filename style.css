@@ -1382,3 +1382,38 @@ body.theme-cr7 .tagline { font-weight: 500; }
 .tg-body { display: grid; gap: 8px; padding: 0 10px 12px; }
 .tg-body .trophy { box-shadow: none; border: 1px solid var(--line); }
 .tier-group.tier-ultime .tg-body .trophy { border: 0; }
+
+/* ---------- Salle des trophées : piédestaux en bois à la place des niches ---------- */
+.niche {
+  min-height: 0; height: 190px; padding: 0 2px; overflow: visible; justify-content: flex-end;
+  background: none; box-shadow: none; border-radius: 0;
+}
+.niche::after { display: none; }
+.niche .ped-beam { top: -22%; bottom: 36%; width: 170%; }
+.niche .ped-show { width: 70%; }
+.niche .st-art { width: 100%; }
+.niche .st-art .t-art { display: block; width: 100%; height: auto; overflow: visible; filter: drop-shadow(0 8px 6px rgba(0, 0, 0, .7)); }
+.niche.tier-legende.lit .st-art .t-art { filter: drop-shadow(0 0 10px rgba(192, 132, 252, .85)) drop-shadow(0 8px 6px rgba(0, 0, 0, .6)); }
+.niche.tier-or.lit .st-art .t-art { filter: drop-shadow(0 0 8px rgba(255, 210, 63, .65)) drop-shadow(0 8px 6px rgba(0, 0, 0, .6)); }
+.niche.tier-bronze .ped-show { width: 60%; }
+.niche .ped-col { height: 62px; width: 74%; }
+.niche .ped-top { height: 11px; }
+.niche .ped-foot { height: 12px; }
+.niche .ped-plate { font-size: .56rem; padding: 3px 5px; }
+.niche .ped-empty { font-size: 1.9rem; }
+.niche.dark .ped-beam { opacity: .18; }
+.niche.dark .ped-pool { opacity: .25; }
+.niche.dark .ped-plate { background: #3a3a3e; color: #77736c; letter-spacing: .2em; }
+.niche.dark .ped-col, .niche.dark .ped-top, .niche.dark .ped-foot { filter: brightness(.55); }
+.niche:hover .st-art, .niche:focus-visible .st-art { transform: translateY(-4px) scale(1.05); }
+.niche .st-art { transition: transform .2s; }
+.case { overflow: hidden; }
+.case-grid { gap: 14px 6px; padding-top: 6px; }
+/* Piédestal central du Trophée CR7 dans la salle */
+.room-pedestal { padding-top: 0; }
+.room-hped { width: min(300px, 82%); height: 320px; }
+.room-hped .hped-beam { top: -14%; }
+.room-hped .bell { max-width: 170px; }
+.room-hped .hped-col { height: 70px; }
+.room-pedestal .rp-hint { margin-top: 12px; }
+.room-pedestal { margin-top: 26px; }
