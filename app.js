@@ -1236,6 +1236,34 @@
     }
   });
 
+  // ---------- Mise à jour automatique ----------
+  // À l'ouverture, on compare la version de l'app avec celle publiée en ligne.
+  const APP_VERSION = "5.1";
+  function checkForUpdate() {
+    if (!location.protocol.startsWith("http")) return;
+    fetch(`version.json?t=${Date.now()}`, { cache: "no-store" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (!data || !data.version || data.version === APP_VERSION) return;
+        if (document.querySelector(".update-bar")) return;
+        const bar = document.createElement("div");
+        bar.className = "update-bar";
+        bar.innerHTML = `<span>🎉 Nouvelle version disponible !</span><button class="btn primary" type="button">Mettre à jour</button>`;
+        bar.querySelector("button").onclick = async () => {
+          try {
+            if (window.caches) for (const k of await caches.keys()) await caches.delete(k);
+            const regs = navigator.serviceWorker ? await navigator.serviceWorker.getRegistrations() : [];
+            for (const r of regs) await r.update();
+          } catch { /* on recharge quand même */ }
+          location.replace(`${location.pathname}?v=${data.version}`);
+        };
+        document.body.appendChild(bar);
+      })
+      .catch(() => { /* hors ligne : rien à faire */ });
+  }
+  checkForUpdate();
+  document.addEventListener("visibilitychange", () => { if (!document.hidden) checkForUpdate(); });
+
   // Écran d'ouverture
   $("w-count").textContent = GENERAL_TOTAL();
   $("enter-btn").onclick = () => {

@@ -1,6 +1,6 @@
 // Service worker : met le quiz en cache pour qu'il marche sans connexion.
 // Change la version à chaque mise à jour des fichiers pour forcer le rafraîchissement.
-const CACHE = "foot-quizz-v38";
+const CACHE = "foot-quizz-5.1";
 const FILES = [
   "./",
   "index.html",
@@ -36,6 +36,7 @@ self.addEventListener("activate", (e) => {
 // Réseau d'abord (pour avoir les nouvelles questions), cache si hors ligne
 self.addEventListener("fetch", (e) => {
   if (e.request.method !== "GET") return;
+  if (e.request.url.includes("version.json")) return;
   e.respondWith(
     fetch(e.request, { cache: "no-cache" })
       .then((res) => {
