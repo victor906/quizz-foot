@@ -631,6 +631,32 @@
         : `Débloque les 5 trophées Superfan CR7 (${have} / 5). Touche pour voir la malle.`}</div></div>`;
     vb.onclick = () => openLegend(won);
     vit.appendChild(vb);
+
+    // Panneau « Défi Superfan » : les 5 trophées à réunir
+    const defi = document.createElement("div");
+    defi.className = `defi${won ? " won" : ""}`;
+    defi.innerHTML = `<div class="defi-head"><span class="defi-tag">🐐 DÉFI SUPERFAN</span><b class="defi-count">${have} / 5</b></div>
+      <p class="defi-intro"></p><ul class="defi-list"></ul>`;
+    defi.querySelector(".defi-intro").textContent = won
+      ? "Défi réussi ! Tu as réuni les 5 trophées Superfan et gagné le Trophée CR7 Ultime."
+      : "Réunis ces 5 trophées en mode Superfan CR7 pour ouvrir la malle et gagner le Trophée CR7 Ultime.";
+    const ul = defi.querySelector(".defi-list");
+    CR7_TROPHY_IDS.forEach((id) => {
+      const t = TROPHIES.find((x) => x.id === id);
+      const goal = trophyGoal(t);
+      const done = !!unlocked[id];
+      const val = Math.min(t.value(s, unlocked), goal);
+      const li = document.createElement("li");
+      li.className = done ? "ok" : "";
+      li.innerHTML = `<span class="d-check">${done ? "✅" : "⬜"}</span>
+        <span class="d-body"><b class="d-name"></b> <span class="d-prog"></span><span class="d-desc"></span><span class="d-tip"></span></span>`;
+      li.querySelector(".d-name").textContent = `${t.icon} ${t.name}`;
+      li.querySelector(".d-prog").textContent = done ? "· réussi" : `· ${val} / ${goal}`;
+      li.querySelector(".d-desc").textContent = t.desc;
+      li.querySelector(".d-tip").textContent = done ? "" : t.tip || "";
+      ul.appendChild(li);
+    });
+    vit.appendChild(defi);
     const grid = $("tr-grid");
     grid.innerHTML = "";
     TROPHIES.forEach((t) => {
@@ -656,6 +682,12 @@
       card.querySelector(".t-val").textContent = done
         ? `Débloqué le ${unlocked[t.id].split("-").reverse().join("/")}`
         : `${val} / ${goal}`;
+      if (CR7_TROPHY_IDS.includes(t.id) || t.tier === "ultime") {
+        const tag = document.createElement("span");
+        tag.className = "defi-chip";
+        tag.textContent = t.tier === "ultime" ? "🐐 Récompense du Défi Superfan" : "🐐 Défi Superfan";
+        card.querySelector(".t-desc").before(tag);
+      }
       if (t.tier === "ultime") {
         const hint = document.createElement("div");
         hint.className = "t-hint";
