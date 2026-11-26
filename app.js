@@ -452,7 +452,7 @@
   });
 
   const PLAY_INFO = {
-    classic: "",
+    classic: "🎯 Le quiz classique : choisis ton thème, le nombre de questions et la difficulté.",
     sudden: "💀 Toutes les questions de ta sélection, jusqu'à la première erreur. Combien de bonnes réponses d'affilée ?",
     rush: "⏳ 60 secondes au total. Bonne réponse : <b>+2 s</b>. Erreur : <b>−3 s</b>. Pas de temps limite par question.",
     daily: "",
@@ -468,8 +468,23 @@
     party: "🎉 Passez-vous le téléphone ! Chacun répond à son tour, le meilleur score gagne. (Sans jokers ni pièces.)",
     review: "",
   };
+  // Familles de jeux (onglets)
+  const famOf = (play) => document.querySelector(`#play-chips .mode[data-play="${play}"]`)?.closest(".fam")?.dataset.fam || "quiz";
+  function showFam(fam) {
+    document.querySelectorAll("#play-chips .fam").forEach((f) => f.classList.toggle("hidden", f.dataset.fam !== fam));
+    document.querySelectorAll("#fam-tabs button").forEach((b) => { const on = b.dataset.fam === fam; b.classList.toggle("on", on); b.setAttribute("aria-selected", on); });
+  }
+  document.querySelectorAll("#fam-tabs button").forEach((b) => {
+    b.onclick = () => {
+      Sounds.play("click");
+      if (famOf(state.play) === b.dataset.fam) return;
+      // On sélectionne le premier jeu de la famille
+      setPlay(document.querySelector(`#play-chips .fam[data-fam="${b.dataset.fam}"] .mode`).dataset.play);
+    };
+  });
   function setPlay(play) {
     state.play = play;
+    showFam(famOf(play));
     document.querySelectorAll("#play-chips .mode").forEach((m) => {
       const on = m.dataset.play === play;
       m.classList.toggle("active", on);
@@ -517,7 +532,7 @@
     $("sec-filters").classList.toggle("hidden", noFilters);
     $("sec-timer").classList.toggle("hidden", ["rush", "geo", "duel"].includes(p));
     $("sec-count").classList.toggle("hidden", ["sudden", "rush", "daily", "geo", "hilo"].includes(p));
-    $("count-title").textContent = p === "party" ? "Questions par joueur" : "Nombre de questions";
+    $("count-title").textContent = p === "party" || p === "duel" ? "Par joueur" : "Questions";
     const small = p === "party" || p === "duel" || ["derby", "whoami", "career", "names"].includes(p);
     document.querySelectorAll("#count-chips .chip").forEach((b) => {
       const big = ["50", "100", "all"].includes(b.dataset.count);
@@ -534,6 +549,9 @@
       : p === "duel" ? "Lancer le duel !"
       : "Coup d'envoi !";
     $("fresh-info").classList.toggle("hidden", noFilters);
+    // Message si ce jeu n'a aucun réglage
+    const anyVisible = ["geo-vars", "party-setup", "sec-theme", "sec-timer", "sec-count", "sec-filters"].some((id) => !$(id).classList.contains("hidden"));
+    $("no-settings").classList.toggle("hidden", anyVisible);
     updateStartState();
   }
   function updateStartState() {
@@ -2983,7 +3001,7 @@
 
   // ---------- Mise à jour automatique ----------
   // À l'ouverture, on compare la version de l'app avec celle publiée en ligne.
-  const APP_VERSION = "6.2";
+  const APP_VERSION = "6.3";
   function checkForUpdate() {
     if (!location.protocol.startsWith("http")) return;
     fetch(`version.json?t=${Date.now()}`, { cache: "no-store" })
@@ -3043,9 +3061,6 @@
     $("w-count").textContent = GENERAL_TOTAL();
     $("w-nmodes").textContent = MODE_CARDS.reduce((n, g) => n + g.items.length, 0);
     $("w-tro").textContent = `${TROPHIES.filter((t) => unlocked[t.id]).length}/${TROPHIES.length}`;
-    $("w-coins").textContent = `🪙 ${coins}`;
-    $("w-kit").innerHTML = kitSvg(avatarKit(), "kit");
-    $("w-hello").textContent = avatar.name ? `Salut ${avatar.name} !` : "Crée ton maillot ✏️";
     const done = daily.scores[todayStr()];
     $("w-daily-txt").textContent = done !== undefined
       ? `✅ Relevé aujourd'hui : ${done}/${DAILY_COUNT}${daily.streak > 1 ? ` · série de ${daily.streak} jours 🔥` : ""}`
@@ -3061,14 +3076,12 @@
       const row = document.createElement("div");
       row.className = "wm-row";
       g.items.forEach(([play, ico, name, desc, col]) => {
-        const b = document.createElement("button");
-        b.type = "button";
+        const b = document.createElement("div");
         b.className = "wm-card";
         b.style.setProperty("--c", col);
         b.innerHTML = `<span class="wm-ico">${ico}</span><b></b><small></small>`;
         b.querySelector("b").textContent = name;
         b.querySelector("small").textContent = desc;
-        b.onclick = () => goMode(play);
         row.appendChild(b);
       });
       wrap.appendChild(row);
@@ -3080,10 +3093,6 @@
     show("home");
   };
   $("w-daily").onclick = () => { goMode("daily"); start(); };
-  $("w-me").onclick = openAvatar;
-  $("w-kit-btn").onclick = openAvatar;
-  $("w-shop-btn").onclick = openShop;
-  $("w-tro-btn").onclick = openTrophies;
 
   renderFilters();
   renderBest();

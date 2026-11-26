@@ -6,7 +6,7 @@
   <title>La Fête Quiz</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" />
-  <link rel="stylesheet" href="style.css?v=6.2" />
+  <link rel="stylesheet" href="style.css?v=6.3" />
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="apple-touch-icon" href="icons/apple-touch-icon-v3.png" />
   <link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon-v3.png" />
@@ -25,10 +25,6 @@
     <!-- ÉCRAN D'OUVERTURE -->
     <section id="screen-welcome" class="screen active">
       <div class="welcome">
-        <div class="w-top">
-          <button class="w-me" id="w-me" type="button"><span id="w-kit"></span><span class="w-hello" id="w-hello">Bienvenue !</span></button>
-          <span class="coins" id="w-coins">🪙 0</span>
-        </div>
         <div class="w-head" aria-hidden="true">
           <span class="w-rays"></span>
           <span class="ph-shadow w-shadow"></span>
@@ -49,12 +45,7 @@
           <div><b id="w-nmodes">15</b><span>modes de jeu</span></div>
           <div><b id="w-tro">0</b><span>trophées</span></div>
         </div>
-        <div class="w-modes" id="w-modes"></div>
-        <div class="w-links">
-          <button type="button" id="w-tro-btn">🏆<span>Trophées</span></button>
-          <button type="button" id="w-shop-btn">🛒<span>Boutique</span></button>
-          <button type="button" id="w-kit-btn">👕<span>Mon maillot</span></button>
-        </div>
+        <div class="w-modes" id="w-modes" aria-label="Aperçu des modes de jeu"></div>
       </div>
     </section>
 
@@ -72,14 +63,22 @@
         <p class="tagline" id="tagline"><b>1038</b> questions, de la naissance du foot en 1863 jusqu'en 2026.</p>
       </header>
 
-      <div class="card">
+      <div class="card home-me">
         <div class="wallet-row">
           <button id="avatar-btn" class="avatar-btn" type="button" aria-label="Mon maillot"><span id="avatar-kit"></span><span class="av-name" id="avatar-name">Mon maillot</span></button>
           <span class="coins" id="home-coins">🪙 0</span>
         </div>
+      </div>
 
+      <div class="card step-card">
+        <h2 class="step-title"><span class="step-n">1</span> Choisis ton jeu</h2>
+        <div class="fam-tabs" id="fam-tabs" role="tablist">
+          <button type="button" data-fam="quiz" role="tab">🎯 Quiz</button>
+          <button type="button" data-fam="foot" role="tab">⚽ Jeux foot</button>
+          <button type="button" data-fam="multi" role="tab">🎉 À plusieurs</button>
+        </div>
         <div id="play-chips" role="radiogroup" aria-label="Type de partie">
-          <h2>Quiz</h2>
+          <div class="fam" data-fam="quiz">
           <div class="play-grid">
             <button class="mode" data-play="classic" role="radio" aria-checked="false"><span class="mode-ico">🎯</span><b>Classique</b><small>Le quiz habituel</small></button>
             <button class="mode" data-play="sudden" role="radio" aria-checked="false"><span class="mode-ico">💀</span><b>Mort subite</b><small>Une erreur et c'est fini</small></button>
@@ -88,7 +87,8 @@
             <button class="mode" data-play="boss" role="radio" aria-checked="false"><span class="mode-ico">🥳</span><b>Battre La Fête</b><small id="boss-small">76 % de réussite</small></button>
             <button class="mode" data-play="review" role="radio" aria-checked="false"><span class="mode-ico">📚</span><b>Révision</b><small id="review-small">Tes erreurs</small></button>
           </div>
-          <h2>Jeux foot</h2>
+          </div>
+          <div class="fam" data-fam="foot">
           <div class="play-grid">
             <button class="mode" data-play="kits" role="radio" aria-checked="false"><span class="mode-ico">👕</span><b>Maillots</b><small>Reconnais les clubs</small></button>
             <button class="mode" data-play="geo" role="radio" aria-checked="false"><span class="mode-ico">🗺️</span><b>Cartes</b><small>Europe, France, monde</small></button>
@@ -98,19 +98,25 @@
             <button class="mode" data-play="names" role="radio" aria-checked="false"><span class="mode-ico">✍️</span><b>Trouve le prénom</b><small>Écris le prénom</small></button>
             <button class="mode" data-play="hilo" role="radio" aria-checked="false"><span class="mode-ico">↕️</span><b>Plus ou moins</b><small>Lequel a le plus ?</small></button>
           </div>
-          <h2>À plusieurs</h2>
+          </div>
+          <div class="fam" data-fam="multi">
           <div class="play-grid">
             <button class="mode" data-play="party" role="radio" aria-checked="false"><span class="mode-ico">🎉</span><b>Soirée</b><small>2 à 6 joueurs + ligue</small></button>
             <button class="mode" data-play="duel" role="radio" aria-checked="false"><span class="mode-ico">🤺</span><b>Duel</b><small>Face à face</small></button>
           </div>
+          </div>
         </div>
+        <p class="play-info" id="play-info"></p>
+      </div>
+
+      <div class="card step-card" id="settings-card">
+        <h2 class="step-title"><span class="step-n">2</span> Règle ta partie</h2>
         <div class="geo-vars hidden" id="geo-vars">
           <button class="chip active" data-geo="europe">🇪🇺 Tour d'Europe</button>
           <button class="chip" data-geo="france">🇫🇷 Tour de France</button>
           <button class="chip" data-geo="pays">🧭 Pays mystère</button>
           <button class="chip" data-geo="monde">🌍 Coupe du monde</button>
         </div>
-        <p class="play-info" id="play-info"></p>
         <div class="party-setup hidden" id="party-setup">
           <div class="party-players" id="party-players"></div>
           <button class="btn ghost party-add" id="party-add" type="button">＋ Ajouter un joueur</button>
@@ -118,66 +124,63 @@
           <div class="league-box hidden" id="league-box"></div>
         </div>
 
-        <div id="sec-theme">
-        <h2>Thème</h2>
-        <div class="mode-row" id="theme-chips" role="radiogroup" aria-label="Quiz">
-          <button class="mode active" data-theme="general" role="radio" aria-checked="true">
-            <span class="mode-ico">🌍</span><b>Quiz général</b><small id="count-general">1038 questions</small>
-          </button>
-          <button class="mode superfan" data-theme="cr7" role="radio" aria-checked="false">
-            <span class="mode-ico">🐐</span><b>Superfan CR7</b><small id="count-cr7">questions</small>
-          </button>
+        <div class="set-row" id="sec-theme">
+          <span class="set-label">Thème</span>
+          <div class="seg" id="theme-chips" role="radiogroup" aria-label="Thème">
+            <button class="mode active" data-theme="general" role="radio" aria-checked="true">🌍 Général <small id="count-general"></small></button>
+            <button class="mode superfan" data-theme="cr7" role="radio" aria-checked="false">🐐 Superfan CR7 <small id="count-cr7"></small></button>
+          </div>
         </div>
-
+        <div class="set-row" id="sec-timer">
+          <span class="set-label">Temps</span>
+          <div class="seg" id="mode-chips" role="radiogroup" aria-label="Temps">
+            <button class="mode active" data-mode="chrono" role="radio" aria-checked="true">⏱️ Chrono</button>
+            <button class="mode" data-mode="detente" role="radio" aria-checked="false">😌 Sans chrono</button>
+          </div>
         </div>
-        <div id="sec-timer">
-        <h2>Mode de jeu</h2>
-        <div class="mode-row" id="mode-chips" role="radiogroup" aria-label="Mode de jeu">
-          <button class="mode active" data-mode="chrono" role="radio" aria-checked="true">
-            <span class="mode-ico">⏱️</span><b>Chrono</b><small>20 s par question</small>
-          </button>
-          <button class="mode" data-mode="detente" role="radio" aria-checked="false">
-            <span class="mode-ico">😌</span><b>Détente</b><small>Sans limite de temps</small>
-          </button>
-        </div>
-
-        </div>
-        <div id="sec-count">
-        <h2 id="count-title">Nombre de questions</h2>
-        <div class="chips" id="count-chips">
-          <button class="chip" data-count="10">10</button>
-          <button class="chip active" data-count="20">20</button>
-          <button class="chip" data-count="50">50</button>
-          <button class="chip" data-count="100">100</button>
-          <button class="chip" data-count="all">Tout</button>
-        </div>
-
+        <div class="set-row" id="sec-count">
+          <span class="set-label" id="count-title">Questions</span>
+          <div class="chips seg-chips" id="count-chips">
+            <button class="chip" data-count="10">10</button>
+            <button class="chip active" data-count="20">20</button>
+            <button class="chip" data-count="50">50</button>
+            <button class="chip" data-count="100">100</button>
+            <button class="chip" data-count="all">Tout</button>
+          </div>
         </div>
         <div id="sec-filters">
-        <h2>Difficulté</h2>
-        <div class="chips diff-row" id="diff-chips"></div>
-
-        <details class="dropdown" id="era-drop">
-          <summary><span class="dd-title" id="era-title">Époques</span><span class="dd-sum" id="era-summary">Toutes</span></summary>
-          <div class="chips" id="era-chips"></div>
-        </details>
-
-        <details class="dropdown" id="cat-drop">
-          <summary><span class="dd-title" id="cat-title">Catégories</span><span class="dd-sum" id="cat-summary">Toutes</span></summary>
-          <div class="chips" id="cat-chips"></div>
-        </details>
-
+          <div class="set-row set-col">
+            <span class="set-label">Difficulté</span>
+            <div class="chips diff-row" id="diff-chips"></div>
+          </div>
+          <details class="more-filters">
+            <summary>🔧 Plus de filtres <small>(époques, catégories)</small></summary>
+            <details class="dropdown" id="era-drop">
+              <summary><span class="dd-title" id="era-title">Époques</span><span class="dd-sum" id="era-summary">Toutes</span></summary>
+              <div class="chips" id="era-chips"></div>
+            </details>
+            <details class="dropdown" id="cat-drop">
+              <summary><span class="dd-title" id="cat-title">Catégories</span><span class="dd-sum" id="cat-summary">Toutes</span></summary>
+              <div class="chips" id="cat-chips"></div>
+            </details>
+          </details>
         </div>
+        <p class="no-settings hidden" id="no-settings">Rien à régler pour ce jeu : lance-toi ! 🚀</p>
+      </div>
 
+      <div class="start-bar">
         <button id="start-btn" class="btn primary big">Coup d'envoi !</button>
         <p class="fresh" id="fresh-info"></p>
+      </div>
+
+      <div class="card home-foot">
         <p class="best" id="best-score"></p>
         <div class="home-bottom">
           <button id="trophies-btn" class="btn trophies-btn">🏆 Mes trophées</button>
           <button id="shop-btn" class="btn shop-btn" type="button">🛒 Boutique</button>
         </div>
       </div>
-      <p class="app-version">Version 6.2</p>
+      <p class="app-version">Version 6.3</p>
     </section>
 
     <!-- ÉCRAN DE QUESTION -->
@@ -365,18 +368,18 @@
     </section>
   </main>
 
-  <script src="questions.js?v=6.2"></script>
-  <script src="questions-plus.js?v=6.2"></script>
-  <script src="questions-extra.js?v=6.2"></script>
-  <script src="questions-multi.js?v=6.2"></script>
-  <script src="questions-cr7.js?v=6.2"></script>
-  <script src="clubs.js?v=6.2"></script>
-  <script src="geo-map.js?v=6.2"></script>
-  <script src="games-data.js?v=6.2"></script>
-  <script src="trophies.js?v=6.2"></script>
-  <script src="sounds.js?v=6.2"></script>
-  <script src="legend.js?v=6.2"></script>
-  <script src="app.js?v=6.2"></script>
+  <script src="questions.js?v=6.3"></script>
+  <script src="questions-plus.js?v=6.3"></script>
+  <script src="questions-extra.js?v=6.3"></script>
+  <script src="questions-multi.js?v=6.3"></script>
+  <script src="questions-cr7.js?v=6.3"></script>
+  <script src="clubs.js?v=6.3"></script>
+  <script src="geo-map.js?v=6.3"></script>
+  <script src="games-data.js?v=6.3"></script>
+  <script src="trophies.js?v=6.3"></script>
+  <script src="sounds.js?v=6.3"></script>
+  <script src="legend.js?v=6.3"></script>
+  <script src="app.js?v=6.3"></script>
   <script>
     // Installation hors ligne (uniquement quand le site est servi en https)
     if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
