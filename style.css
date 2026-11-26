@@ -781,3 +781,9 @@ body.theme-cr7 .tagline { font-weight: 500; }
 .w-features li { justify-content: flex-start; gap: 10px; }
 .w-features li span { width: 1.4em; text-align: center; }
 .w-features li em { font-style: normal; }
+
+/* ---------- Question bonus ---------- */
+.badge.bonus { background: linear-gradient(135deg, #ff2d95, #ffb347); color: #fff; animation: bonus-wiggle 1.2s ease-in-out infinite; }
+@keyframes bonus-wiggle { 0%, 100% { rotate: -3deg; } 50% { rotate: 3deg; } }
+.question-card.is-bonus { box-shadow: 0 0 0 4px #ffb347, 0 18px 40px rgba(0, 0, 0, .25); background: linear-gradient(180deg, #fff8ef, #fff 40%); }
+@media (prefers-reduced-motion: reduce) { .badge.bonus { animation: none; } }

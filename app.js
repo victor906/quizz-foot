@@ -65,6 +65,21 @@
     b.eraSel = new Set(b.eras.map((e) => e.id));
   });
   let QUESTIONS = BANKS.general.questions;
+
+  // ---------- Question bonus ----------
+  const BONUS_CHANCE = 0.5;
+  const BONUS_QUESTION = {
+    key: "__bonus-ballon-dor-2018__",
+    bonus: true,
+    cat: "🎁 Question bonus",
+    q: "Qui a remporté le Ballon d'Or 2018 ?",
+    multi: false,
+    correct: ["Luka Modrić"],
+    answers: ["Tigrou", "Maître Fufucheng", "La Fête", "Le Poulet", "Luka Modrić"],
+    explain: "Luka Modrić, bien sûr ! Ni Tigrou, ni Maître Fufucheng, ni La Fête, ni Le Poulet… même si la concurrence était rude.",
+    diff: "f",
+    era: "C",
+  };
   const ALL_QUESTION_COUNT = () => BANKS.general.questions.length + BANKS.cr7.questions.length;
   let categories = BANKS.general.categories;
 
@@ -344,6 +359,12 @@
     }
 
     state.list = chosen.map((q) => ({ ...q, shuffled: shuffle(q.answers) }));
+
+    // Question bonus : apparaît souvent (environ une partie sur deux), à une place au hasard
+    if (Math.random() < BONUS_CHANCE) {
+      const pos = Math.floor(Math.random() * (state.list.length + 1));
+      state.list.splice(pos, 0, { ...BONUS_QUESTION, shuffled: shuffle(BONUS_QUESTION.answers) });
+    }
     state.index = 0;
     state.score = 0;
     state.streak = 0;
@@ -362,10 +383,12 @@
     state.answered = false;
     state.selected = new Set();
 
-    seen.add(q.key);
-    saveSeen();
-    everSeen.add(q.key);
-    saveEver();
+    if (!q.bonus) {
+      seen.add(q.key);
+      saveSeen();
+      everSeen.add(q.key);
+      saveEver();
+    }
     state.qStart = Date.now();
 
     $("q-num").textContent = `${state.index + 1}/${total}`;
@@ -379,6 +402,10 @@
     const e = eraOf(q.era);
     $("q-era").textContent = e.id === "O" ? "1863-1929" : e.label;
     $("q-multi").classList.toggle("hidden", !q.multi);
+    $("q-cat").classList.toggle("bonus", !!q.bonus);
+    $("q-diff").classList.toggle("hidden", !!q.bonus);
+    $("q-era").classList.toggle("hidden", !!q.bonus);
+    document.querySelector(".question-card").classList.toggle("is-bonus", !!q.bonus);
     $("q-hint").classList.toggle("hidden", !q.multi);
     $("q-text").textContent = q.q;
     $("feedback").className = "feedback hidden";
