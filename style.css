@@ -233,8 +233,8 @@ body {
 }
 
 /* ---------- Ajouts : multi-réponses, son, questions jamais vues ---------- */
-.hero h1 { font-size: clamp(2rem, 7.5vw, 3.2rem); line-height: 1.05; text-wrap: balance; }
-.hero h1 span { display: block; }
+.hero h1 { font-size: clamp(1.9rem, 9vw, 3.4rem); line-height: 1.05; white-space: nowrap; }
+.hero h1 span { display: inline; }
 .toggle { margin: 0 0 14px; }
 #start-btn { margin-top: 8px; }
 .fresh { text-align: center; color: var(--grass-1); font-weight: 600; margin: 14px 0 0; font-size: .92rem; }
