@@ -1068,7 +1068,14 @@
       clearTimeout(showDetail.tm);
       showDetail.tm = setTimeout(() => detail.classList.add("hidden"), 4000);
     };
-    ROOM_CASES.forEach((c) => {
+    // Parcours du plus modeste au plus prestigieux : Bronze → Argent → Or → Légende → Ultime
+    const WALK_ORDER = [
+      { title: "Bronze", tiers: ["bronze"] },
+      { title: "Argent", tiers: ["argent"] },
+      { title: "Or", tiers: ["or"] },
+      { title: "Légende", tiers: ["legende"] },
+    ];
+    WALK_ORDER.forEach((c) => {
       addStation("st-sign", `<div class="st-signboard">Vitrine<br><b>${c.title}</b></div>`);
       TROPHIES.filter((t) => c.tiers.includes(t.tier)).forEach((t) => {
         const done = !!unlocked[t.id];
