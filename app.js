@@ -206,6 +206,21 @@
     };
   });
 
+  // Mode de jeu : Chrono ou Détente (mémorisé)
+  function setMode(mode) {
+    state.timer = mode !== "detente";
+    document.querySelectorAll("#mode-chips .mode").forEach((m) => {
+      const on = m.dataset.mode === mode;
+      m.classList.toggle("active", on);
+      m.setAttribute("aria-checked", on ? "true" : "false");
+    });
+    storage.set("fqf-mode", mode);
+  }
+  document.querySelectorAll("#mode-chips .mode").forEach((m) => {
+    m.onclick = () => setMode(m.dataset.mode);
+  });
+  setMode(storage.get("fqf-mode") === "detente" ? "detente" : "chrono");
+
   $("multi-toggle").onchange = (e) => { state.multi = e.target.checked; renderFresh(); };
 
   function renderBest() {
@@ -218,7 +233,6 @@
   // ---------- Partie ----------
   function start() {
     Sounds.unlock();
-    state.timer = $("timer-toggle").checked;
     state.multi = $("multi-toggle").checked;
 
     const pool = currentPool();

@@ -24,7 +24,7 @@ python3 -m http.server 8000
 - Filtres par difficulté (facile, moyen, difficile) et par époque (1863-1929, 1930-1969, 1970-1999, 2000-2019, 2020-2026, toutes époques)
 - Sons : bonne réponse, mauvaise réponse, sifflet d'arbitre, clameur du public
 - Filtre par catégorie
-- Chrono de 20 secondes par question (désactivable)
+- Mode de jeu : Chrono (20 s par question) ou Détente (sans limite de temps)
 - Score, série de bonnes réponses, explication après chaque question
 - Récapitulatif des erreurs en fin de partie
 - Meilleur score sauvegardé dans le navigateur

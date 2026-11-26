@@ -299,3 +299,19 @@ body {
 .dropdown .chips { padding: 0 12px 12px; margin: 0; }
 #diff-chips { margin-bottom: 16px; }
 .dropdown + h2 { margin-top: 18px; }
+
+/* ---------- Mode de jeu ---------- */
+.mode-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+.mode {
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  font: inherit; color: var(--ink); background: #f6faf7;
+  border: 2px solid var(--line); border-radius: 14px; padding: 12px 8px; cursor: pointer;
+  transition: all .15s;
+}
+.mode-ico { font-size: 1.5rem; line-height: 1.2; }
+.mode b { font-size: 1.02rem; }
+.mode small { color: var(--muted); font-size: .78rem; }
+.mode:hover { border-color: var(--grass-2); }
+.mode.active { background: var(--grass-2); border-color: var(--grass-2); color: #fff; }
+.mode.active small { color: rgba(255,255,255,.85); }
+.mode:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }

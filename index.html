@@ -20,6 +20,16 @@
       </header>
 
       <div class="card">
+        <h2>Mode de jeu</h2>
+        <div class="mode-row" id="mode-chips" role="radiogroup" aria-label="Mode de jeu">
+          <button class="mode active" data-mode="chrono" role="radio" aria-checked="true">
+            <span class="mode-ico">⏱️</span><b>Chrono</b><small>20 s par question</small>
+          </button>
+          <button class="mode" data-mode="detente" role="radio" aria-checked="false">
+            <span class="mode-ico">😌</span><b>Détente</b><small>Sans limite de temps</small>
+          </button>
+        </div>
+
         <h2>Nombre de questions</h2>
         <div class="chips" id="count-chips">
           <button class="chip" data-count="10">10</button>
@@ -43,11 +53,6 @@
         </details>
 
         <h2>Options</h2>
-        <label class="toggle">
-          <input type="checkbox" id="timer-toggle" checked />
-          <span class="switch"></span>
-          <span>Chrono : 20 s par question (30 s si plusieurs réponses)</span>
-        </label>
         <label class="toggle">
           <input type="checkbox" id="multi-toggle" checked />
           <span class="switch"></span>
