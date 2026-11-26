@@ -16,6 +16,15 @@ python3 -m http.server 8000
 # puis ouvre http://localhost:8000
 ```
 
+## Installer comme une app sur iPhone
+
+Le site est une « web app » : une fois en ligne (par exemple avec GitHub Pages), on peut l'installer
+sur l'écran d'accueil. Il s'ouvre alors en plein écran avec son icône, et fonctionne sans connexion.
+
+1. Ouvre l'adresse du site dans **Safari**.
+2. Appuie sur le bouton **Partager** (carré avec une flèche vers le haut).
+3. Choisis **« Sur l'écran d'accueil »**, puis **Ajouter**.
+
 ## Fonctionnalités
 
 - Choix du nombre de questions (10, 20, 50, 100 ou tout)
