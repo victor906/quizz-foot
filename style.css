@@ -638,7 +638,9 @@ body.theme-cr7 .tagline { font-weight: 500; }
 .vitrine.locked { background: linear-gradient(135deg, #1b1b1b, #2c2c2c 60%, #3a3a3a); border-color: #6b6b6b; box-shadow: 0 10px 24px rgba(0, 0, 0, .35); }
 .vitrine.locked::after { display: none; }
 .vitrine.locked .v-cup { position: relative; filter: none; animation: none; }
-.vitrine.locked .v-cup svg { filter: grayscale(1) brightness(.5); }
+.vitrine.locked .v-cup svg { filter: blur(8px) brightness(.85) saturate(.7); opacity: .9; }
+.vitrine.locked .v-cup { overflow: hidden; border-radius: 12px; }
+.vitrine.locked .v-lock::after { content: "?"; display: block; font-size: 1.1rem; font-weight: 900; color: #ffd76a; margin-top: -2px; }
 .vitrine.locked .v-lock { position: absolute; left: 50%; top: 52%; translate: -50% -50%; font-size: 1.7rem; text-shadow: 0 2px 6px rgba(0, 0, 0, .8); }
 .vitrine.locked .v-kicker { color: #bfc6ca; }
 .vitrine.locked .v-cta { color: rgba(255, 255, 255, .7); }
