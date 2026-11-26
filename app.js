@@ -1038,7 +1038,6 @@
     };
     // Entrée
     addStation("st-entry", `<div class="st-title"><span>${total}</span>${total > 1 ? "TROPHÉES" : "TROPHÉE"}</div>
-      <div class="st-crest"><img src="${document.querySelector(".wall-crest img").getAttribute("src")}" alt=""/><b>LA FÊTE QUIZ</b></div>
       <div class="st-welcome">Bienvenue dans ta salle des trophées</div>`);
     // Vitrines
     const detail = w.querySelector(".walk-detail");
