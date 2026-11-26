@@ -966,6 +966,130 @@
     });
   }
 
+  // ---------- Visite 3D de la salle (on glisse à l'horizontale) ----------
+  let walkRaf = 0;
+  function openWalk() {
+    Sounds.unlock();
+    const total = TROPHIES.filter((t) => unlocked[t.id]).length;
+    const won = !!unlocked["cr7-ultime"];
+    const w = document.createElement("div");
+    w.className = "walk";
+    w.setAttribute("role", "dialog");
+    w.setAttribute("aria-modal", "true");
+    w.setAttribute("aria-label", "Visite 3D de la salle des trophées");
+    w.innerHTML = `
+      <div class="walk-wall"></div>
+      <div class="walk-ceiling"></div>
+      <div class="walk-floor"><div class="walk-floor-grid"></div></div>
+      <div class="walk-track" tabindex="0"><div class="walk-spacer"></div></div>
+      <div class="walk-ui">
+        <button class="btn walk-close" type="button">✕ Sortir</button>
+        <div class="walk-count">${total} / ${TROPHIES.length}</div>
+      </div>
+      <button class="walk-arrow left" type="button" aria-label="Reculer">‹</button>
+      <button class="walk-arrow right" type="button" aria-label="Avancer">›</button>
+      <div class="walk-hint">👉 Fais glisser pour te balader<span class="walk-rotate"> · 📱↻ Tourne ton téléphone</span></div>
+      <div class="walk-detail hidden"></div>`;
+    document.body.appendChild(w);
+    const track = w.querySelector(".walk-track");
+
+    const addStation = (cls, html, onTap) => {
+      const st = document.createElement("button");
+      st.type = "button";
+      st.className = `station ${cls}`;
+      st.innerHTML = `<div class="st-inner">${html}</div>`;
+      if (onTap) st.onclick = onTap;
+      track.appendChild(st);
+      return st;
+    };
+    // Entrée
+    addStation("st-entry", `<div class="st-title"><span>${total}</span>${total > 1 ? "TROPHÉES" : "TROPHÉE"}</div>
+      <div class="st-crest"><img src="${document.querySelector(".wall-crest img").getAttribute("src")}" alt=""/><b>LA FÊTE QUIZ</b></div>
+      <div class="st-welcome">Bienvenue dans ta salle des trophées</div>`);
+    // Vitrines
+    const detail = w.querySelector(".walk-detail");
+    const showDetail = (t) => {
+      const done = !!unlocked[t.id];
+      const goal = trophyGoal(t);
+      detail.className = `walk-detail tier-${t.tier}`;
+      detail.innerHTML = `<b></b><span></span><small></small>`;
+      detail.querySelector("b").textContent = `${done ? t.icon : "🔒"} ${t.name}`;
+      detail.querySelector("span").textContent = t.desc;
+      detail.querySelector("small").textContent = done
+        ? `${TROPHY_TIERS[t.tier]} · débloqué le ${unlocked[t.id].split("-").reverse().join("/")}`
+        : `${TROPHY_TIERS[t.tier]} · à débloquer (${Math.min(t.value(fullStats(), unlocked), goal)} / ${goal})`;
+      clearTimeout(showDetail.tm);
+      showDetail.tm = setTimeout(() => detail.classList.add("hidden"), 4000);
+    };
+    ROOM_CASES.forEach((c) => {
+      addStation("st-sign", `<div class="st-signboard">Vitrine<br><b>${c.title}</b></div>`);
+      TROPHIES.filter((t) => c.tiers.includes(t.tier)).forEach((t) => {
+        const done = !!unlocked[t.id];
+        const art = trophyArt(t.tier, done ? t.icon : "");
+        addStation(`st-case tier-${t.tier}${done ? " lit" : " dark"}`,
+          `<div class="st-box"><span class="st-spot"></span><span class="st-art">${art.svg}</span>${done ? "" : '<span class="st-lock">🔒</span>'}<span class="st-stand"></span></div>
+           <div class="st-plaque">${done ? escapeXml(t.name) : "???"}</div>`, () => showDetail(t));
+      });
+    });
+    // Salle d'honneur : le Trophée CR7 Ultime
+    addStation(`st-honor${won ? " won" : " locked"}`,
+      `<div class="st-honor-sign">Salle d'honneur</div>
+       <div class="st-honor-cup">${LegendReveal.miniSvg()}${won ? "" : '<span class="st-veil">?</span>'}</div>
+       <div class="st-honor-base">${won ? "Trophée CR7 Ultime" : "Emplacement réservé"}</div>`,
+      () => openLegend(won));
+    track.insertAdjacentHTML("beforeend", '<div class="walk-spacer"></div>');
+
+    // Effet de profondeur : chaque station pivote selon sa distance au centre
+    const stations = [...track.querySelectorAll(".station")];
+    const wall = w.querySelector(".walk-wall"), floor = w.querySelector(".walk-floor-grid"), ceil = w.querySelector(".walk-ceiling");
+    const update = () => {
+      walkRaf = 0;
+      const vw = track.clientWidth, sx = track.scrollLeft, mid = sx + vw / 2;
+      stations.forEach((st) => {
+        const c = st.offsetLeft + st.offsetWidth / 2;
+        const d = Math.max(-2.2, Math.min(2.2, (c - mid) / (vw / 2)));
+        const inner = st.firstElementChild;
+        inner.style.transform = `translateZ(${-Math.abs(d) * 260}px) rotateY(${-d * 38}deg) scale(${1 - Math.min(Math.abs(d), 1) * 0.08})`;
+        inner.style.opacity = String(Math.max(0.25, 1 - Math.abs(d) * 0.35));
+        st.classList.toggle("is-center", Math.abs(d) < 0.25);
+      });
+      wall.style.backgroundPositionX = `${-sx * 0.35}px`;
+      ceil.style.backgroundPositionX = `${-sx * 0.6}px`;
+      floor.style.backgroundPositionX = `${-sx * 1.1}px`;
+    };
+    const onScroll = () => { if (!walkRaf) walkRaf = requestAnimationFrame(update); };
+    track.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+    // Molette verticale = avancer (ordinateur)
+    track.addEventListener("wheel", (e) => {
+      if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) { track.scrollLeft += e.deltaY; e.preventDefault(); }
+    }, { passive: false });
+    const step = (dir) => {
+      const vw = track.clientWidth, mid = track.scrollLeft + vw / 2;
+      const target = stations.map((st) => st.offsetLeft + st.offsetWidth / 2)
+        .filter((c) => (dir > 0 ? c > mid + 5 : c < mid - 5))
+        .sort((a, b) => (dir > 0 ? a - b : b - a))[0];
+      if (target !== undefined) track.scrollTo({ left: target - vw / 2, behavior: "smooth" });
+    };
+    w.querySelector(".walk-arrow.left").onclick = () => step(-1);
+    w.querySelector(".walk-arrow.right").onclick = () => step(1);
+    const onKey = (e) => {
+      if (e.key === "ArrowRight") step(1);
+      else if (e.key === "ArrowLeft") step(-1);
+      else if (e.key === "Escape") close();
+    };
+    document.addEventListener("keydown", onKey);
+    const close = () => {
+      document.removeEventListener("keydown", onKey);
+      window.removeEventListener("resize", onScroll);
+      w.classList.add("closing");
+      setTimeout(() => w.remove(), 300);
+    };
+    w.querySelector(".walk-close").onclick = close;
+    requestAnimationFrame(() => { w.classList.add("in"); update(); track.focus({ preventScroll: true }); });
+    setTimeout(() => w.querySelector(".walk-hint").classList.add("fade"), 4500);
+  }
+
   function openRoom() {
     renderRoom();
     show("room");
@@ -1001,6 +1125,7 @@
   $("end-trophies-btn").onclick = openTrophies;
   $("tr-back").onclick = () => { renderBest(); show("home"); };
   $("room-back").onclick = openTrophies;
+  $("walk-btn").onclick = openWalk;
 
   // Double appui pour abandonner (les boîtes confirm() ne marchent pas partout)
   let quitArmed = null;

@@ -1065,3 +1065,183 @@ body.theme-cr7 .tagline { font-weight: 500; }
 .wall-crest { width: 108px; height: 108px; }
 .wall-crest img { top: 4px; width: 46px; }
 .wall-crest span { bottom: 0; padding: 4px 0 7px; background: linear-gradient(180deg, rgba(122, 27, 27, .0), #7a1b1b 35%); font-size: .58rem; }
+
+/* =========================================================
+   Visite 3D de la salle des trophées
+   ========================================================= */
+.walk-btn {
+  margin: 10px 0 2px; padding: 10px 18px; color: #1a1206; font-family: "Oswald", "Arial Narrow", sans-serif; letter-spacing: .08em;
+  background: linear-gradient(180deg, #ffc27a, #ff9a3c); box-shadow: 0 4px 0 #b05f17, 0 0 18px rgba(255, 154, 60, .45);
+}
+.walk {
+  --led: #ff9a3c;
+  position: fixed; inset: 0; z-index: 90; overflow: hidden; color: #fff; opacity: 0; transition: opacity .3s;
+  background: #070708;
+}
+.walk.in { opacity: 1; }
+.walk.closing { opacity: 0; }
+/* Mur du fond : panneaux + bandeaux LED (défile plus lentement = profondeur) */
+.walk-wall {
+  position: absolute; inset: 0 0 34% 0;
+  background:
+    linear-gradient(180deg, rgba(255, 154, 60, .16), transparent 18%),
+    repeating-linear-gradient(90deg, #121215 0 178px, #0c0c0e 178px 180px, #121215 180px 360px),
+    #101012;
+  box-shadow: inset 0 -40px 60px rgba(0, 0, 0, .8);
+}
+.walk-wall::after {
+  content: ""; position: absolute; left: 0; right: 0; top: 12%; height: 2px;
+  background: var(--led); box-shadow: 0 0 16px 4px rgba(255, 154, 60, .55); opacity: .7;
+}
+/* Plafond avec spots */
+.walk-ceiling {
+  position: absolute; left: 0; right: 0; top: 0; height: 12%;
+  background:
+    radial-gradient(ellipse 30px 10px at 120px 100%, rgba(255, 224, 170, .9), transparent 70%) 0 0 / 240px 100% repeat-x,
+    linear-gradient(180deg, #050506, #0c0c0e);
+}
+/* Sol en carrelage, en perspective, qui défile sous les pieds */
+.walk-floor { position: absolute; left: 0; right: 0; bottom: 0; height: 34%; perspective: 340px; overflow: hidden; }
+.walk-floor-grid {
+  position: absolute; inset: -60% -60% 0; transform: rotateX(70deg); transform-origin: 50% 100%;
+  background:
+    linear-gradient(180deg, rgba(0, 0, 0, .9), transparent 45%),
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, .07) 0 2px, transparent 2px 90px),
+    repeating-linear-gradient(0deg, rgba(255, 255, 255, .06) 0 2px, transparent 2px 90px),
+    linear-gradient(180deg, #121215, #1c1c20);
+}
+.walk-floor::after { /* reflet de la lumière sur le sol */
+  content: ""; position: absolute; inset: 0;
+  background: radial-gradient(ellipse 50% 60% at 50% 0%, rgba(255, 170, 90, .14), transparent 70%);
+}
+/* La piste qu'on fait défiler */
+.walk-track {
+  position: absolute; inset: 0; display: flex; align-items: center; overflow-x: auto; overflow-y: hidden;
+  scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; scrollbar-width: none;
+  perspective: 900px; perspective-origin: 50% 45%; outline: none;
+  padding-top: max(env(safe-area-inset-top, 0px), 10px);
+}
+.walk-track::-webkit-scrollbar { display: none; }
+.walk-spacer { flex: 0 0 calc(50vw - clamp(150px, 30vw, 250px) / 2); }
+.station {
+  flex: 0 0 clamp(150px, 30vw, 250px); height: min(78%, 420px); scroll-snap-align: center;
+  background: none; border: 0; padding: 0 8px; color: inherit; font: inherit; cursor: pointer;
+  transform-style: preserve-3d;
+}
+.st-inner {
+  height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: flex-end;
+  transform-style: preserve-3d; will-change: transform; transition: opacity .2s;
+}
+/* Entrée */
+.st-entry .st-inner { justify-content: center; gap: 10px; }
+.st-title { display: flex; flex-direction: column; align-items: center; font-family: "Oswald", "Arial Narrow", sans-serif; font-weight: 500; letter-spacing: .1em; color: #d9d2c5; font-size: 1.05rem; line-height: 1; }
+.st-title span { font-size: 4rem; font-weight: 700; color: #f4efe6; letter-spacing: -1px; text-shadow: 0 0 20px rgba(255, 154, 60, .45); }
+.st-crest { position: relative; width: 92px; height: 92px; border-radius: 50%; overflow: hidden; background: radial-gradient(circle at 50% 35%, #1f8a4c, #0f5a31 70%); border: 4px solid #e0b23a; box-shadow: 0 0 0 3px #7a1b1b, 0 0 24px rgba(255, 154, 60, .5); }
+.st-crest img { position: absolute; left: 50%; top: 4px; width: 40px; translate: -50% 0; }
+.st-crest b { position: absolute; left: 0; right: 0; bottom: 0; padding: 4px 0 6px; font-family: "Oswald", "Arial Narrow", sans-serif; font-size: .52rem; letter-spacing: .1em; background: linear-gradient(180deg, transparent, #7a1b1b 35%); }
+.st-welcome { font-size: .8rem; color: #f3e3c2; opacity: .85; text-align: center; max-width: 18ch; }
+/* Panneau de section */
+.st-sign { flex-basis: clamp(110px, 18vw, 170px); }
+.st-sign .st-inner { justify-content: center; }
+.st-signboard {
+  padding: 14px 16px; border-radius: 6px; text-align: center; font-family: "Oswald", "Arial Narrow", sans-serif;
+  letter-spacing: .2em; text-transform: uppercase; font-size: .72rem; color: #d9d2c5;
+  background: linear-gradient(180deg, #19191c, #0d0d0f); border: 1px solid #26262b; box-shadow: 0 0 0 1px #000, 0 0 22px rgba(255, 154, 60, .25);
+}
+.st-signboard b { display: block; margin-top: 4px; font-size: 1.05rem; color: var(--led); letter-spacing: .12em; }
+/* Vitrine en verre d'un trophée */
+.st-box {
+  position: relative; width: 100%; max-width: 170px; aspect-ratio: 3 / 4; display: flex; align-items: flex-end; justify-content: center;
+  border-radius: 4px; overflow: hidden;
+  background: linear-gradient(180deg, rgba(255, 255, 255, .06), rgba(255, 255, 255, .01) 40%), linear-gradient(180deg, #17171a, #0d0d0f);
+  border: 1px solid rgba(255, 255, 255, .12);
+  box-shadow: inset 0 0 0 1px rgba(255, 154, 60, .15), 0 20px 30px rgba(0, 0, 0, .7);
+}
+.st-box::before { /* bandeau LED en haut de la vitrine */
+  content: ""; position: absolute; left: 10%; right: 10%; top: 0; height: 3px; border-radius: 3px;
+  background: var(--led); box-shadow: 0 0 14px 3px rgba(255, 154, 60, .7);
+}
+.st-box::after { /* reflet sur la vitre */
+  content: ""; position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(115deg, transparent 30%, rgba(255, 255, 255, .08) 38%, transparent 46%);
+}
+.st-spot { position: absolute; inset: 0; background: radial-gradient(ellipse 60% 80% at 50% 0%, rgba(255, 196, 120, .38), transparent 70%); }
+.st-art { position: relative; z-index: 1; width: 62%; margin-bottom: 22%; }
+.st-art .t-art { display: block; width: 100%; height: auto; overflow: visible; filter: drop-shadow(0 10px 8px rgba(0, 0, 0, .7)); }
+.st-stand { position: absolute; left: 12%; right: 12%; bottom: 10%; height: 10%; border-radius: 3px; background: linear-gradient(180deg, #2a2a2f, #121214); box-shadow: inset 0 2px 0 rgba(255, 154, 60, .5); }
+.st-case.tier-legende.lit .st-art .t-art { filter: drop-shadow(0 0 14px rgba(192, 132, 252, .9)) drop-shadow(0 10px 8px rgba(0, 0, 0, .6)); }
+.st-case.tier-or.lit .st-art .t-art { filter: drop-shadow(0 0 12px rgba(255, 210, 63, .7)) drop-shadow(0 10px 8px rgba(0, 0, 0, .6)); }
+.st-case.dark .st-spot { opacity: .2; }
+.st-case.dark .st-box::before { opacity: .25; box-shadow: none; }
+.st-case.dark .st-art .t-art { filter: brightness(0) opacity(.6); }
+.st-case.dark .t-glint, .st-case.dark .t-spark { display: none; }
+.st-lock { position: absolute; z-index: 2; top: 42%; left: 50%; translate: -50% -50%; font-size: 1.1rem; opacity: .7; }
+.st-plaque {
+  margin-top: 10px; padding: 5px 10px; border-radius: 3px; max-width: 170px; text-align: center;
+  font-size: .72rem; font-weight: 700; color: #1a1206; background: linear-gradient(180deg, #f6d9a8, #c99a4a);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, .6);
+}
+.st-case.dark .st-plaque { background: #2a2a2e; color: #6d6a64; letter-spacing: .2em; }
+.station.is-center .st-box { box-shadow: inset 0 0 0 1px rgba(255, 154, 60, .3), 0 0 30px rgba(255, 154, 60, .25), 0 20px 30px rgba(0, 0, 0, .7); }
+/* Salle d'honneur */
+.st-honor { flex-basis: clamp(190px, 38vw, 320px); }
+.st-honor .st-inner { justify-content: flex-end; }
+.st-honor-sign { font-family: "Oswald", "Arial Narrow", sans-serif; letter-spacing: .25em; text-transform: uppercase; color: var(--led); font-size: .85rem; margin-bottom: 8px; text-shadow: 0 0 12px rgba(255, 154, 60, .6); }
+.st-honor-cup { position: relative; width: 62%; max-width: 170px; filter: drop-shadow(0 0 26px rgba(255, 200, 60, .8)); }
+.st-honor-cup svg { display: block; width: 100%; height: auto; }
+.st-honor.locked .st-honor-cup { filter: none; }
+.st-honor.locked .st-honor-cup svg { filter: blur(10px) brightness(.8) saturate(.6); }
+.st-veil { position: absolute; inset: 0; display: grid; place-items: center; font-size: 3rem; font-weight: 900; color: #ffd76a; text-shadow: 0 2px 10px rgba(0, 0, 0, .8); }
+.st-honor-base { margin-top: -2px; width: 80%; padding: 10px; text-align: center; border-radius: 4px; font-size: .7rem; font-weight: 900; letter-spacing: .1em; text-transform: uppercase; color: #ffd29a; background: linear-gradient(180deg, #232326, #0b0b0c); border-top: 4px solid var(--led); box-shadow: 0 0 18px rgba(255, 154, 60, .4); }
+/* Interface */
+.walk-ui {
+  position: absolute; z-index: 5; left: 0; right: 0; top: 0; display: flex; justify-content: space-between; align-items: center;
+  padding: calc(10px + env(safe-area-inset-top, 0px)) max(14px, env(safe-area-inset-right, 0px)) 0 max(14px, env(safe-area-inset-left, 0px));
+  pointer-events: none;
+}
+.walk-ui > * { pointer-events: auto; }
+.walk-close { background: rgba(0, 0, 0, .55); color: #fff; border: 1.5px solid rgba(255, 154, 60, .6); padding: 8px 14px; font-size: .88rem; }
+.walk-count { font-family: "Oswald", "Arial Narrow", sans-serif; font-weight: 700; color: #ffd76a; letter-spacing: .06em; background: rgba(0, 0, 0, .5); padding: 6px 12px; border-radius: 999px; }
+.walk-arrow {
+  position: absolute; z-index: 5; top: 50%; translate: 0 -50%; width: 42px; height: 42px; border-radius: 50%;
+  border: 1.5px solid rgba(255, 154, 60, .6); background: rgba(0, 0, 0, .5); color: #fff; font-size: 1.6rem; line-height: 1; cursor: pointer;
+}
+.walk-arrow.left { left: max(10px, env(safe-area-inset-left, 0px)); }
+.walk-arrow.right { right: max(10px, env(safe-area-inset-right, 0px)); }
+.walk-hint {
+  position: absolute; z-index: 5; left: 50%; bottom: calc(14px + env(safe-area-inset-bottom, 0px)); translate: -50% 0;
+  padding: 8px 14px; border-radius: 999px; background: rgba(0, 0, 0, .6); color: #f3e3c2; font-size: .82rem; white-space: nowrap;
+  transition: opacity .6s;
+}
+.walk-hint.fade { opacity: 0; }
+.walk-rotate { display: none; }
+@media (orientation: portrait) { .walk-rotate { display: inline; } .walk-hint { white-space: normal; text-align: center; width: max-content; max-width: 90vw; } }
+.walk-detail {
+  position: absolute; z-index: 6; left: 50%; bottom: calc(14px + env(safe-area-inset-bottom, 0px)); translate: -50% 0;
+  width: min(420px, calc(100% - 32px)); padding: 10px 14px; border-radius: 12px; background: #fffaf0; color: var(--ink);
+  display: flex; flex-direction: column; gap: 2px; box-shadow: 0 14px 30px rgba(0, 0, 0, .6); animation: pop .25s ease;
+  border-left: 6px solid #d9b25a;
+}
+.walk-detail b { font-size: .98rem; }
+.walk-detail span { font-size: .86rem; color: #4a5a50; }
+.walk-detail small { font-size: .74rem; color: var(--muted); }
+.walk-detail.tier-legende { border-left-color: var(--legende); }
+.walk-detail.tier-argent { border-left-color: var(--argent); }
+.walk-detail.tier-bronze { border-left-color: var(--bronze); }
+/* En paysage sur téléphone (peu de hauteur) */
+@media (max-height: 500px) {
+  .station { height: 84%; }
+  .st-box { max-width: 130px; }
+  .st-plaque { margin-top: 6px; font-size: .66rem; }
+  .st-title span { font-size: 3rem; }
+  .st-crest { width: 70px; height: 70px; }
+  .st-crest img { width: 30px; }
+  .st-honor-cup { max-width: 120px; }
+}
+@media (prefers-reduced-motion: reduce) { .walk-track { scroll-behavior: auto; } }
+@media (orientation: portrait) {
+  .walk-track { align-items: center; }
+  .station { height: 62%; }
+  .walk-wall { bottom: 30%; }
+  .walk-floor { height: 30%; }
+}
