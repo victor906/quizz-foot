@@ -1,6 +1,6 @@
 # 🎉 La Fête Quiz
 
-Un site de quiz sur le football : **644 questions**, de la naissance du foot en 1863
+Un site de quiz sur le football : **645 questions** (dont une question bonus), de la naissance du foot en 1863
 jusqu'en 2026, réparties en 15 catégories (histoire, Coupe du monde, Ligue des champions,
 Ballon d'Or, Équipe de France, clubs, entraîneurs, stades, mercato, légendes, règles, foot féminin…), dont des questions
 à plusieurs bonnes réponses.

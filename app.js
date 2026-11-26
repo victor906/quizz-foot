@@ -81,6 +81,8 @@
     era: "C",
   };
   const ALL_QUESTION_COUNT = () => BANKS.general.questions.length + BANKS.cr7.questions.length;
+  // Total affiché du quiz général : ses questions + la question bonus
+  const GENERAL_TOTAL = () => BANKS.general.questions.length + 1;
   let categories = BANKS.general.categories;
 
   const state = {
@@ -196,12 +198,12 @@
     });
     $("tagline").innerHTML = state.theme === "cr7"
       ? `🐐 Mode Superfan : <b>${QUESTIONS.length}</b> questions sur Cristiano Ronaldo, de Madère à aujourd'hui.`
-      : `<b>${QUESTIONS.length}</b> questions, de la naissance du foot en 1863 jusqu'en 2026.`;
+      : `<b>${GENERAL_TOTAL()}</b> questions, de la naissance du foot en 1863 jusqu'en 2026.`;
     $("cat-title").textContent = state.theme === "cr7" ? "Thèmes" : "Catégories";
     $("era-title").textContent = state.theme === "cr7" ? "Périodes" : "Époques";
     storage.set("fqf-theme", state.theme);
   }
-  $("count-general").textContent = `${BANKS.general.questions.length} questions`;
+  $("count-general").textContent = `${GENERAL_TOTAL()} questions`;
   $("count-cr7").textContent = `${BANKS.cr7.questions.length} questions`;
   document.querySelectorAll("#theme-chips .mode").forEach((m) => {
     m.onclick = () => { useTheme(m.dataset.theme); renderFilters(); renderBest(); };
@@ -810,7 +812,7 @@
   });
 
   // Écran d'ouverture
-  $("w-count").textContent = BANKS.general.questions.length;
+  $("w-count").textContent = GENERAL_TOTAL();
   $("enter-btn").onclick = () => {
     Sounds.unlock();
     Sounds.play("start");
