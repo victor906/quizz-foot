@@ -323,7 +323,7 @@ const LegendReveal = (() => {
     if (unlocked) {
       sub.textContent = secret
         ? `Tu as débloqué absolument tout. Tu es le roi de la fête !${reward ? ` +${reward.toLocaleString("fr-FR")} 🪙` : ""} (le ${date})`
-        : `Le plus rare de tous. Débloqué le ${date}. Siuuu !`;
+        : `Le plus rare de tous. Débloqué le ${date}. Siuuu !${reward ? ` +${reward.toLocaleString("fr-FR")} 🪙` : ""}`;
     } else {
       sub.textContent = remaining > 1
         ? `La malle est verrouillée. Encore ${remaining} trophées Superfan à débloquer.`

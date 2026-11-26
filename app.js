@@ -1571,7 +1571,7 @@
       <p class="defi-intro"></p><ul class="defi-list"></ul>`;
     defi.querySelector(".defi-intro").textContent = won
       ? "Défi réussi ! Tu as réuni les 5 trophées Superfan et gagné le Trophée CR7 Ultime."
-      : "Réunis ces 5 trophées en mode Superfan CR7 pour ouvrir la malle et gagner le Trophée CR7 Ultime.";
+      : `Réunis ces 5 trophées en mode Superfan CR7 pour ouvrir la malle et gagner le Trophée CR7 Ultime… et ${TROPHY_REWARD.ultime.toLocaleString("fr-FR")} 🪙 !`;
     const ul = defi.querySelector(".defi-list");
     CR7_TROPHY_IDS.forEach((id) => {
       const t = TROPHIES.find((x) => x.id === id);
@@ -1705,6 +1705,7 @@
       date: d ? d.split("-").reverse().join("/") : "",
       remaining: CR7_TROPHY_IDS.filter((id) => !unlocked[id]).length,
       loop,
+      reward: TROPHY_REWARD.ultime,
     });
   }
 
@@ -3061,7 +3062,7 @@
 
   // ---------- Mise à jour automatique ----------
   // À l'ouverture, on compare la version de l'app avec celle publiée en ligne.
-  const APP_VERSION = "6.4";
+  const APP_VERSION = "6.5";
   function checkForUpdate() {
     if (!location.protocol.startsWith("http")) return;
     fetch(`version.json?t=${Date.now()}`, { cache: "no-store" })
@@ -3158,11 +3159,25 @@
   renderBest();
   renderWallet();
   renderAvatarHome();
+  // Rattrapage : le Trophée CR7 Ultime rapporte désormais 5 000 pièces (il en rapportait 600)
+  let cr7TopUp = 0;
+  if (unlocked["cr7-ultime"] && !storage.get("fqf-cr7-topup")) {
+    cr7TopUp = TROPHY_REWARD.ultime - 600;
+    coins += cr7TopUp;
+    storage.set("fqf-coins", String(coins));
+    storage.set("fqf-cr7-topup", "1");
+    renderWallet();
+  } else if (!storage.get("fqf-cr7-topup")) storage.set("fqf-cr7-topup", "1");
+
   // Trophées déjà mérités au lancement (ex. tout débloqué) : révélation en entrant dans le jeu
   const initFresh = checkTrophies();
   if (initFresh.length) {
     const prev = $("enter-btn").onclick;
     $("enter-btn").onclick = (e) => { prev(e); celebrateFresh(initFresh); renderNewTrophies(initFresh); };
+  }
+  if (cr7TopUp) {
+    const prevEnter = $("enter-btn").onclick;
+    $("enter-btn").onclick = (e) => { prevEnter(e); setTimeout(() => toast(`🐐 Bonus Trophée CR7 Ultime : +${cr7TopUp.toLocaleString("fr-FR")} 🪙`), 400); };
   }
   renderWelcome();
   setPlay(["classic", "sudden", "rush", "daily", "kits", "geo", "party", "review", "boss", "derby", "whoami", "career", "names", "hilo", "duel"].includes(storage.get("fqf-play")) ? storage.get("fqf-play") : "classic");
