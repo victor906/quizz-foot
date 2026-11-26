@@ -1026,16 +1026,31 @@
       TROPHIES.filter((t) => c.tiers.includes(t.tier)).forEach((t) => {
         const done = !!unlocked[t.id];
         const art = trophyArt(t.tier, done ? t.icon : "");
+        // Piédestal en bois éclairé par un spot (vide tant que le trophée n'est pas gagné)
         addStation(`st-case tier-${t.tier}${done ? " lit" : " dark"}`,
-          `<div class="st-box"><span class="st-spot"></span><span class="st-art">${art.svg}</span>${done ? "" : '<span class="st-lock">🔒</span>'}<span class="st-stand"></span></div>
-           <div class="st-plaque">${done ? escapeXml(t.name) : "???"}</div>`, () => showDetail(t));
+          `<div class="ped">
+             <span class="ped-beam"></span><span class="ped-pool"></span>
+             <div class="ped-show">${done ? `<span class="st-art">${art.svg}</span>` : '<span class="ped-empty">?</span>'}</div>
+             <div class="ped-top"></div>
+             <div class="ped-col"><span class="ped-plate">${done ? escapeXml(t.name) : "???"}</span></div>
+             <div class="ped-foot"></div>
+           </div>`, () => showDetail(t));
       });
     });
     // Salle d'honneur : le Trophée CR7 Ultime
     addStation(`st-honor${won ? " won" : " locked"}`,
       `<div class="st-honor-sign">Salle d'honneur</div>
-       <div class="st-honor-cup">${LegendReveal.miniSvg()}${won ? "" : '<span class="st-veil">?</span>'}</div>
-       <div class="st-honor-base">${won ? "Trophée CR7 Ultime" : "Emplacement réservé"}</div>`,
+       <div class="hped">
+         <span class="hped-beam b1"></span><span class="hped-beam b2"></span><span class="hped-beam b3"></span><span class="hped-pool"></span>
+         <div class="bell">
+           <div class="bell-cup">${LegendReveal.miniSvg()}${won ? "" : '<span class="st-veil">?</span>'}</div>
+           <span class="bell-glass"></span><span class="bell-knob"></span>
+           <span class="bell-ring"></span>
+         </div>
+         <div class="hped-cap"></div>
+         <div class="hped-col"><span class="hped-plate">${won ? "Trophée CR7 Ultime" : "Emplacement réservé"}</span></div>
+         <div class="hped-step s1"></div><div class="hped-step s2"></div>
+       </div>`,
       () => openLegend(won));
     track.insertAdjacentHTML("beforeend", '<div class="walk-spacer"></div>');
 
