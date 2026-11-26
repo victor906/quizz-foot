@@ -615,6 +615,20 @@
       <div class="stat"><b>${stats.games}</b><span>Parties</span></div>
       <div class="stat"><b>${stats.correct}</b><span>Bonnes réponses</span></div>
       <div class="stat"><b>${stats.bestStreak} 🔥</b><span>Meilleure série</span></div>`;
+    // Vitrine en haut de l'écran une fois le Trophée CR7 Ultime débloqué
+    const vit = $("tr-vitrine");
+    vit.innerHTML = "";
+    vit.classList.toggle("hidden", !unlocked["cr7-ultime"]);
+    if (unlocked["cr7-ultime"]) {
+      const b = document.createElement("button");
+      b.className = "vitrine";
+      b.type = "button";
+      b.innerHTML = `<div class="v-cup">${LegendReveal.miniSvg()}</div>
+        <div class="v-txt"><div class="v-kicker">✦ VITRINE ✦</div><div class="v-title">Trophée CR7 Ultime</div>
+        <div class="v-cta">Touche pour le voir sortir de la malle, en boucle</div></div>`;
+      b.onclick = () => openLegend(true);
+      vit.appendChild(b);
+    }
     const grid = $("tr-grid");
     grid.innerHTML = "";
     TROPHIES.forEach((t) => {
@@ -631,7 +645,8 @@
           <div class="t-prog"><div class="t-bar"></div></div>
           <div class="t-val"></div>
         </div>`;
-      card.querySelector(".t-ico").textContent = done ? t.icon : "🔒";
+      if (done && t.tier === "ultime") card.querySelector(".t-ico").innerHTML = LegendReveal.miniSvg();
+      else card.querySelector(".t-ico").textContent = done ? t.icon : "🔒";
       card.querySelector(".t-name").textContent = t.name;
       card.querySelector(".t-tier").textContent = TROPHY_TIERS[t.tier];
       card.querySelector(".t-desc").textContent = t.desc;
@@ -646,7 +661,7 @@
         card.querySelector(".t-body").appendChild(hint);
         card.setAttribute("role", "button");
         card.tabIndex = 0;
-        const go = () => openLegend();
+        const go = () => openLegend(done);
         card.onclick = go;
         card.onkeydown = (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); go(); } };
       }
@@ -655,13 +670,15 @@
   }
 
   // Ouvre la malle du Trophée CR7 Ultime
-  function openLegend() {
+  // loop : l'animation se répète (vitrine)
+  function openLegend(loop = false) {
     Sounds.unlock();
     const d = unlocked["cr7-ultime"];
     LegendReveal.open({
       unlocked: !!d,
       date: d ? d.split("-").reverse().join("/") : "",
       remaining: CR7_TROPHY_IDS.filter((id) => !unlocked[id]).length,
+      loop,
     });
   }
 

@@ -1,49 +1,114 @@
 // Révélation légendaire du Trophée CR7 Ultime : une malle en cuir s'ouvre et le trophée en sort.
 const LegendReveal = (() => {
+  // ---------- Dessin du trophée (SVG) ----------
+  const star = (cx, cy, r) => {
+    const pts = [];
+    for (let k = 0; k < 10; k++) {
+      const rr = k % 2 ? r * 0.45 : r;
+      const a = (-90 + k * 36) * Math.PI / 180;
+      pts.push(`${(cx + rr * Math.cos(a)).toFixed(1)},${(cy + rr * Math.sin(a)).toFixed(1)}`);
+    }
+    return pts.join(" ");
+  };
+  // Branche de laurier (feuilles le long d'une courbe)
+  const laurel = (side) => {
+    let out = "";
+    for (let i = 0; i < 8; i++) {
+      const t = i / 7;
+      const x = 120 + side * (52 + 22 * Math.sin(t * Math.PI * 0.9));
+      const y = 214 - t * 150;
+      const ang = side * (25 + t * 40);
+      out += `<ellipse cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" rx="11" ry="4.6" fill="url(#cGoldV)" stroke="#7a4d00" stroke-width=".8" transform="rotate(${(side > 0 ? -1 : 1) * (90 - ang)} ${x.toFixed(1)} ${y.toFixed(1)})"/>`;
+      out += `<ellipse cx="${(x + side * 7).toFixed(1)}" cy="${(y + 5).toFixed(1)}" rx="9" ry="3.8" fill="url(#cGold)" stroke="#7a4d00" stroke-width=".8" transform="rotate(${side * (20 + t * 30)} ${(x + side * 7).toFixed(1)} ${(y + 5).toFixed(1)})"/>`;
+    }
+    return `<path d="M${120 + side * 50} 220 Q ${120 + side * 82} 140 ${120 + side * 60} 62" fill="none" stroke="#a86f00" stroke-width="2.4"/>` + out;
+  };
+  const stars = [[60, 34], [90, 22], [120, 17], [150, 22], [180, 34]]
+    .map(([x, y]) => `<polygon class="c-star" points="${star(x, y, 9)}" fill="url(#cGoldV)" stroke="#fff3b8" stroke-width="1"/>`).join("");
+
   const TROPHY_SVG = `
-  <svg viewBox="0 0 200 240" class="lg-cup" aria-hidden="true">
+  <svg viewBox="0 0 240 300" class="lg-cup" aria-hidden="true">
     <defs>
-      <linearGradient id="lgGold" x1="0" y1="0" x2="1" y2="0">
-        <stop offset="0" stop-color="#8a5a00"/><stop offset=".22" stop-color="#ffe17a"/>
-        <stop offset=".45" stop-color="#d9a01a"/><stop offset=".62" stop-color="#fff3b8"/>
-        <stop offset=".82" stop-color="#c78a0a"/><stop offset="1" stop-color="#7a4d00"/>
+      <linearGradient id="cGold" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0" stop-color="#7a4800"/><stop offset=".2" stop-color="#ffe27a"/>
+        <stop offset=".42" stop-color="#d99c12"/><stop offset=".6" stop-color="#fff5c2"/>
+        <stop offset=".8" stop-color="#c58606"/><stop offset="1" stop-color="#6e4300"/>
       </linearGradient>
-      <linearGradient id="lgGoldV" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0" stop-color="#fff1a6"/><stop offset="1" stop-color="#a86f00"/>
+      <linearGradient id="cGoldV" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#fff4b5"/><stop offset=".5" stop-color="#e3a91e"/><stop offset="1" stop-color="#8a5600"/>
       </linearGradient>
-      <linearGradient id="lgGlint" x1="0" y1="0" x2="1" y2="0">
+      <radialGradient id="cRuby" cx=".35" cy=".3" r=".8">
+        <stop offset="0" stop-color="#ff8a93"/><stop offset=".35" stop-color="#e0102b"/><stop offset="1" stop-color="#5c0010"/>
+      </radialGradient>
+      <radialGradient id="cEmerald" cx=".35" cy=".3" r=".8">
+        <stop offset="0" stop-color="#9dffc8"/><stop offset=".35" stop-color="#0aa04f"/><stop offset="1" stop-color="#003d1f"/>
+      </radialGradient>
+      <linearGradient id="cMarble" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#2b2b2b"/><stop offset=".45" stop-color="#0c0c0c"/><stop offset=".55" stop-color="#262626"/><stop offset="1" stop-color="#050505"/>
+      </linearGradient>
+      <linearGradient id="cGlint" x1="0" y1="0" x2="1" y2="0">
         <stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".5" stop-color="#fff" stop-opacity=".95"/><stop offset="1" stop-color="#fff" stop-opacity="0"/>
       </linearGradient>
-      <clipPath id="lgClip">
-        <path d="M48 24 H152 C152 92 132 128 100 136 C68 128 48 92 48 24 Z"/>
-        <path d="M92 134 H108 L112 168 H88 Z"/>
-        <ellipse cx="100" cy="170" rx="30" ry="7"/>
-        <rect x="54" y="220" width="92" height="9"/>
-        <rect x="76" y="190" width="48" height="20"/>
+      <clipPath id="cClip">
+        <path d="M74 66 H166 C166 140 146 176 120 184 C94 176 74 140 74 66 Z"/>
+        <path d="M84 62 L92 40 L106 54 L120 30 L134 54 L148 40 L156 62 Z"/>
+        <path d="M110 182 H130 L134 214 H106 Z"/>
+        <rect x="78" y="254" width="84" height="18" rx="3"/>
       </clipPath>
-      <linearGradient id="lgBase" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0" stop-color="#2a1a10"/><stop offset="1" stop-color="#0d0805"/>
-      </linearGradient>
     </defs>
-    <path d="M58 40 C18 40 14 92 62 104" fill="none" stroke="url(#lgGold)" stroke-width="11" stroke-linecap="round"/>
-    <path d="M142 40 C182 40 186 92 138 104" fill="none" stroke="url(#lgGold)" stroke-width="11" stroke-linecap="round"/>
-    <path d="M48 24 H152 C152 92 132 128 100 136 C68 128 48 92 48 24 Z" fill="url(#lgGold)"/>
-    <ellipse cx="100" cy="24" rx="52" ry="9" fill="url(#lgGoldV)"/>
-    <ellipse cx="100" cy="25" rx="44" ry="6" fill="#7a4d00" opacity=".55"/>
-    <path d="M92 134 H108 L112 168 H88 Z" fill="url(#lgGold)"/>
-    <ellipse cx="100" cy="170" rx="30" ry="7" fill="url(#lgGoldV)"/>
-    <path d="M62 178 H138 L146 222 H54 Z" fill="url(#lgBase)"/>
-    <rect x="54" y="220" width="92" height="9" rx="2" fill="url(#lgGold)"/>
-    <rect x="62" y="176" width="76" height="5" rx="2" fill="url(#lgGold)"/>
-    <rect x="76" y="190" width="48" height="20" rx="3" fill="url(#lgGold)"/>
-    <text x="100" y="205" text-anchor="middle" font-family="Arial Black, Arial, sans-serif" font-weight="900" font-size="14" fill="#3a2400">CR7</text>
-    <polygon points="100,52 108,72 130,72 112,85 119,106 100,93 81,106 88,85 70,72 92,72" fill="#fff8d6" stroke="#a86f00" stroke-width="2"/>
-    <path d="M64 34 C66 70 76 100 92 116" fill="none" stroke="#fffbe6" stroke-width="5" stroke-linecap="round" opacity=".6"/>
-    <g clip-path="url(#lgClip)"><rect class="lg-glint" x="0" y="0" width="46" height="240" fill="url(#lgGlint)"/></g>
+
+    <!-- 5 étoiles : 5 Ballons d'Or, 5 Ligues des champions -->
+    ${stars}
+
+    <!-- Lauriers -->
+    ${laurel(-1)}${laurel(1)}
+
+    <!-- Anses -->
+    <path d="M78 80 C36 78 38 140 92 150" fill="none" stroke="url(#cGold)" stroke-width="10" stroke-linecap="round"/>
+    <path d="M162 80 C204 78 202 140 148 150" fill="none" stroke="url(#cGold)" stroke-width="10" stroke-linecap="round"/>
+
+    <!-- Couronne -->
+    <path d="M84 62 L92 40 L106 54 L120 30 L134 54 L148 40 L156 62 Z" fill="url(#cGoldV)" stroke="#7a4d00" stroke-width="1.5"/>
+    <circle cx="92" cy="40" r="4" fill="url(#cEmerald)"/><circle cx="148" cy="40" r="4" fill="url(#cEmerald)"/>
+    <circle cx="120" cy="30" r="5" fill="url(#cRuby)"/>
+    <circle cx="120" cy="52" r="4" fill="url(#cRuby)"/>
+
+    <!-- Coupe -->
+    <path d="M74 66 H166 C166 140 146 176 120 184 C94 176 74 140 74 66 Z" fill="url(#cGold)" stroke="#6e4300" stroke-width="1.2"/>
+    <ellipse cx="120" cy="66" rx="46" ry="8" fill="url(#cGoldV)" stroke="#6e4300" stroke-width="1"/>
+    <path d="M84 74 C86 112 96 148 112 166" fill="none" stroke="#fffbe6" stroke-width="5" stroke-linecap="round" opacity=".55"/>
+    <!-- Le 7 en rubis -->
+    <text x="120" y="158" text-anchor="middle" font-family="Arial Black, Arial, sans-serif" font-weight="900" font-size="74" fill="url(#cRuby)" stroke="#ffe27a" stroke-width="2.5" paint-order="stroke">7</text>
+
+    <!-- Pied -->
+    <path d="M110 182 H130 L134 214 H106 Z" fill="url(#cGold)"/>
+    <ellipse cx="120" cy="216" rx="30" ry="6" fill="url(#cGoldV)"/>
+
+    <!-- Ruban aux couleurs du Portugal -->
+    <path d="M58 200 L70 194 L70 214 L58 220 L64 210 Z" fill="#00592e"/>
+    <path d="M182 200 L170 194 L170 214 L182 220 L176 210 Z" fill="#8b0010"/>
+    <path d="M70 194 H120 V214 H70 Z" fill="#0a7a3c"/>
+    <path d="M120 194 H170 V214 H120 Z" fill="#d0102b"/>
+    <rect x="70" y="194" width="100" height="20" fill="none" stroke="#ffd76a" stroke-width="1.6"/>
+    <text x="120" y="209" text-anchor="middle" font-family="Arial Black, Arial, sans-serif" font-weight="900" font-size="12" letter-spacing="2" fill="#fff" stroke="#3a2400" stroke-width=".6">SIUUU</text>
+
+    <!-- Socle en marbre noir -->
+    <path d="M70 222 H170 L182 286 H58 Z" fill="url(#cMarble)" stroke="url(#cGold)" stroke-width="2"/>
+    <rect x="54" y="284" width="132" height="10" rx="3" fill="url(#cGold)"/>
+    <rect x="66" y="220" width="108" height="6" rx="2" fill="url(#cGold)"/>
+    <rect x="78" y="254" width="84" height="18" rx="3" fill="url(#cGold)" stroke="#6e4300" stroke-width="1"/>
+    <text x="120" y="267" text-anchor="middle" font-family="Arial Black, Arial, sans-serif" font-weight="900" font-size="11" letter-spacing="1.5" fill="#3a2400">CR7 · GOAT</text>
+    <circle cx="80" cy="240" r="6" fill="url(#cEmerald)" stroke="#ffd76a" stroke-width="1.5"/>
+    <circle cx="160" cy="240" r="6" fill="url(#cRuby)" stroke="#ffd76a" stroke-width="1.5"/>
+    <text x="120" y="246" text-anchor="middle" font-family="Arial, sans-serif" font-weight="700" font-size="8" letter-spacing="3" fill="#ffd76a">ULTIME</text>
+
+    <!-- Reflet animé, découpé à la forme du trophée -->
+    <g clip-path="url(#cClip)"><rect class="lg-glint" x="0" y="0" width="52" height="300" fill="url(#cGlint)"/></g>
   </svg>`;
 
   let overlay = null;
   let sparkTimer = null;
+  let looping = false;
   const timers = [];
   const later = (fn, ms) => timers.push(setTimeout(fn, ms));
   const reduced = () => window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -52,6 +117,7 @@ const LegendReveal = (() => {
     if (!overlay) return;
     timers.splice(0).forEach(clearTimeout);
     clearInterval(sparkTimer);
+    sparkTimer = null;
     const o = overlay;
     overlay = null;
     o.classList.add("closing");
@@ -75,9 +141,55 @@ const LegendReveal = (() => {
     setTimeout(() => s.remove(), 2300);
   }
 
-  // unlocked : trophée gagné ; remaining : nombre de trophées Superfan manquants
-  function open({ unlocked, date, remaining }) {
+  // Une séquence complète : tremblement → ouverture → le trophée sort
+  function sequence(o, first) {
+    if (reduced()) {
+      o.classList.add("open", "risen", "show-text");
+      Sounds.play("legend");
+      return;
+    }
+    const t0 = first ? 600 : 0;
+    later(() => { o.classList.add("shake"); Sounds.play("rumble"); }, t0);
+    later(() => { o.classList.remove("shake"); o.classList.add("open"); Sounds.play("open"); }, t0 + 1200);
+    later(() => { o.classList.add("risen"); Sounds.play("legend"); }, t0 + 1450);
+    later(() => {
+      o.classList.add("show-text");
+      if (!sparkTimer) sparkTimer = setInterval(spark, 90);
+    }, t0 + 2100);
+    if (looping) later(() => rewind(o), t0 + 7600);
+  }
+
+  // Le trophée redescend, la malle se referme, puis tout recommence
+  function rewind(o) {
+    if (overlay !== o) return;
+    o.classList.remove("show-text", "risen");
+    clearInterval(sparkTimer);
+    sparkTimer = null;
+    later(() => o.classList.remove("open"), 900);
+    later(() => sequence(o, false), 1700);
+  }
+
+  function replay() {
+    const o = overlay;
+    if (!o || o.classList.contains("is-locked")) return;
+    timers.splice(0).forEach(clearTimeout);
+    rewind(o);
+  }
+
+  function setLoop(on) {
+    looping = on;
+    if (!overlay) return;
+    const b = overlay.querySelector(".lg-loop");
+    b.classList.toggle("on", on);
+    b.setAttribute("aria-pressed", on ? "true" : "false");
+    b.textContent = on ? "🔁 Boucle activée" : "🔁 Boucle";
+    if (on && overlay.classList.contains("show-text")) later(() => rewind(overlay), 3000);
+  }
+
+  // unlocked : trophée gagné ; remaining : nombre de trophées Superfan manquants ; loop : répéter l'animation
+  function open({ unlocked, date, remaining, loop = false }) {
     if (overlay) close();
+    looping = !!loop && !!unlocked;
     overlay = document.createElement("div");
     overlay.className = `legend-overlay${unlocked ? "" : " is-locked"}`;
     overlay.setAttribute("role", "dialog");
@@ -86,12 +198,13 @@ const LegendReveal = (() => {
     overlay.innerHTML = `
       <div class="lg-bg"></div>
       <div class="lg-rays"></div>
+      <div class="lg-rays lg-rays2"></div>
       <div class="lg-flash"></div>
       <div class="lg-sparkles"></div>
       <div class="lg-stage">
         <div class="lg-halo"></div>
         <div class="lg-rise"><div class="lg-trophy">${TROPHY_SVG}</div></div>
-        <div class="trunk">
+        <div class="trunk drop">
           <div class="trunk-glow"></div>
           <div class="trunk-lid">
             <div class="lid-front"><span class="strap s1"></span><span class="strap s2"></span><span class="lid-plate">CR7</span></div>
@@ -110,10 +223,16 @@ const LegendReveal = (() => {
         <h2 class="lg-title">Trophée CR7 Ultime</h2>
         <p class="lg-sub"></p>
       </div>
-      <button class="btn lg-close" type="button">Fermer</button>`;
+      <div class="lg-actions">
+        <button class="btn lg-btn lg-replay" type="button">↻ Revoir</button>
+        <button class="btn lg-btn lg-loop" type="button" aria-pressed="false">🔁 Boucle</button>
+        <button class="btn lg-btn lg-close" type="button">Fermer</button>
+      </div>`;
     document.body.appendChild(overlay);
     overlay.querySelector(".lg-close").onclick = close;
     overlay.querySelector(".lg-bg").onclick = close;
+    overlay.querySelector(".lg-replay").onclick = replay;
+    overlay.querySelector(".lg-loop").onclick = () => setLoop(!looping);
     document.addEventListener("keydown", onKey);
 
     const sub = overlay.querySelector(".lg-sub");
@@ -124,7 +243,10 @@ const LegendReveal = (() => {
         ? `La malle est verrouillée. Encore ${remaining} trophées Superfan à débloquer.`
         : "La malle est verrouillée. Plus qu'un trophée Superfan à débloquer !";
       overlay.querySelector(".lg-rarity").textContent = "🔒 VERROUILLÉ";
+      overlay.querySelector(".lg-replay").remove();
+      overlay.querySelector(".lg-loop").remove();
     }
+    if (unlocked) setLoop(looping);
 
     const o = overlay;
     requestAnimationFrame(() => o.classList.add("in"));
@@ -134,21 +256,11 @@ const LegendReveal = (() => {
       later(() => o.classList.add("show-text"), 900);
       return;
     }
-
-    if (reduced()) {
-      o.classList.add("shake-done", "open", "risen", "show-text");
-      Sounds.play("legend");
-      return;
-    }
-
-    later(() => { o.classList.add("shake"); Sounds.play("rumble"); }, 600);
-    later(() => { o.classList.remove("shake"); o.classList.add("open"); Sounds.play("open"); }, 1800);
-    later(() => { o.classList.add("risen"); Sounds.play("legend"); }, 2050);
-    later(() => {
-      o.classList.add("show-text");
-      sparkTimer = setInterval(spark, 90);
-    }, 2700);
+    sequence(o, true);
   }
 
-  return { open, close };
+  // Petite version du trophée pour la vitrine et la carte
+  const miniSvg = () => TROPHY_SVG.replace('class="lg-cup"', 'class="lg-cup mini"');
+
+  return { open, close, miniSvg };
 })();
