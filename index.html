@@ -23,10 +23,20 @@
       <header class="hero">
         <div class="ball">⚽</div>
         <h1>Le Foot Quizz <span>de la Fête</span></h1>
-        <p class="tagline"><b id="total-count">500</b> questions, de la naissance du foot en 1863 jusqu'en 2026.</p>
+        <p class="tagline" id="tagline"><b>644</b> questions, de la naissance du foot en 1863 jusqu'en 2026.</p>
       </header>
 
       <div class="card">
+        <h2>Quiz</h2>
+        <div class="mode-row" id="theme-chips" role="radiogroup" aria-label="Quiz">
+          <button class="mode active" data-theme="general" role="radio" aria-checked="true">
+            <span class="mode-ico">🌍</span><b>Quiz général</b><small id="count-general">644 questions</small>
+          </button>
+          <button class="mode superfan" data-theme="cr7" role="radio" aria-checked="false">
+            <span class="mode-ico">🐐</span><b>Superfan CR7</b><small id="count-cr7">questions</small>
+          </button>
+        </div>
+
         <h2>Mode de jeu</h2>
         <div class="mode-row" id="mode-chips" role="radiogroup" aria-label="Mode de jeu">
           <button class="mode active" data-mode="chrono" role="radio" aria-checked="true">
@@ -50,12 +60,12 @@
         <div class="chips diff-row" id="diff-chips"></div>
 
         <details class="dropdown" id="era-drop">
-          <summary><span class="dd-title">Époques</span><span class="dd-sum" id="era-summary">Toutes</span></summary>
+          <summary><span class="dd-title" id="era-title">Époques</span><span class="dd-sum" id="era-summary">Toutes</span></summary>
           <div class="chips" id="era-chips"></div>
         </details>
 
         <details class="dropdown" id="cat-drop">
-          <summary><span class="dd-title">Catégories</span><span class="dd-sum" id="cat-summary">Toutes</span></summary>
+          <summary><span class="dd-title" id="cat-title">Catégories</span><span class="dd-sum" id="cat-summary">Toutes</span></summary>
           <div class="chips" id="cat-chips"></div>
         </details>
 
@@ -120,6 +130,7 @@
   <script src="questions.js"></script>
   <script src="questions-plus.js"></script>
   <script src="questions-multi.js"></script>
+  <script src="questions-cr7.js"></script>
   <script src="sounds.js"></script>
   <script src="app.js"></script>
   <script>

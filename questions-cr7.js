@@ -1,0 +1,138 @@
+// MODE SUPERFAN : questions uniquement sur Cristiano Ronaldo.
+// Format : [thème, question, [bonne réponse, mauvaise 1, mauvaise 2, mauvaise 3], explication, difficulté, époque]
+// Difficulté : "f" facile, "m" moyen, "d" difficile.
+// Époque : "B" 1985-1999, "C" 2000-2019, "D" 2020-2026, "X" toute la carrière.
+const CR7_RAW = [
+  // ---------- ENFANCE & SPORTING ----------
+  ["Enfance & Sporting", "Quelle est la date de naissance de Cristiano Ronaldo ?", ["5 février 1985", "5 février 1987", "24 juin 1985", "20 décembre 1985"], "Messi, lui, est né le 24 juin 1987.", "m", "B"],
+  ["Enfance & Sporting", "Dans quelle ville est né Cristiano Ronaldo ?", ["Funchal", "Lisbonne", "Porto", "Faro"], "La capitale de l'île de Madère.", "f", "B"],
+  ["Enfance & Sporting", "Sur quelle île portugaise Cristiano Ronaldo a-t-il grandi ?", ["Madère", "Les Açores", "Porto Santo", "Le Cap-Vert"], "Une île de l'Atlantique, au large du Maroc.", "f", "B"],
+  ["Enfance & Sporting", "Quel est le nom complet de Cristiano Ronaldo ?", ["Cristiano Ronaldo dos Santos Aveiro", "Cristiano Ronaldo da Silva Pereira", "Cristiano Ronaldo Nazário de Lima", "Cristiano Ronaldo Gomes Ferreira"], "Dos Santos vient de sa mère, Aveiro de son père.", "m", "B"],
+  ["Enfance & Sporting", "En hommage à qui ses parents l'ont-ils appelé « Ronaldo » ?", ["Ronald Reagan, l'acteur et président américain", "Le footballeur brésilien Ronaldo", "Un oncle de la famille", "Un saint portugais"], "Son père était un grand admirateur de Ronald Reagan.", "d", "B"],
+  ["Enfance & Sporting", "Dans quel petit club de Madère Cristiano Ronaldo a-t-il commencé le football ?", ["Andorinha", "Marítimo", "Nacional", "União da Madeira"], "Son père y était équipementier. Il a ensuite joué au Nacional.", "d", "B"],
+  ["Enfance & Sporting", "Quel métier exerçait son père, José Dinis Aveiro, au club d'Andorinha ?", ["Équipementier (il s'occupait des maillots et du matériel)", "Entraîneur", "Président", "Arbitre"], "Il est décédé en 2005.", "d", "B"],
+  ["Enfance & Sporting", "À quel âge Cristiano Ronaldo a-t-il quitté Madère pour rejoindre le centre de formation du Sporting ?", ["12 ans", "8 ans", "15 ans", "17 ans"], "Seul, loin de sa famille, à Lisbonne.", "m", "B"],
+  ["Enfance & Sporting", "Quel problème de santé a été soigné par une opération quand il était adolescent ?", ["Un cœur qui battait trop vite (tachycardie)", "Une fracture du tibia", "Un problème de vue", "De l'asthme"], "Une opération au laser lui a permis de reprendre très vite.", "d", "B"],
+  ["Enfance & Sporting", "Quel numéro portait Cristiano Ronaldo au Sporting ?", ["28", "7", "17", "11"], "Il avait demandé le 28 à son arrivée à Manchester, mais on lui a donné le 7.", "d", "C"],
+  ["Enfance & Sporting", "Contre quel club a-t-il marqué ses deux premiers buts en championnat avec le Sporting, en 2002 ?", ["Moreirense", "Benfica", "FC Porto", "Boavista"], "Dont un but magnifique après un slalom depuis le milieu de terrain.", "d", "C"],
+  ["Enfance & Sporting", "Quel match amical a convaincu Manchester United de le recruter en août 2003 ?", ["Sporting – Manchester United, pour l'inauguration du nouveau stade du Sporting", "Portugal – Angleterre chez les moins de 17 ans", "Un match de Ligue des champions Sporting – United", "Un match de charité à Madère"], "Les joueurs de United auraient demandé à Ferguson de le signer dans le bus du retour.", "m", "C"],
+  ["Enfance & Sporting", "Quel est le surnom de Cristiano Ronaldo, formé de ses initiales et de son numéro ?", ["CR7", "CR9", "R7", "C7R"], "C'est aussi le nom de sa marque.", "f", "X"],
+  ["Enfance & Sporting", "Quel surnom lui donnent souvent les supporters espagnols ?", ["El Bicho", "El Toro", "El Niño", "El Comandante"], "« La bestiole » en espagnol, un surnom affectueux.", "d", "C"],
+
+  // ---------- MANCHESTER UNITED ----------
+  ["Manchester United", "Quel entraîneur l'a fait venir à Manchester United en 2003 ?", ["Sir Alex Ferguson", "Arsène Wenger", "José Mourinho", "Carlo Ancelotti"], "Ronaldo le considère comme son « père dans le football ».", "f", "C"],
+  ["Manchester United", "Quel numéro mythique Cristiano Ronaldo a-t-il reçu à Manchester United ?", ["7", "9", "10", "11"], "Porté avant lui par Best, Cantona et Beckham.", "f", "C"],
+  ["Manchester United", "Quelle légende portait le n°7 de Manchester United juste avant Ronaldo ?", ["David Beckham", "Éric Cantona", "George Best", "Ryan Giggs"], "Beckham venait de partir au Real Madrid.", "m", "C"],
+  ["Manchester United", "Dans quelle finale de coupe a-t-il ouvert le score en 2004, son premier trophée avec United ?", ["La FA Cup contre Millwall", "La League Cup contre Chelsea", "La Ligue des champions contre Porto", "Le Community Shield contre Arsenal"], "Victoire 3-0 au Millennium Stadium de Cardiff.", "d", "C"],
+  ["Manchester United", "Combien de titres de champion d'Angleterre a-t-il remportés lors de son premier passage à United ?", ["3", "2", "4", "1"], "En 2007, 2008 et 2009.", "m", "C"],
+  ["Manchester United", "Combien de buts a-t-il marqués en Premier League lors de la saison 2007-2008 ?", ["31", "25", "28", "36"], "Il remporte aussi son premier Soulier d'or européen.", "d", "C"],
+  ["Manchester United", "Contre quel club a-t-il marqué de la tête en finale de la Ligue des champions 2008 ?", ["Chelsea", "Barcelone", "Liverpool", "AC Milan"], "À Moscou. Il rate ensuite son tir au but, mais United gagne la séance.", "f", "C"],
+  ["Manchester United", "Que s'est-il passé pour Ronaldo lors de la séance de tirs au but de la finale 2008 ?", ["Il a manqué son tir, mais United a quand même gagné", "Il a marqué le tir décisif", "Il n'a pas tiré", "Il a marqué deux fois"], "John Terry glisse ensuite et rate le tir qui aurait donné la victoire à Chelsea.", "m", "C"],
+  ["Manchester United", "Avec quel club a-t-il remporté son premier Ballon d'Or, en 2008 ?", ["Manchester United", "Real Madrid", "Sporting", "Juventus"], "Il succède à Kaká, lauréat en 2007.", "f", "C"],
+  ["Manchester United", "Pour quel but a-t-il reçu le tout premier prix Puskás, en 2009 ?", ["Une frappe de 40 mètres contre Porto en Ligue des champions", "Un retourné contre Chelsea", "Un coup franc contre Arsenal", "Un slalom contre Tottenham"], "En quart de finale retour, au stade du Dragão.", "d", "C"],
+  ["Manchester United", "Contre quel club a-t-il marqué un coup franc de près de 40 mètres en demi-finale de la Ligue des champions 2009 ?", ["Arsenal", "Chelsea", "Barcelone", "Inter Milan"], "À l'Emirates Stadium. Il marque deux fois ce soir-là.", "d", "C"],
+  ["Manchester United", "Combien de fois a-t-il été élu meilleur joueur de Premier League par les joueurs (PFA) ?", ["2 (2007 et 2008)", "1 (2008)", "3 (2007, 2008, 2009)", "Jamais"], "Il reçoit aussi le titre de meilleur jeune joueur en 2007.", "d", "C"],
+  ["Manchester United", "En quelle année Cristiano Ronaldo est-il revenu à Manchester United ?", ["2021", "2019", "2022", "2020"], "Il quitte la Juventus en fin de mercato.", "f", "D"],
+  ["Manchester United", "Contre quel club a-t-il marqué un doublé pour son retour à Old Trafford en 2021 ?", ["Newcastle", "West Ham", "Everton", "Leeds United"], "Victoire 4-1.", "d", "D"],
+  ["Manchester United", "Après quel événement son second passage à United s'est-il terminé en novembre 2022 ?", ["Une interview télévisée où il critiquait le club", "Une blessure grave", "Une bagarre à l'entraînement", "Un transfert payé par le PSG"], "Le contrat est rompu d'un commun accord.", "m", "D"],
+  ["Manchester United", "Quelle coupe d'Europe a-t-il gagnée avec United, en plus de la Ligue des champions, fin 2008 ?", ["La Coupe du monde des clubs", "La Ligue Europa", "La Coupe des coupes", "La Supercoupe d'Europe"], "Au Japon, contre la LDU Quito.", "d", "C"],
+
+  // ---------- REAL MADRID ----------
+  ["Real Madrid", "En quelle année Cristiano Ronaldo a-t-il rejoint le Real Madrid ?", ["2009", "2008", "2010", "2007"], "Pour environ 94 millions d'euros, un record à l'époque.", "f", "C"],
+  ["Real Madrid", "Combien de spectateurs environ sont venus à sa présentation au Santiago Bernabéu en 2009 ?", ["Environ 80 000", "Environ 20 000", "Environ 40 000", "Environ 120 000"], "Un record pour la présentation d'un joueur.", "d", "C"],
+  ["Real Madrid", "Quel numéro portait-il lors de sa première saison au Real Madrid ?", ["9", "7", "11", "17"], "Le 7 appartenait encore à Raúl, parti en 2010.", "d", "C"],
+  ["Real Madrid", "Quel joueur portait le n°7 du Real Madrid avant que Ronaldo ne le récupère en 2010 ?", ["Raúl", "Luís Figo", "Zinédine Zidane", "Michael Owen"], "Le capitaine historique du Real.", "m", "C"],
+  ["Real Madrid", "Combien de buts a-t-il marqués avec le Real Madrid, un record dans l'histoire du club ?", ["450", "350", "500", "400"], "En 438 matchs, plus d'un but par match.", "m", "C"],
+  ["Real Madrid", "Combien de Ligues des champions a-t-il remportées avec le Real Madrid ?", ["4", "3", "5", "2"], "En 2014, 2016, 2017 et 2018.", "m", "C"],
+  ["Real Madrid", "Combien de fois a-t-il été champion d'Espagne avec le Real Madrid ?", ["2", "4", "3", "5"], "En 2012 et 2017. Le Barça de Messi dominait à cette époque.", "m", "C"],
+  ["Real Madrid", "Contre quel adversaire a-t-il marqué de la tête le but de la victoire en finale de la Coupe du Roi 2011 ?", ["FC Barcelone", "Atlético Madrid", "Valence", "Séville"], "En prolongation, au stade de Mestalla.", "m", "C"],
+  ["Real Madrid", "Combien de buts a-t-il marqués en Liga lors de la saison 2014-2015, son record personnel ?", ["48", "40", "46", "50"], "61 buts toutes compétitions confondues.", "d", "C"],
+  ["Real Madrid", "Combien de buts a-t-il marqués lors de la Ligue des champions 2013-2014, un record sur une seule saison ?", ["17", "14", "12", "20"], "Il conclut par un penalty en finale.", "d", "C"],
+  ["Real Madrid", "Comment surnomme-t-on la 10e Ligue des champions du Real, gagnée en 2014 avec Ronaldo ?", ["La Décima", "La Diez", "La Grande", "La Remontada"], "Le Real l'attendait depuis 2002.", "m", "C"],
+  ["Real Madrid", "Contre quel club le Real a-t-il gagné les finales de Ligue des champions 2014 et 2016 ?", ["Atlético Madrid", "Juventus", "Liverpool", "Borussia Dortmund"], "Deux derbys madrilènes en finale.", "f", "C"],
+  ["Real Madrid", "Comment Ronaldo a-t-il offert la Ligue des champions 2016 au Real ?", ["En marquant le dernier tir au but", "D'un but de la tête en prolongation", "Sur coup franc direct", "D'un doublé"], "À Milan, contre l'Atlético.", "m", "C"],
+  ["Real Madrid", "Combien de buts a-t-il marqués en finale de la Ligue des champions 2017 contre la Juventus ?", ["2", "1", "3", "0"], "Victoire 4-1 à Cardiff.", "m", "C"],
+  ["Real Madrid", "Contre quel club a-t-il marqué un retourné acrobatique applaudi par les supporters adverses en 2018 ?", ["Juventus", "Bayern Munich", "Paris Saint-Germain", "Atlético Madrid"], "En quart de finale aller de la Ligue des champions, à Turin.", "f", "C"],
+  ["Real Madrid", "Combien de fois a-t-il été Pichichi (meilleur buteur de la Liga) ?", ["3", "1", "5", "4"], "En 2011, 2014 et 2015.", "d", "C"],
+  ["Real Madrid", "Combien de points a pris le Real Madrid lors de son titre de champion 2012, un record à l'époque ?", ["100", "95", "98", "102"], "Avec 121 buts marqués.", "d", "C"],
+  ["Real Madrid", "Contre quel club a-t-il marqué son premier but officiel avec le Real Madrid, sur penalty, en 2009 ?", ["Deportivo La Corogne", "Barcelone", "Getafe", "Villarreal"], "Lors de la 1re journée de Liga.", "d", "C"],
+  ["Real Madrid", "Qui était l'entraîneur du Real Madrid lors des trois Ligues des champions consécutives de Ronaldo (2016-2018) ?", ["Zinédine Zidane", "Carlo Ancelotti", "José Mourinho", "Rafael Benítez"], "Un ancien coéquipier de légende du Real.", "f", "C"],
+
+  // ---------- JUVENTUS ----------
+  ["Juventus", "En quelle année Cristiano Ronaldo a-t-il rejoint la Juventus ?", ["2018", "2017", "2019", "2016"], "Pour environ 100 millions d'euros.", "f", "C"],
+  ["Juventus", "Combien de titres de champion d'Italie a-t-il remportés avec la Juventus ?", ["2", "3", "1", "0"], "En 2019 et 2020.", "m", "C"],
+  ["Juventus", "Quel record a-t-il établi en étant meilleur buteur de Serie A en 2020-2021 ?", ["Premier joueur meilleur buteur en Angleterre, en Espagne et en Italie", "Plus de 50 buts en Serie A", "Meilleur buteur de l'histoire de la Juventus", "Premier joueur portugais champion d'Italie"], "Il marque 29 buts cette saison-là.", "d", "D"],
+  ["Juventus", "Contre quel club a-t-il réussi un triplé pour qualifier la Juventus en Ligue des champions en 2019, après une défaite 2-0 à l'aller ?", ["Atlético Madrid", "Ajax", "Manchester United", "Lyon"], "Victoire 3-0 au retour à Turin.", "m", "C"],
+  ["Juventus", "Quel club a éliminé la Juventus de Ronaldo en Ligue des champions 2020, à cause de la règle des buts à l'extérieur ?", ["Olympique lyonnais", "Porto", "Ajax", "Barcelone"], "Ronaldo marque deux fois au retour, mais ça ne suffit pas.", "d", "D"],
+  ["Juventus", "Quelle coupe nationale a-t-il remportée avec la Juventus en 2021 ?", ["La Coupe d'Italie", "La Coupe de la Ligue", "La FA Cup", "La Coupe du Roi"], "Contre l'Atalanta.", "m", "D"],
+
+  // ---------- AL-NASSR ----------
+  ["Al-Nassr", "Dans quel pays se trouve le club d'Al-Nassr ?", ["Arabie saoudite", "Qatar", "Émirats arabes unis", "Koweït"], "Le club est basé à Riyad, la capitale.", "f", "D"],
+  ["Al-Nassr", "À quelle date Cristiano Ronaldo a-t-il signé à Al-Nassr ?", ["Fin décembre 2022", "Juillet 2022", "Août 2023", "Janvier 2024"], "Juste après la Coupe du monde au Qatar.", "m", "D"],
+  ["Al-Nassr", "Combien de buts a-t-il marqués en championnat saoudien en 2023-2024, un record pour ce championnat ?", ["35", "28", "30", "40"], "Il bat le record de l'ancien Marocain Abderrazak Hamdallah.", "d", "D"],
+  ["Al-Nassr", "Quel a été son premier trophée avec Al-Nassr, en 2023 ?", ["La Coupe arabe des clubs champions", "Le championnat saoudien", "La Ligue des champions asiatique", "La Coupe du Roi saoudien"], "Il marque un doublé en finale contre Al-Hilal.", "d", "D"],
+  ["Al-Nassr", "Quel numéro porte-t-il à Al-Nassr ?", ["7", "9", "10", "77"], "Fidèle à son numéro fétiche.", "f", "D"],
+  ["Al-Nassr", "Jusqu'à quand a-t-il prolongé son contrat avec Al-Nassr en juin 2025 ?", ["2027", "2026", "2028", "2030"], "Une prolongation de deux ans.", "m", "D"],
+
+  // ---------- PORTUGAL ----------
+  ["Portugal", "En quelle année Cristiano Ronaldo a-t-il joué son premier match avec le Portugal ?", ["2003", "2001", "2004", "2005"], "Contre le Kazakhstan, à 18 ans.", "m", "C"],
+  ["Portugal", "Quel numéro portait-il lors de l'Euro 2004, sa première grande compétition ?", ["17", "7", "11", "23"], "Le 7 appartenait encore à Luís Figo.", "d", "C"],
+  ["Portugal", "Contre quel pays a-t-il marqué son premier but en sélection, lors de l'Euro 2004 ?", ["Grèce", "Espagne", "Russie", "Pays-Bas"], "Lors du match d'ouverture, perdu 2-1.", "d", "C"],
+  ["Portugal", "Quelle équipe a battu le Portugal de Ronaldo en finale de l'Euro 2004 à Lisbonne ?", ["Grèce", "France", "Espagne", "Pays-Bas"], "Le jeune Ronaldo avait fondu en larmes.", "f", "C"],
+  ["Portugal", "Quel grand titre a-t-il remporté avec le Portugal en 2016 ?", ["L'Euro", "La Coupe du monde", "La Ligue des nations", "La Coupe des confédérations"], "Le premier titre majeur de l'histoire du Portugal.", "f", "C"],
+  ["Portugal", "Que lui est-il arrivé en finale de l'Euro 2016 contre la France ?", ["Il s'est blessé au genou et est sorti en pleurs, puis a encouragé l'équipe depuis le bord du terrain", "Il a marqué le but de la victoire", "Il a été expulsé", "Il a raté un penalty"], "Le Portugal gagne quand même grâce à Éder.", "f", "C"],
+  ["Portugal", "Qui était le sélectionneur du Portugal champion d'Europe en 2016 ?", ["Fernando Santos", "Roberto Martínez", "Paulo Bento", "Carlos Queiroz"], "Il a aussi gagné la Ligue des nations 2019.", "m", "C"],
+  ["Portugal", "Quelle compétition le Portugal a-t-il gagnée en 2019, avec un triplé de Ronaldo en demi-finale ?", ["La Ligue des nations", "L'Euro", "La Coupe des confédérations", "La Coupe du monde"], "Le triplé est contre la Suisse, à Porto.", "m", "C"],
+  ["Portugal", "Contre quelle équipe a-t-il réussi un triplé (3-3) lors de la Coupe du monde 2018, avec un coup franc à la fin ?", ["Espagne", "Maroc", "Iran", "Uruguay"], "Un match de légende à Sotchi.", "m", "C"],
+  ["Portugal", "Quel titre individuel a-t-il obtenu lors de l'Euro 2020 ?", ["Meilleur buteur du tournoi", "Meilleur joueur du tournoi", "Meilleur jeune joueur", "Aucun"], "Avec 5 buts, à égalité avec Patrik Schick, mais avec une passe décisive en plus.", "m", "D"],
+  ["Portugal", "Contre quel pays a-t-il battu le record de buts en sélection d'Ali Daei, en 2021 ?", ["Irlande", "Luxembourg", "Hongrie", "Azerbaïdjan"], "Deux buts de la tête en fin de match.", "d", "D"],
+  ["Portugal", "Quel record a-t-il battu en marquant sur penalty contre le Ghana lors de la Coupe du monde 2022 ?", ["Premier joueur à marquer lors de cinq Coupes du monde", "Meilleur buteur de l'histoire de la Coupe du monde", "Plus vieux buteur de la Coupe du monde", "But le plus rapide de la compétition"], "2006, 2010, 2014, 2018 et 2022.", "m", "D"],
+  ["Portugal", "Quelle équipe a éliminé le Portugal en quarts de finale de la Coupe du monde 2022 ?", ["Maroc", "France", "Croatie", "Argentine"], "Ronaldo avait commencé le match sur le banc.", "f", "D"],
+  ["Portugal", "Contre quel pays a-t-il fêté sa 200e sélection en 2023, une première dans l'histoire ?", ["Islande", "Liechtenstein", "Luxembourg", "Slovaquie"], "Il marque le but de la victoire.", "d", "D"],
+  ["Portugal", "Lors de l'Euro 2024, contre quel pays a-t-il raté un penalty en prolongation avant de marquer lors de la séance de tirs au but ?", ["Slovénie", "Turquie", "Géorgie", "Tchéquie"], "Il avait fondu en larmes après son penalty manqué.", "m", "D"],
+  ["Portugal", "Quelle équipe a éliminé le Portugal en quarts de finale de l'Euro 2024 ?", ["France", "Espagne", "Allemagne", "Angleterre"], "Aux tirs au but.", "f", "D"],
+  ["Portugal", "Quel trophée a-t-il remporté avec le Portugal en juin 2025, en marquant en finale ?", ["La Ligue des nations", "L'Euro", "La Coupe du monde", "La Finalissima"], "Il égalise à 2-2 contre l'Espagne, avant la victoire aux tirs au but.", "m", "D"],
+  ["Portugal", "Combien d'Euros a-t-il disputés, un record ?", ["6", "5", "4", "7"], "De 2004 à 2024.", "m", "D"],
+  ["Portugal", "Lors de la Coupe du monde 2006, quel geste de Ronaldo envers le banc portugais a fait polémique après l'expulsion de Wayne Rooney ?", ["Un clin d'œil", "Un doigt sur la bouche", "Un pouce levé", "Des applaudissements"], "Il était alors coéquipier de Rooney à Manchester United.", "m", "C"],
+
+  // ---------- RECORDS & TROPHÉES ----------
+  ["Records & trophées", "Combien de Ballons d'Or Cristiano Ronaldo a-t-il remportés ?", ["5", "4", "6", "3"], "En 2008, 2013, 2014, 2016 et 2017.", "f", "X"],
+  ["Records & trophées", "Combien de Ligues des champions a-t-il remportées au total ?", ["5", "4", "6", "3"], "Une avec Manchester United, quatre avec le Real Madrid.", "f", "X"],
+  ["Records & trophées", "Combien de buts a-t-il marqués en Ligue des champions, un record ?", ["140", "120", "110", "155"], "Loin devant Lionel Messi.", "m", "X"],
+  ["Records & trophées", "Combien de Souliers d'or européens a-t-il remportés ?", ["4", "2", "3", "6"], "En 2008, 2011, 2014 et 2015. Messi en a six.", "d", "C"],
+  ["Records & trophées", "Combien de buts a-t-il marqués à l'Euro, un record ?", ["14", "9", "11", "17"], "Il a dépassé les 9 buts de Michel Platini en 2016.", "m", "X"],
+  ["Records & trophées", "Contre quel pays a-t-il marqué le 900e but de sa carrière, en septembre 2024 ?", ["Croatie", "Écosse", "Pologne", "Espagne"], "En Ligue des nations, avec le Portugal.", "d", "D"],
+  ["Records & trophées", "Dans combien de finales de Ligue des champions a-t-il marqué pendant le jeu ?", ["3 (2008, 2014 et 2017)", "2 (2014 et 2017)", "4", "5"], "En 2016, il a marqué lors de la séance de tirs au but.", "d", "C"],
+  ["Records & trophées", "Combien de Coupes du monde des clubs a-t-il remportées ?", ["4", "2", "3", "5"], "Une avec Manchester United (2008), trois avec le Real Madrid (2014, 2016, 2017).", "d", "C"],
+  ["Records & trophées", "Combien de clubs professionnels a-t-il connus dans sa carrière ?", ["5", "4", "6", "3"], "Sporting, Manchester United, Real Madrid, Juventus et Al-Nassr.", "m", "X"],
+  ["Records & trophées", "Dans quels pays a-t-il été champion avant de partir en Arabie saoudite ?", ["Angleterre, Espagne et Italie", "Portugal, Angleterre et Espagne", "Angleterre et Espagne seulement", "Portugal, Espagne et Italie"], "Il n'a jamais été champion du Portugal.", "m", "X"],
+  ["Records & trophées", "Quel est le record de Cristiano Ronaldo en sélection nationale ?", ["Il est le meilleur buteur et le joueur le plus capé de l'histoire", "Il est le plus jeune capitaine de l'histoire", "Il a gagné trois Coupes du monde", "Il a marqué dans toutes les phases finales depuis 1998"], "Plus de 200 sélections et de 130 buts.", "f", "X"],
+  ["Records & trophées", "Quel record a-t-il battu avec sa chaîne YouTube, lancée en août 2024 ?", ["Le plus rapide à atteindre 1 million d'abonnés", "La vidéo la plus longue", "Le plus de vidéos publiées en un jour", "Le plus grand live de football"], "En environ une heure et demie.", "m", "D"],
+  ["Records & trophées", "Sur quel réseau social Cristiano Ronaldo est-il la personne la plus suivie au monde ?", ["Instagram", "TikTok", "Snapchat", "LinkedIn"], "Avec plusieurs centaines de millions d'abonnés.", "f", "D"],
+
+  // ---------- VIE & LÉGENDE ----------
+  ["Vie & légende", "Comment s'appelle sa célébration de but la plus célèbre ?", ["Le « Siuuu »", "Le « Calma »", "Le « Bang »", "Le « Olé »"], "Un saut avec une demi-rotation, bras écartés, en criant « Sí ! ».", "f", "X"],
+  ["Vie & légende", "Quel aéroport porte son nom depuis 2017 ?", ["L'aéroport de Madère (Funchal)", "L'aéroport de Lisbonne", "L'aéroport de Porto", "L'aéroport de Riyad"], "La statue de son buste dévoilée ce jour-là a beaucoup fait parler.", "m", "C"],
+  ["Vie & légende", "Comment s'appelle le musée consacré à Cristiano Ronaldo à Funchal ?", ["Le Museu CR7", "Le Musée Ronaldo Gold", "La Casa Cristiano", "Le Funchal Football Museum"], "On y voit ses trophées et ses Ballons d'Or.", "m", "C"],
+  ["Vie & légende", "Comment s'appelle sa compagne, avec qui il a annoncé ses fiançailles en 2025 ?", ["Georgina Rodríguez", "Irina Shayk", "Nereida Gallardo", "Katia Aveiro"], "Katia Aveiro est sa sœur, chanteuse.", "m", "D"],
+  ["Vie & légende", "Comment s'appelle son fils aîné, né en 2010 ?", ["Cristiano Jr", "Mateo", "José", "Hugo"], "Il a lui aussi joué dans les équipes de jeunes des clubs de son père.", "f", "C"],
+  ["Vie & légende", "Quel agent l'accompagne depuis le début de sa carrière ?", ["Jorge Mendes", "Mino Raiola", "Pini Zahavi", "Jonathan Barnett"], "Le célèbre agent portugais.", "m", "X"],
+  ["Vie & légende", "Quelle est l'une des grandes raisons de sa longévité, souvent citées ?", ["Une hygiène de vie très stricte (sommeil, alimentation, entraînement)", "Il ne s'entraîne qu'une fois par semaine", "Il a changé de poste pour devenir défenseur", "Il ne joue que les matchs à domicile"], "Il joue encore au plus haut niveau après 40 ans.", "f", "X"],
+  ["Vie & légende", "Avec quel joueur a-t-il formé la plus grande rivalité du football moderne ?", ["Lionel Messi", "Neymar", "Zlatan Ibrahimović", "Kylian Mbappé"], "À eux deux, 13 Ballons d'Or.", "f", "X"],
+  ["Vie & légende", "Selon le magazine Forbes, quel classement a-t-il occupé en 2023, 2024 et 2025 ?", ["Sportif le mieux payé du monde", "Footballeur le plus généreux", "Sportif le plus suivi à la télévision", "Joueur le plus rapide"], "Grâce à son contrat saoudien et à ses sponsors.", "m", "D"],
+];
+
+// Questions à plusieurs bonnes réponses (mode Superfan)
+// Format : [thème, question, [bonnes réponses], [mauvaises réponses], explication, difficulté, époque]
+const CR7_MULTI_RAW = [
+  ["Records & trophées", "Dans quels clubs Cristiano Ronaldo a-t-il joué ?", ["Sporting", "Juventus", "Al-Nassr"], ["Benfica", "Paris Saint-Germain"], "Il n'a jamais joué ni à Benfica ni au PSG.", "f", "X"],
+  ["Records & trophées", "En quelles années a-t-il remporté le Ballon d'Or ?", ["2008", "2013", "2016"], ["2010", "2012"], "Les cinq : 2008, 2013, 2014, 2016, 2017. En 2010 et 2012, c'était Messi.", "d", "C"],
+  ["Records & trophées", "En quelles années a-t-il gagné la Ligue des champions ?", ["2008", "2014", "2018"], ["2009", "2011"], "En 2009, United perd la finale contre le Barça ; en 2011, Ronaldo est au Real, et c'est encore le Barça qui gagne.", "m", "C"],
+  ["Portugal", "Quels titres a-t-il gagnés avec le Portugal ?", ["L'Euro 2016", "La Ligue des nations 2019", "La Ligue des nations 2025"], ["La Coupe du monde 2006", "L'Euro 2004"], "En 2004, le Portugal perd la finale ; en 2006, il termine 4e.", "m", "X"],
+  ["Records & trophées", "Dans quels championnats a-t-il terminé meilleur buteur ?", ["Premier League", "Liga", "Serie A"], ["Bundesliga", "Ligue 1"], "Le premier joueur à réussir ce triplé.", "m", "X"],
+  ["Manchester United", "Quels joueurs étaient ses coéquipiers à Manchester United lors de son premier passage ?", ["Wayne Rooney", "Paul Scholes", "Ryan Giggs"], ["Thierry Henry", "Steven Gerrard"], "Henry jouait à Arsenal, Gerrard à Liverpool.", "f", "C"],
+  ["Real Madrid", "Quels joueurs formaient avec lui la « BBC » du Real Madrid ?", ["Gareth Bale", "Karim Benzema"], ["Gonzalo Higuaín", "Ángel Di María", "Luka Modrić"], "Bale, Benzema, Cristiano.", "f", "C"],
+  ["Real Madrid", "Quels entraîneurs a-t-il eus au Real Madrid ?", ["José Mourinho", "Carlo Ancelotti", "Zinédine Zidane"], ["Pep Guardiola", "Jürgen Klopp"], "Il a aussi eu Manuel Pellegrini et Rafael Benítez.", "m", "C"],
+  ["Vie & légende", "Quels numéros a-t-il portés dans sa carrière ?", ["7", "9", "17", "28"], ["10", "11"], "28 au Sporting, 9 au Real la 1re saison, 17 à l'Euro 2004, et le 7 partout ailleurs.", "d", "X"],
+  ["Portugal", "Lors de quelles Coupes du monde a-t-il marqué ?", ["2006", "2014", "2022"], ["2002", "1998"], "Il a marqué en 2006, 2010, 2014, 2018 et 2022. Il ne jouait pas encore en 1998 et 2002.", "m", "X"],
+];

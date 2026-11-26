@@ -27,6 +27,8 @@ sur l'écran d'accueil. Il s'ouvre alors en plein écran avec son icône, et fon
 
 ## Fonctionnalités
 
+- **Mode Superfan CR7** : 112 questions uniquement sur Cristiano Ronaldo, de Madère à aujourd'hui (fichier `questions-cr7.js`)
+
 - Choix du nombre de questions (10, 20, 50, 100 ou tout)
 - Priorité aux questions jamais vues : on ne retombe pas sur les mêmes d'une partie à l'autre
 - Questions à plusieurs bonnes réponses (à cocher, puis « Valider »)

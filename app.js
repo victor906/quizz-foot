@@ -10,7 +10,7 @@
     { id: "m", label: "Moyen", stars: "★★" },
     { id: "d", label: "Difficile", stars: "★★★" },
   ];
-  const ERAS = [
+  const ERAS_GENERAL = [
     { id: "O", label: "Les origines", range: "1863-1929" },
     { id: "A", label: "1930-1969", range: "" },
     { id: "B", label: "1970-1999", range: "" },
@@ -18,14 +18,19 @@
     { id: "D", label: "2020-2026", range: "" },
     { id: "X", label: "Toutes époques", range: "règles, records, culture" },
   ];
+  // Époques du mode Superfan (carrière de Cristiano Ronaldo)
+  const ERAS_CR7 = [
+    { id: "B", label: "Enfance", range: "avant 2002" },
+    { id: "C", label: "2002-2019", range: "" },
+    { id: "D", label: "2020-2026", range: "" },
+    { id: "X", label: "Toute la carrière", range: "" },
+  ];
+  let ERAS = ERAS_GENERAL;
   const diffOf = (id) => DIFFS.find((d) => d.id === id) || DIFFS[1];
-  const eraOf = (id) => ERAS.find((e) => e.id === id) || ERAS[5];
+  const eraOf = (id) => ERAS.find((e) => e.id === id) || ERAS[ERAS.length - 1];
 
-  // ---------- Construction de la banque de questions ----------
-  const QUESTIONS = [
-    ...QUESTIONS_RAW,
-    ...QUESTIONS_PLUS_RAW,
-  ].map(([cat, q, answers, explain, diff, era]) => ({
+  // ---------- Construction des banques de questions ----------
+  const build = (single, multi) => single.map(([cat, q, answers, explain, diff, era]) => ({
     key: q,
     cat,
     q,
@@ -36,7 +41,7 @@
     diff,
     era,
   })).concat(
-    QUESTIONS_MULTI_RAW.map(([cat, q, good, bad, explain, diff, era]) => ({
+    multi.map(([cat, q, good, bad, explain, diff, era]) => ({
       key: q,
       cat,
       q,
@@ -49,11 +54,25 @@
     }))
   );
 
+  // Deux quiz : le quiz général et le mode Superfan Cristiano Ronaldo
+  const BANKS = {
+    general: { questions: build([...QUESTIONS_RAW, ...QUESTIONS_PLUS_RAW], QUESTIONS_MULTI_RAW), eras: ERAS_GENERAL },
+    cr7: { questions: build(CR7_RAW, CR7_MULTI_RAW), eras: ERAS_CR7 },
+  };
+  Object.values(BANKS).forEach((b) => {
+    b.categories = [...new Set(b.questions.map((q) => q.cat))];
+    b.cats = new Set(b.categories);
+    b.eraSel = new Set(b.eras.map((e) => e.id));
+  });
+  let QUESTIONS = BANKS.general.questions;
+  let categories = BANKS.general.categories;
+
   const state = {
     count: "20",
-    cats: new Set(),
+    theme: "general",
+    cats: BANKS.general.cats,
     diffs: new Set(DIFFS.map((d) => d.id)),
-    eras: new Set(ERAS.map((e) => e.id)),
+    eras: BANKS.general.eraSel,
     timer: true,
     list: [],
     index: 0,
@@ -96,9 +115,34 @@
   }
 
   // ---------- Accueil ----------
-  const categories = [...new Set(QUESTIONS.map((q) => q.cat))];
-  categories.forEach((c) => state.cats.add(c));
-  $("total-count").textContent = QUESTIONS.length;
+  // Choix du quiz : général ou Superfan CR7 (mémorisé)
+  function useTheme(theme) {
+    const b = BANKS[theme] ? BANKS[theme] : BANKS.general;
+    state.theme = BANKS[theme] ? theme : "general";
+    QUESTIONS = b.questions;
+    ERAS = b.eras;
+    categories = b.categories;
+    state.cats = b.cats;
+    state.eras = b.eraSel;
+    document.body.classList.toggle("theme-cr7", state.theme === "cr7");
+    document.querySelectorAll("#theme-chips .mode").forEach((m) => {
+      const on = m.dataset.theme === state.theme;
+      m.classList.toggle("active", on);
+      m.setAttribute("aria-checked", on ? "true" : "false");
+    });
+    $("tagline").innerHTML = state.theme === "cr7"
+      ? `🐐 Mode Superfan : <b>${QUESTIONS.length}</b> questions sur Cristiano Ronaldo, de Madère à aujourd'hui.`
+      : `<b>${QUESTIONS.length}</b> questions, de la naissance du foot en 1863 jusqu'en 2026.`;
+    $("cat-title").textContent = state.theme === "cr7" ? "Thèmes" : "Catégories";
+    $("era-title").textContent = state.theme === "cr7" ? "Périodes" : "Époques";
+    storage.set("fqf-theme", state.theme);
+  }
+  $("count-general").textContent = `${BANKS.general.questions.length} questions`;
+  $("count-cr7").textContent = `${BANKS.cr7.questions.length} questions`;
+  document.querySelectorAll("#theme-chips .mode").forEach((m) => {
+    m.onclick = () => { useTheme(m.dataset.theme); renderFilters(); renderBest(); };
+  });
+  useTheme(storage.get("fqf-theme") || "general");
 
   function currentPool() {
     return QUESTIONS.filter((q) =>
@@ -220,8 +264,10 @@
   setMode(storage.get("fqf-mode") === "detente" ? "detente" : "chrono");
 
 
+  const bestKey = () => (state.theme === "cr7" ? "fqf-best-cr7" : "fqf-best");
+
   function renderBest() {
-    const best = storage.get("fqf-best");
+    const best = storage.get(bestKey());
     $("best-score").textContent = best ? `🏅 Ton meilleur score : ${best}` : "";
     updateSummaries();
     renderFresh();
@@ -428,10 +474,10 @@
       <div class="stat"><b>${state.bestStreak} 🔥</b><span>Meilleure série</span></div>
       <div class="stat"><b>${state.mistakes.length}</b><span>Erreurs</span></div>`;
 
-    const prev = storage.get("fqf-best-pct");
+    const prev = storage.get(bestKey() + "-pct");
     if (total >= 10 && (prev === null || pct > Number(prev))) {
-      storage.set("fqf-best-pct", String(pct));
-      storage.set("fqf-best", `${state.score}/${total} (${pct}%)`);
+      storage.set(bestKey() + "-pct", String(pct));
+      storage.set(bestKey(), `${state.score}/${total} (${pct}%)`);
     }
 
     const review = $("review");

@@ -323,3 +323,10 @@ body {
     padding-bottom: calc(40px + env(safe-area-inset-bottom, 0px));
   }
 }
+
+/* ---------- Mode Superfan CR7 ---------- */
+.mode.superfan { border-color: #e9c46a; background: #fffaf0; }
+.mode.superfan.active { background: linear-gradient(135deg, #b8860b, #e0b23a); border-color: #b8860b; color: #fff; }
+.mode.superfan.active small { color: rgba(255,255,255,.9); }
+body.theme-cr7 .hero h1 span { color: #ffd76a; }
+body.theme-cr7 .tagline { font-weight: 500; }
