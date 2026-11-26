@@ -57,6 +57,8 @@ const CLUBS_RAW = [
   ["Villarreal CF", "Villarreal", "🇪🇸", 39.944, -0.104, { b: KC.yellow, t: KC.blue }],
   ["Celta Vigo", "Vigo", "🇪🇸", 42.212, -8.740, { b: KC.sky, t: KC.white }],
   ["Rayo Vallecano", "Madrid", "🇪🇸", 40.392, -3.659, { b: KC.white, p: "sash", c: KC.red, t: KC.red }],
+  ["Espanyol", "Barcelone", "🇪🇸", 41.348, 2.075, { b: KC.white, p: "stripes", c: "#0055a5", t: "#0055a5", s: KC.white }],
+  ["Deportivo La Corogne", "La Corogne", "🇪🇸", 43.369, -8.417, { b: KC.white, p: "stripes", c: KC.blue, t: KC.white, s: KC.blue }],
   // Italie
   ["Juventus", "Turin", "🇮🇹", 45.110, 7.641, { b: KC.white, p: "stripes", c: KC.black, t: KC.black }],
   ["AC Milan", "Milan", "🇮🇹", 45.478, 9.124, { b: KC.red, p: "stripes", c: KC.black, t: KC.black }],
@@ -94,6 +96,9 @@ const CLUBS_RAW = [
   ["Aston Villa", "Birmingham", "🏴󠁧󠁢󠁥󠁮󠁧󠁿", 52.509, -1.885, { b: KC.claret, s: KC.sky, t: KC.sky }],
   ["Leeds United", "Leeds", "🏴󠁧󠁢󠁥󠁮󠁧󠁿", 53.778, -1.572, { b: KC.white, t: KC.yellow }],
   ["Nottingham Forest", "Nottingham", "🏴󠁧󠁢󠁥󠁮󠁧󠁿", 52.940, -1.133, { b: KC.red, t: KC.white, s: KC.red }],
+  ["Sunderland", "Sunderland", "🏴󠁧󠁢󠁥󠁮󠁧󠁿", 54.915, -1.388, { b: KC.white, p: "stripes", c: KC.red, t: KC.black, s: KC.red }],
+  ["Crystal Palace", "Londres", "🏴󠁧󠁢󠁥󠁮󠁧󠁿", 51.398, -0.086, { b: KC.red, p: "stripes", c: KC.blue, t: KC.blue }],
+  ["Brighton", "Brighton", "🏴󠁧󠁢󠁥󠁮󠁧󠁿", 50.862, -0.083, { b: KC.white, p: "stripes", c: "#0057b8", t: "#0057b8", s: "#0057b8" }],
   ["Celtic", "Glasgow", "🏴󠁧󠁢󠁳󠁣󠁴󠁿", 55.850, -4.206, { b: KC.white, p: "hoops", c: KC.green, t: KC.green }],
   ["Rangers", "Glasgow", "🏴󠁧󠁢󠁳󠁣󠁴󠁿", 55.853, -4.309, { b: KC.royal, t: KC.red }],
   // Pays-Bas, Belgique, Portugal
@@ -168,3 +173,32 @@ function kitSvg(kit, cls = "kit") {
 }
 // Deux maillots identiques ne doivent jamais être proposés dans la même question
 const kitSignature = (k) => [k.b, k.p || "plain", k.c || "", k.s && k.s !== k.b ? k.s : "", k.c2 || ""].join("|");
+
+// Couleurs regroupées par famille, pour savoir si deux maillots se ressemblent à l'œil
+function colorGroup(hex) {
+  const n = parseInt((hex || "#ffffff").slice(1), 16);
+  const r = (n >> 16) / 255, g = ((n >> 8) & 255) / 255, b = (n & 255) / 255;
+  const max = Math.max(r, g, b), min = Math.min(r, g, b), l = (max + min) / 2, d = max - min;
+  const sat = d === 0 ? 0 : d / (1 - Math.abs(2 * l - 1));
+  if (l > 0.86) return "blanc";
+  if (l < 0.17) return "noir";
+  if (sat < 0.15) return "gris";
+  let h = max === r ? ((g - b) / d) % 6 : max === g ? (b - r) / d + 2 : (r - g) / d + 4;
+  h = (h * 60 + 360) % 360;
+  if (h < 15 || h >= 335) return l < 0.36 ? "bordeaux" : "rouge";
+  if (h < 42) return "orange";
+  if (h < 70) return "jaune";
+  if (h < 170) return "vert";
+  if (h < 250) return l > 0.55 ? "ciel" : "bleu";
+  if (h < 300) return "violet";
+  return l < 0.4 ? "bordeaux" : "rose";
+}
+// « Allure » d'un maillot : motif + familles de couleurs visibles
+function kitLook(k) {
+  const p = k.p || "plain";
+  const parts = [p, colorGroup(k.b)];
+  if (p !== "plain") parts.push(colorGroup(k.c));
+  if (k.c2) parts.push(colorGroup(k.c2));
+  if (k.s && colorGroup(k.s) !== colorGroup(k.b)) parts.push("manches-" + colorGroup(k.s));
+  return parts.join("|");
+}

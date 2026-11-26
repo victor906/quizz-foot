@@ -1587,7 +1587,6 @@ body.turn-wait #screen-quiz { visibility: hidden; }
 .wallet-row { margin-bottom: 8px; }
 .wallet-row2 { display: flex; gap: 8px; margin-bottom: 16px; }
 .wallet-row2 .btn { flex: 1; padding: 10px; }
-.night-btn { background: #eef3f0; color: var(--ink); }
 .avatar-btn { display: flex; align-items: center; gap: 8px; background: none; border: 0; padding: 0; cursor: pointer; font: inherit; color: var(--ink); min-width: 0; }
 .avatar-btn .kit { width: 44px; height: 44px; display: block; filter: drop-shadow(0 3px 4px rgba(0,0,0,.25)); }
 .av-name { font-weight: 800; font-size: .95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 150px; text-align: left; }
@@ -1692,32 +1691,22 @@ body.turn-wait #screen-quiz { visibility: hidden; }
 .kit-item .si-ico .kit { width: 46px; height: 46px; }
 .kit-item.owned { border: 2px solid var(--good); }
 
-/* ---------- Mode nuit : match en nocturne ---------- */
-body.night { --card: #14201a; --ink: #e9f1ec; --muted: #9db3a6; --line: #2a3b32; --good-bg: #123d26; --bad-bg: #4a1f1c; background: #05140c; }
-body.night .pitch { background: radial-gradient(ellipse 60% 40% at 8% -5%, rgba(255,255,230,.35), transparent 60%), radial-gradient(ellipse 60% 40% at 92% -5%, rgba(255,255,230,.35), transparent 60%),
-  repeating-linear-gradient(0deg, #08301a 0 60px, #0a3a20 60px 120px); }
-body.night .pitch::before, body.night .pitch::after { opacity: .5; }
-body.night .chip, body.night .mode, body.night .answer, body.night .pp-input, body.night .av-fields input, body.night .av-pat, body.night .dropdown summary,
-body.night .trophy, body.night .tier-group, body.night .shop-item { background: #1b2a22; color: var(--ink); border-color: #2f4438; }
-body.night .chip.active, body.night .mode.active, body.night .av-pat.on { background: var(--grass-2); color: #fff; border-color: var(--grass-2); }
-body.night .mode.superfan { background: #2a2414; }
-body.night .play-info, body.night .clues li, body.night .league-box, body.night .league-end, body.night .pr-row, body.night .stat, body.night .turn-chip, body.night .geo-result.bad { background: #1b2a22; color: var(--ink); }
-body.night .pr-row.win, body.night .league-table tr.lead td { background: #3a3110; }
-body.night .feedback.good { color: #8ff0b4; }
-body.night .feedback.bad { color: #ffb4ab; }
-body.night .geo-result.good { color: #8ff0b4; }
-body.night .answer .letter, body.night .night-btn, body.night .pp-del { background: #26382e; color: var(--ink); }
-body.night .q-text { color: var(--ink) !important; }
-body.night .badge { background: #20352a; color: #9be3b6; }
-body.night .card { box-shadow: 0 18px 40px rgba(0,0,0,.6), 0 0 0 1px rgba(255,255,255,.04); }
-body.night .hero h1, body.night .tagline { text-shadow: 0 0 24px rgba(255,255,200,.25); }
-body.night .shop-toast, body.night .commentator { box-shadow: 0 0 30px rgba(255,210,63,.3); }
 .av-fields label { min-width: 0; }
 .av-fields input { width: 100%; box-sizing: border-box; }
-body.night .timer { background: conic-gradient(var(--grass-2) var(--p, 100%), #2a3b32 0); color: var(--ink); }
-body.night .timer.warn { background: conic-gradient(var(--bad) var(--p, 100%), #2a3b32 0); }
-body.night .timer::before { background: var(--card); }
-body.night .scoreboard { box-shadow: 0 0 30px rgba(255,255,220,.08); }
-body.night .jokers .joker { background: #2a2414; color: #ffe08a; }
-body.night .shop-balance, body.night .coins { box-shadow: 0 0 18px rgba(255,210,63,.35); }
 .pp-input { flex: 1 1 0; width: 0; }
+
+/* Trouve le prénom */
+.name-card { text-align: center; background: linear-gradient(135deg, #0f6b34, #138a43); color: #fff; border-radius: 14px; padding: 16px 12px; }
+.nc-hint { display: block; font-size: .85rem; opacity: .9; margin-bottom: 4px; }
+.nc-last { display: block; font-family: Oswald, Impact, sans-serif; font-size: 2.2rem; letter-spacing: .04em; line-height: 1.1; word-break: break-word; }
+.type-form { display: flex; gap: 8px; }
+.type-in { flex: 1 1 0; width: 0; font: inherit; font-size: 1.15rem; font-weight: 700; padding: 14px; border: 2px solid var(--line); border-radius: 14px; color: var(--ink); background: #fff; }
+.type-in:focus { outline: none; border-color: var(--grass-2); }
+.type-in.good { border-color: var(--good); background: var(--good-bg); }
+.type-in.bad { border-color: var(--bad); background: var(--bad-bg); }
+.type-skip { width: 100%; margin-top: 6px; }
+/* Plus ou moins : deux maillots face à face */
+.hilo-kits { display: flex; align-items: center; justify-content: center; gap: 14px; }
+.hilo-kits .kit { width: 84px; height: 84px; filter: drop-shadow(0 4px 6px rgba(0,0,0,.2)); }
+.hilo-kits span { font-family: Oswald, sans-serif; font-size: 1.4rem; color: var(--muted); }
+.answers.hilo-answers .answer { font-size: .98rem; text-align: center; }

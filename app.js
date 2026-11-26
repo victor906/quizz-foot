@@ -129,7 +129,7 @@
     zenGames: 0, cr7Games: 0, cr7Correct: 0, cr7Perfect: 0, cr7BestStreak: 0,
     perfect10: 0, perfect20: 0, marathon: 0, fullGames: 0,
     kitCorrect: 0, kitPerfect: 0, geoBest: 0, geoBullseye: 0,
-    geoCountryPerfect: 0, worldBest: 0, derbyCorrect: 0, whoamiFirst: 0, careerCorrect: 0, orderCorrect: 0, hiloBest: 0,
+    geoCountryPerfect: 0, worldBest: 0, derbyCorrect: 0, whoamiFirst: 0, careerCorrect: 0, orderCorrect: 0, namesCorrect: 0, hiloBest: 0,
     bossBeaten: 0, duelGames: 0, leagueSeasons: 0, avatarMade: 0, kitsBought: 0,
     suddenBest: 0, rushBest: 0, dailyBestStreak: 0, partyGames: 0, reviewFixed: 0, purchases: 0, jokersUsed: 0,
   };
@@ -430,15 +430,14 @@
   };
 
   // Battre La Fête : niveau et probabilité de bonne réponse
-  const bossLevel = () => Math.max(1, Number(storage.get("fqf-boss-level") || 1));
-  const bossProb = (lvl) => Math.min(0.93, 0.42 + lvl * 0.06);
+  const BOSS_PROB = 0.76;
   // Variantes du mode Cartes
   let geoVar = ["europe", "france", "pays", "monde"].includes(storage.get("fqf-geo")) ? storage.get("fqf-geo") : "europe";
   const GEO_INFO = {
-    europe: "🇪🇺 10 clubs à placer sur la carte d'Europe. Plus ton épingle est proche du stade, plus tu marques (1 000 pts max par club). Zoome avec ＋ et fais glisser la carte.",
+    europe: "🇪🇺 10 clubs à placer sur la carte d'Europe. Plus ton épingle est proche du stade, plus tu marques (1 000 pts max par club). Un doigt pour déplacer la carte, deux doigts pour zoomer.",
     france: "🇫🇷 Tour de France : 10 clubs de Ligue 1 et Ligue 2 à placer sur la carte de France. Plus tu es précis, plus tu marques.",
     pays: "🧭 Pays mystère : on te donne un club, touche son pays sur la carte. 1 000 pts par bonne réponse.",
-    monde: "🌍 Coupe du monde : pays organisateurs et origines des stars, sur la carte du monde. Zoome pour les petits pays !",
+    monde: "🌍 Coupe du monde : pays organisateurs et origines des stars, sur la carte du monde. Zoome à deux doigts pour les petits pays !",
   };
   document.querySelectorAll("#geo-vars .chip").forEach((c) => {
     c.onclick = () => { geoVar = c.dataset.geo; storage.set("fqf-geo", geoVar); updatePlayUI(); };
@@ -449,13 +448,13 @@
     sudden: "💀 Toutes les questions de ta sélection, jusqu'à la première erreur. Combien de bonnes réponses d'affilée ?",
     rush: "⏳ 60 secondes au total. Bonne réponse : <b>+2 s</b>. Erreur : <b>−3 s</b>. Pas de temps limite par question.",
     daily: "",
-    kits: "👕 Un maillot, quatre clubs… ou l'inverse ! Une centaine de clubs de toute l'Europe, dessinés aux couleurs de leur tenue domicile.",
+    kits: "👕 Un maillot, quatre clubs… ou l'inverse ! Une quarantaine de maillots bien reconnaissables, aux couleurs de leur tenue domicile. Le drapeau du pays t'aide un peu.",
     geo: "",
     derby: "⚔️ On te donne un club, trouve son grand rival ! La carte te montre ensuite le derby.",
     whoami: "🕵️ Des indices s'affichent un par un. Trouve le joueur le plus tôt possible : moins d'indices = plus de pièces (jusqu'à +5 🪙).",
     career: "🧳 Une suite de clubs, un seul joueur. Qui a eu ce parcours ?",
-    order: "📜 Touche les 4 événements du plus ancien au plus récent, puis valide.",
-    hilo: "↕️ Ce club a-t-il été fondé avant ou après le précédent ? Enchaîne le plus longtemps possible : une erreur et c'est fini.",
+    names: "✍️ On te donne le nom de famille d'un joueur (des années 80 à aujourd'hui), écris son prénom ! Pas de panique pour l'orthographe : accents et petites fautes sont acceptés.",
+    hilo: "↕️ Qui a le plus de titres, de Ballons d'Or, quel club est le plus ancien… Une nouvelle comparaison à chaque manche. Une erreur et c'est fini !",
     boss: "",
     duel: "🤺 Posez le téléphone à plat entre vous deux. Chacun a ses boutons de son côté : le premier qui trouve la bonne réponse marque le point. Une erreur et tu es bloqué pour la question !",
     party: "🎉 Passez-vous le téléphone ! Chacun répond à son tour, le meilleur score gagne. (Sans jokers ni pièces.)",
@@ -484,10 +483,9 @@
         ? `📅 Défi d'aujourd'hui déjà relevé : <b>${doneToday}/${DAILY_COUNT}</b>. Tu peux rejouer pour le plaisir (sans récompense). Reviens demain !`
         : `📅 Les mêmes 10 questions toute la journée (3 faciles, 4 moyennes, 3 difficiles). Récompense : <b>+30 🪙</b>.${daily.streak && daily.last === yesterdayStr() ? ` Série en cours : <b>${daily.streak} jour${daily.streak > 1 ? "s" : ""}</b> 🔥` : ""}`;
     }
-    const lvl = bossLevel();
-    $("boss-small").textContent = `Niveau ${lvl}`;
     if (p === "boss") {
-      info = `🥳 Affronte La Fête sur les mêmes questions. Niveau <b>${lvl}</b> : La Fête trouve environ <b>${Math.round(bossProb(lvl) * 100)} %</b> des réponses. Bats-la pour monter de niveau et gagner <b>+${10 * lvl} 🪙</b> !`;
+      const wins = Number(storage.get("fqf-boss-wins") || 0);
+      info = `🥳 Affronte La Fête sur les mêmes questions. Elle a <b>76 % de réussite</b>. Fais mieux qu'elle pour gagner <b>+30 🪙</b> !${wins ? ` Tu l'as déjà battue <b>${wins}</b> fois.` : ""}`;
     }
     if (p === "geo") {
       info = GEO_INFO[geoVar];
@@ -506,13 +504,13 @@
     document.querySelector(".league-toggle").classList.toggle("hidden", p === "duel");
     if (p === "party" || p === "duel") renderParty();
     if (p === "party") renderLeague();
-    const noFilters = ["daily", "review", "kits", "geo", "derby", "whoami", "career", "order", "hilo"].includes(p);
+    const noFilters = ["daily", "review", "kits", "geo", "derby", "whoami", "career", "names", "hilo"].includes(p);
     $("sec-theme").classList.toggle("hidden", noFilters);
     $("sec-filters").classList.toggle("hidden", noFilters);
     $("sec-timer").classList.toggle("hidden", ["rush", "geo", "duel"].includes(p));
     $("sec-count").classList.toggle("hidden", ["sudden", "rush", "daily", "geo", "hilo"].includes(p));
     $("count-title").textContent = p === "party" ? "Questions par joueur" : "Nombre de questions";
-    const small = p === "party" || p === "duel" || ["derby", "whoami", "career", "order"].includes(p);
+    const small = p === "party" || p === "duel" || ["derby", "whoami", "career", "names"].includes(p);
     document.querySelectorAll("#count-chips .chip").forEach((b) => {
       const big = ["50", "100", "all"].includes(b.dataset.count);
       b.classList.toggle("hidden", small && big);
@@ -524,7 +522,7 @@
       : p === "party" ? "Lancer la soirée !"
       : p === "review" ? "Réviser !"
       : p === "geo" ? "C'est parti !"
-      : p === "boss" ? `Défier La Fête (niv. ${lvl})`
+      : p === "boss" ? "Défier La Fête !"
       : p === "duel" ? "Lancer le duel !"
       : "Coup d'envoi !";
     $("fresh-info").classList.toggle("hidden", noFilters);
@@ -532,7 +530,7 @@
   }
   function updateStartState() {
     const p = state.play;
-    $("start-btn").disabled = p === "review" ? missed.size === 0 : ["daily", "kits", "geo", "derby", "whoami", "career", "order", "hilo"].includes(p) ? false : currentPool().length === 0;
+    $("start-btn").disabled = p === "review" ? missed.size === 0 : ["daily", "kits", "geo", "derby", "whoami", "career", "names", "hilo"].includes(p) ? false : currentPool().length === 0;
   }
 
 
@@ -577,16 +575,16 @@
   const baseQ = (extra) => ({ noTrack: true, multi: false, diff: "m", era: "X", ...extra, shuffled: shuffle(extra.answers) });
 
   function derbyQuestion(used) {
-    const d = pickUnused(DERBIES, used, (x) => x[2]);
+    const d = pickUnused(DERBIES, used, (x) => x[0] + x[1]);
     const flip = Math.random() < 0.5;
     const club = CLUB_BY_NAME.get(flip ? d[1] : d[0]);
     const rival = CLUB_BY_NAME.get(flip ? d[0] : d[1]);
     // Pas de faux choix qui serait aussi un rival du club
     const rivals = new Set(DERBIES.filter((x) => x.includes(club.name)).flatMap((x) => [x[0], x[1]]));
     const same = shuffle(CLUBS.filter((c) => c.flag === club.flag && !rivals.has(c.name)));
-    const others = shuffle(CLUBS.filter((c) => c.flag !== club.flag && !rivals.has(c.name)));
+    const others = shuffle(CLUBS.filter((c) => c.flag !== club.flag && DERBY_FLAGS.includes(c.flag) && !rivals.has(c.name)));
     const wrong = [...same, ...others].slice(0, 3).map((c) => c.name);
-    return baseQ({ key: `derby-${d[2]}`, cat: "⚔️ Derbys", q: `Quel est le grand rival de ${club.name} ?`, kit: club.kit,
+    return baseQ({ key: `derby-${d[0]}-${d[1]}`, cat: "⚔️ Derbys", q: `Quel est le grand rival de ${club.name} ?`, kit: club.kit,
       derby: { a: club, b: rival, name: d[2] }, correct: [rival.name], answers: [rival.name, ...wrong],
       explain: `${d[2]} : ${club.name} contre ${rival.name}.`, gameStat: "derbyCorrect" });
   }
@@ -600,56 +598,78 @@
     return baseQ({ key: `car-${name}`, cat: "🧳 Parcours", q: "Quel joueur a suivi ce parcours ?", career: clubs, correct: [name],
       answers: [name, ...otherNames(CAREERS.map((x) => x[0]), name)], explain: `Le parcours de ${name} : ${clubs.join(" → ")}.`, gameStat: "careerCorrect" });
   }
-  function orderQuestion(used) {
-    let items = [];
-    for (let tries = 0; tries < 60; tries++) {
-      items = shuffle(TIMELINE).slice(0, 4);
-      if (new Set(items.map((x) => x[1])).size === 4 && !items.some((x) => used.has(x[0]))) break;
-    }
-    items.forEach((x) => used.add(x[0]));
-    if (used.size > TIMELINE.length - 8) used.clear();
-    const sorted = items.slice().sort((a, b) => a[1] - b[1]);
-    return { key: `order-${sorted.map((x) => x[1]).join("-")}`, noTrack: true, multi: false, order: true, diff: "m", era: "X",
-      cat: "📜 Le bon ordre", q: "Du plus ancien au plus récent :", answers: items.map((x) => x[0]), shuffled: items.map((x) => x[0]),
-      correct: sorted.map((x) => x[0]), years: Object.fromEntries(items),
-      explain: sorted.map((x) => `${x[1]} : ${x[0]}`).join(" · "), gameStat: "orderCorrect" };
+  function namesQuestion(used) {
+    const [last, firsts, hint] = pickUnused(NAMES, used, (x) => x[0]);
+    return { key: `name-${last}`, noTrack: true, multi: false, typeIn: true, diff: "m", era: "X", cat: "✍️ Trouve le prénom",
+      q: `Quel est le prénom de ${last} ?`, last, hint, answers: firsts, shuffled: [], correct: [firsts[0]],
+      explain: `${firsts[0]} ${last}.`, gameStat: "namesCorrect" };
   }
-  function hiloList() {
-    // Une chaîne de clubs : chaque club est comparé au précédent
-    const seq = [];
-    let pool = shuffle(FOUNDED);
-    let guard = 0;
-    while (seq.length < 80 && guard++ < 1000) {
-      if (!pool.length) pool = shuffle(FOUNDED);
-      const next = pool.pop();
-      const prev = seq[seq.length - 1];
-      if (prev && (prev[1] === next[1] || prev[0] === next[0])) continue;
-      seq.push(next);
+  // Comparaison tolérante : accents, majuscules, tirets et petites fautes
+  const normName = (t) => (t || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .replace(/ø/g, "o").replace(/ß/g, "ss").replace(/[^a-z]/g, "");
+  function lev(a, b) {
+    const d = Array.from({ length: a.length + 1 }, (_, i) => [i]);
+    for (let j = 1; j <= b.length; j++) d[0][j] = j;
+    for (let i = 1; i <= a.length; i++) for (let j = 1; j <= b.length; j++)
+      d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+    return d[a.length][b.length];
+  }
+  function nameMatch(q, typed) {
+    let t = normName(typed);
+    const ln = normName(q.last);
+    if (t.endsWith(ln) && t.length > ln.length + 1) t = t.slice(0, -ln.length); // « Zinedine Zidane »
+    if (!t) return { ok: false };
+    for (const f of q.answers) {
+      const n = normName(f);
+      if (t === n) return { ok: true, exact: true };
+      const tol = n.length <= 3 ? 0 : n.length <= 5 ? 1 : n.length <= 9 ? 2 : 3;
+      if (lev(t, n) <= tol) return { ok: true, exact: false };
     }
+    return { ok: false };
+  }
+
+  function hiloList() {
+    // Chaque manche : une catégorie au hasard et deux éléments au hasard (valeurs différentes)
     const list = [];
-    for (let i = 1; i < seq.length; i++) {
-      const [a, ya] = seq[i - 1], [b, yb] = seq[i];
+    let lastSet = -1;
+    for (let i = 0; i < 80; i++) {
+      let si;
+      do { si = Math.floor(Math.random() * HILO_SETS.length); } while (si === lastSet && HILO_SETS.length > 1);
+      lastSet = si;
+      const set = HILO_SETS[si];
+      let a, b;
+      do { [a, b] = shuffle(set.items).slice(0, 2); } while (a[1] === b[1]);
+      const win = (set.low ? a[1] < b[1] : a[1] > b[1]) ? a : b;
+      const kitA = (CLUB_BY_NAME.get(a[0]) || {}).kit, kitB = (CLUB_BY_NAME.get(b[0]) || {}).kit;
       list.push({ key: `hilo-${i}`, noTrack: true, multi: false, diff: "m", era: "X", cat: "↕️ Plus ou moins",
-        q: `${b} a-t-il été fondé avant ou après ${a} (fondé en ${ya}) ?`, kit: (CLUB_BY_NAME.get(b) || {}).kit,
-        answers: ["Avant", "Après"], shuffled: ["Avant", "Après"], correct: [yb < ya ? "Avant" : "Après"],
-        explain: `${b} a été fondé en ${yb}.` });
+        q: set.q, hiloKits: kitA && kitB ? [kitA, kitB] : null,
+        answers: [a[0], b[0]], shuffled: [a[0], b[0]], correct: [win[0]],
+        explain: `${a[0]} : ${set.unit(a[1])} · ${b[0]} : ${set.unit(b[1])}.` });
     }
     return list;
   }
 
+
   // ---------- Mode Maillots ----------
+  // Seuls les maillots reconnaissables sont proposés : allure unique, ou club « référence » de son motif
+  const KIT_REFS = ["AC Milan", "Juventus", "Atlético de Madrid", "FC Porto", "Inter Milan", "Celtic", "Arsenal", "West Ham", "Stade Rennais", "FC Sochaux"];
+  const LOOK_COUNT = {};
+  CLUBS.forEach((c) => { const l = kitLook(c.kit); LOOK_COUNT[l] = (LOOK_COUNT[l] || 0) + 1; });
+  const KIT_POOL = CLUBS.filter((c) => LOOK_COUNT[kitLook(c.kit)] === 1 || KIT_REFS.includes(c.name));
   function kitQuestion(used) {
-    let pool = CLUBS.filter((c) => !used.has(c.id));
-    if (!pool.length) { used.clear(); pool = CLUBS; }
+    let pool = KIT_POOL.filter((c) => !used.has(c.id));
+    if (!pool.length) { used.clear(); pool = KIT_POOL; }
     const club = pick(pool);
     used.add(club.id);
-    const sig = new Set([kitSignature(club.kit)]);
+    // Faux choix : maillots d'une allure différente (et différents entre eux)
+    const looks = new Set([kitLook(club.kit)]);
+    const mains = new Set([colorGroup(club.kit.b) + (club.kit.p || "plain")]);
     const others = [];
     for (const c of shuffle(CLUBS)) {
       if (others.length === 3) break;
-      const sg = kitSignature(c.kit);
-      if (c.id === club.id || sig.has(sg)) continue;
-      sig.add(sg);
+      const lk = kitLook(c.kit), mn = colorGroup(c.kit.b) + (c.kit.p || "plain");
+      if (c.id === club.id || looks.has(lk) || mains.has(mn)) continue;
+      looks.add(lk); mains.add(mn);
       others.push(c);
     }
     const reverse = Math.random() < 0.5;
@@ -659,7 +679,7 @@
       noTrack: true,
       kitQ: true,
       cat: "👕 Maillots",
-      q: reverse ? `Quel est le maillot de ${club.name} ?` : "À quel club appartient ce maillot ?",
+      q: reverse ? `Quel est le maillot de ${club.name} ?` : `À quel club appartient ce maillot ? ${club.flag}`,
       kit: reverse ? null : club.kit,
       answerKits: reverse,
       multi: false,
@@ -683,15 +703,15 @@
     if (p === "duel") { startDuel(); return; }
     if (p === "daily") {
       state.list = dailyQuestions();
-    } else if (["derby", "whoami", "career", "order"].includes(p)) {
-      const gen = { derby: derbyQuestion, whoami: whoamiQuestion, career: careerQuestion, order: orderQuestion }[p];
+    } else if (["derby", "whoami", "career", "names"].includes(p)) {
+      const gen = { derby: derbyQuestion, whoami: whoamiQuestion, career: careerQuestion, names: namesQuestion }[p];
       const n = Math.min(Number(state.count) || 10, 20);
       const used = new Set();
       state.list = Array.from({ length: n }, () => gen(used));
     } else if (p === "hilo") {
       state.list = hiloList();
     } else if (p === "kits") {
-      const n = state.count === "all" ? CLUBS.length : Math.min(Number(state.count), CLUBS.length);
+      const n = state.count === "all" ? KIT_POOL.length : Math.min(Number(state.count), KIT_POOL.length);
       const used = new Set();
       state.list = Array.from({ length: n }, () => kitQuestion(used));
     } else if (p === "review") {
@@ -849,9 +869,15 @@
     if (q.kit) vHtml = kitSvg(q.kit, "kit kit-big" + (q.kitQ && !q.answerKits ? " blurry" : ""));
     if (q.career) vHtml = careerHtml(q.career);
     if (q.clues) { state.cluesShown = 1; vHtml = `<ol class="clues"></ol><button class="btn clue-btn" type="button"></button>`; }
+    if (q.hiloKits) vHtml = `<div class="hilo-kits">${kitSvg(q.hiloKits[0], "kit")}<span>VS</span>${kitSvg(q.hiloKits[1], "kit")}</div>`;
+    if (q.typeIn) vHtml = `<div class="name-card"><span class="nc-hint"></span><b class="nc-last"></b></div>`;
     $("q-visual").innerHTML = vHtml;
     $("q-visual").classList.toggle("hidden", !vHtml);
     if (q.clues) renderClues();
+    if (q.typeIn) {
+      document.querySelector(".nc-hint").textContent = q.hint;
+      document.querySelector(".nc-last").textContent = q.last.toUpperCase();
+    }
     $("q-era").classList.toggle("hidden", !!q.bonus || !!q.noTrack);
     $("q-diff").classList.toggle("hidden", !!q.bonus || !!q.noTrack);
     $("feedback").className = "feedback hidden";
@@ -879,8 +905,16 @@
       wrap.appendChild(b);
     });
 
+    if (q.typeIn) {
+      wrap.innerHTML = `<form class="type-form" autocomplete="off"><input class="type-in" type="text" autocomplete="off" autocapitalize="words" autocorrect="off" spellcheck="false" enterkeyhint="done" placeholder="Écris le prénom…" maxlength="30" /><button class="btn primary" type="submit">Valider</button></form>
+        <button class="btn ghost type-skip" type="button">Je ne sais pas 🤷</button>`;
+      const form = wrap.querySelector("form"), inp = wrap.querySelector("input");
+      form.onsubmit = (e) => { e.preventDefault(); if (inp.value.trim()) answer([inp.value.trim()]); };
+      wrap.querySelector(".type-skip").onclick = () => answer([""]);
+      setTimeout(() => inp.focus({ preventScroll: true }), 0);
+    }
     renderJokers();
-    if (state.play !== "rush") startTimer(q.multi || q.order || q.clues || q.career ? TIME_MULTI : TIME_SINGLE);
+    if (state.play !== "rush") startTimer(q.multi || q.order || q.clues || q.career || q.typeIn ? TIME_MULTI : TIME_SINGLE);
   }
 
   // Le bon ordre : on touche les événements un par un
@@ -975,7 +1009,7 @@
   function jokerUsable(id) {
     const q = state.list[state.index];
     if (state.answered || state.usedHere.has(id) || !(jokers[id] > 0)) return false;
-    if (id === "fifty") return q.answers.length - q.correct.length >= 2 && !document.querySelector(".answer.gone");
+    if (id === "fifty") return !q.typeIn && q.answers.length - q.correct.length >= 2 && !document.querySelector(".answer.gone");
     if (id === "time") return state.play === "rush" || state.timerOn;
     if (id === "skip") return !q.bonus && !!replacementFor();
     return false;
@@ -998,7 +1032,7 @@
   function replacementFor() {
     if (state.play === "kits") return [kitQuestion(new Set(state.list.map((x) => Number(x.key.split("-")[1]))))];
     if (state.play === "hilo") return null;
-    const gens = { derby: [derbyQuestion, DERBIES.length], whoami: [whoamiQuestion, WHOAMI.length], career: [careerQuestion, CAREERS.length], order: [orderQuestion, 99] };
+    const gens = { derby: [derbyQuestion], whoami: [whoamiQuestion], career: [careerQuestion], names: [namesQuestion] };
     if (gens[state.play]) {
       const inList = new Set(state.list.map((x) => x.key));
       for (let i = 0; i < 30; i++) { const nq = gens[state.play][0](new Set()); if (!inList.has(nq.key)) return [nq]; }
@@ -1082,10 +1116,16 @@
     const q = state.list[state.index];
     const picked = new Set(choice || []);
     const good = new Set(q.correct);
-    const ok = q.order
+    const nm = q.typeIn && choice ? nameMatch(q, choice[0]) : null;
+    const ok = q.typeIn ? !!(nm && nm.ok) : q.order
       ? !!choice && choice.length === q.correct.length && choice.every((a, i) => a === q.correct[i])
       : choice !== null && picked.size === good.size && [...picked].every((a) => good.has(a));
 
+    if (q.typeIn) {
+      const inp = document.querySelector(".type-in");
+      if (inp) { inp.disabled = true; inp.classList.add(ok ? "good" : "bad"); inp.blur(); }
+      document.querySelectorAll(".type-form button, .type-skip").forEach((b) => { b.disabled = true; });
+    }
     if (q.order) {
       document.querySelectorAll(".answer").forEach((b) => {
         b.disabled = true;
@@ -1166,7 +1206,7 @@
     // Battre La Fête : l'adversaire répond aussi
     let bossLine = "";
     if (state.play === "boss") {
-      const bOk = !q.bonus && Math.random() < bossProb(bossLevel());
+      const bOk = !q.bonus && Math.random() < BOSS_PROB;
       if (bOk) state.bossScore++;
       bossLine = q.bonus ? "🥳 La Fête a répondu… « La Fête », évidemment. ❌"
         : bOk ? `🥳 La Fête a trouvé : ✅` : `🥳 La Fête s'est trompée : ❌`;
@@ -1190,11 +1230,14 @@
     } else {
       title = pick(["❌ Raté !", "🟥 Carton rouge !", "😬 À côté du poteau !", "🚩 Hors-jeu !"]);
     }
-    const answerText = q.order ? "Voici le bon ordre."
+    const answerText = q.typeIn ? `C'était ${q.answers[0]} ${q.last}.`
+      : q.order ? "Voici le bon ordre."
       : q.multi ? `Les bonnes réponses : ${q.correct.join(", ")}.`
       : `La bonne réponse : ${q.correct[0]}.`;
     fb.innerHTML = `<strong></strong><span></span>`;
     fb.firstChild.textContent = ok ? title : `${title} ${answerText}`;
+    if (q.typeIn && ok && !nm.exact) fb.firstChild.textContent = `${title} (petite faute, on valide : ${q.answers[0]})`;
+    if (q.typeIn && choice && choice[0] === "") fb.firstChild.textContent = `🤷 Dommage ! ${answerText}`;
     fb.lastChild.textContent = q.explain;
     if (bossLine) { const bl = document.createElement("span"); bl.className = "boss-line"; bl.textContent = bossLine; fb.appendChild(bl); }
     if (state.blurBonus) { const bb = document.createElement("span"); bb.className = "boss-line"; bb.textContent = "🔍 Vu à travers le flou ! +2 🪙 bonus"; fb.appendChild(bb); }
@@ -1303,20 +1346,20 @@
       recordText = recordFor("fqf-best-hilo", n);
       stats.hiloBest = Math.max(stats.hiloBest, n);
     } else if (p === "boss") {
-      const lvl = bossLevel();
       const me = state.score, her = state.bossScore;
       scoreText = `${me} – ${her}`;
       if (me > her) {
+        const wins = Number(storage.get("fqf-boss-wins") || 0) + 1;
+        storage.set("fqf-boss-wins", String(wins));
         emoji = "🏆"; title = `Tu as battu La Fête !`;
-        msg = `Niveau ${lvl} terminé. Prochain niveau : ${lvl + 1}, La Fête sera plus forte !`;
-        storage.set("fqf-boss-level", String(lvl + 1));
-        stats.bossBeaten = Math.max(stats.bossBeaten, lvl);
-        addCoins(10 * lvl);
-        recordText = `🥳 Victoire : +${10 * lvl} 🪙`;
+        msg = `C'est ta ${wins === 1 ? "première" : `${wins}e`} victoire contre elle.`;
+        stats.bossBeaten++;
+        addCoins(30);
+        recordText = "🥳 Victoire : +30 🪙";
       } else if (me === her) {
-        emoji = "🤝"; title = "Match nul !"; msg = `La Fête t'a tenu tête au niveau ${lvl}. Rejoue pour la battre !`;
+        emoji = "🤝"; title = "Match nul !"; msg = "La Fête t'a tenu tête. Rejoue pour la battre !";
       } else {
-        emoji = "🥳"; title = "La Fête a gagné…"; msg = `Elle fait la fête, toi tu fais la tête. Revanche au niveau ${lvl} ?`;
+        emoji = "🥳"; title = "La Fête a gagné…"; msg = "Elle fait la fête, toi tu fais la tête. Revanche ?";
       }
     } else if (p === "kits") {
       title = pct === 100 ? "Œil de lynx !" : title;
@@ -1404,7 +1447,7 @@
     const coinStat = p === "party" ? "" : statBox(`+${state.coinsEarned} 🪙`, "Pièces gagnées");
     let statsHtml;
     if (p === "party") statsHtml = statBox(state.players.length, "Joueurs") + statBox(total / state.players.length, "Questions chacun");
-    else if (p === "boss") statsHtml = statBox(pct + "%", "Ta réussite") + statBox(`Niv. ${bossLevel()}`, "Prochain match") + coinStat;
+    else if (p === "boss") statsHtml = statBox(pct + "%", "Ta réussite") + statBox("76 %", "La Fête") + coinStat;
     else if (p === "sudden" || p === "rush" || p === "hilo") statsHtml = statBox(`${state.bestStreak} 🔥`, "Meilleure série") + statBox(pct + "%", "Réussite") + coinStat;
     else statsHtml = statBox(pct + "%", "Réussite") + statBox(`${state.bestStreak} 🔥`, "Meilleure série") + coinStat;
     $("end-stats").innerHTML = statsHtml;
@@ -2114,6 +2157,11 @@
       if (geo.guess && geo.guess.country && !it.accept.includes(geo.guess.country)) mark(geo.guess.country, "bad");
     } else if (geo.guess && geo.guess.country) mark(geo.guess.country, "sel");
   }
+  // Garde l'anneau de la bonne réponse à taille constante pendant le zoom
+  function drawMarksSize() {
+    const ring = document.querySelector("#geo-marks .geo-ring");
+    if (ring) ring.setAttribute("r", 15 * 3 * (geo.view.w / 1000));
+  }
   function drawMarks() {
     const g = $("geo-marks");
     g.innerHTML = "";
@@ -2186,7 +2234,7 @@
       $("geo-kit").innerHTML = '<span class="geo-globe">🌍</span>';
     }
     $("geo-club").classList.toggle("long", !it.kit);
-    $("geo-tip").textContent = countryMode() ? "Touche le bon pays 👆" : "Touche la carte pour placer ton épingle 📍";
+    $("geo-tip").textContent = countryMode() ? "Touche le bon pays 👆 · 2 doigts pour zoomer" : "Touche pour placer l'épingle 📍 · 2 doigts pour zoomer";
     $("geo-ok").disabled = true;
     $("geo-ok").classList.remove("hidden");
     $("geo-next").classList.add("hidden");
@@ -2309,37 +2357,75 @@
   // Toucher / glisser sur la carte
   (() => {
     const svg = $("geo-map");
-    let down = null;
+    // Gestes tactiles : 1 doigt = déplacer, 2 doigts = zoomer, toucher sans bouger = placer l'épingle
+    const pts = new Map();
+    let gesture = null;
+    const unitsPerPx = () => geo.view.w / svg.getBoundingClientRect().width;
+    function startGesture() {
+      const list = [...pts.values()];
+      if (list.length === 1) {
+        gesture = { type: "pan", x: list[0].x, y: list[0].y, vx: geo.view.x, vy: geo.view.y, moved: gesture ? gesture.moved : false };
+      } else if (list.length >= 2) {
+        const [a, b] = list;
+        const mid = { clientX: (a.x + b.x) / 2, clientY: (a.y + b.y) / 2 };
+        gesture = { type: "pinch", dist: Math.hypot(a.x - b.x, a.y - b.y) || 1, view: { ...geo.view }, anchor: toMap(mid), mid, moved: true };
+      }
+    }
     svg.addEventListener("pointerdown", (e) => {
-      down = { x: e.clientX, y: e.clientY, vx: geo.view.x, vy: geo.view.y, moved: false };
       svg.setPointerCapture(e.pointerId);
+      pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      startGesture();
     });
     svg.addEventListener("pointermove", (e) => {
-      if (!down) return;
-      const dx = e.clientX - down.x, dy = e.clientY - down.y;
-      if (!down.moved && Math.hypot(dx, dy) < 8) return;
-      down.moved = true;
-      const scale = geo.view.w / svg.getBoundingClientRect().width;
-      geo.view.x = down.vx - dx * scale;
-      geo.view.y = down.vy - dy * scale;
+      if (!pts.has(e.pointerId) || !gesture) return;
+      pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      const B = geo.bounds;
+      if (gesture.type === "pan") {
+        const p = pts.get(e.pointerId);
+        const dx = p.x - gesture.x, dy = p.y - gesture.y;
+        if (!gesture.moved && Math.hypot(dx, dy) < 8) return;
+        gesture.moved = true;
+        const k = unitsPerPx();
+        geo.view.x = gesture.vx - dx * k;
+        geo.view.y = gesture.vy - dy * k;
+      } else {
+        const [a, b] = [...pts.values()];
+        const f = Math.hypot(a.x - b.x, a.y - b.y) / gesture.dist;
+        const v0 = gesture.view;
+        const nw = Math.min(B.w, Math.max(B.w / 12, v0.w / f));
+        const nh = nw * B.h / B.w;
+        // Le point sous les doigts reste sous les doigts
+        const rect = svg.getBoundingClientRect();
+        const mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
+        const rx = (mx - rect.left) / rect.width, ry = (my - rect.top) / rect.height;
+        geo.view.w = nw; geo.view.h = nh;
+        geo.view.x = gesture.anchor.x - rx * nw;
+        geo.view.y = gesture.anchor.y - ry * nh;
+      }
       clampView();
       applyView();
+      drawMarksSize();
     });
-    svg.addEventListener("pointerup", (e) => {
-      const d = down;
-      down = null;
-      if (!d || d.moved || geo.done) return;
+    function endPointer(e, cancel) {
+      if (!pts.has(e.pointerId)) return;
+      pts.delete(e.pointerId);
+      const g = gesture;
+      if (pts.size) { gesture = { moved: true }; startGesture(); gesture.moved = true; return; }
+      gesture = null;
+      if (cancel || !g || g.moved || geo.done) return;
+      // Simple toucher : on place l'épingle
       const p = toMap(e);
-      // Pays touché (s'il y en a un sous le doigt)
-      svg.releasePointerCapture && svg.releasePointerCapture(e.pointerId);
       const hit = document.elementsFromPoint(e.clientX, e.clientY).find((el) => el.dataset && el.dataset.c);
       geo.guess = { x: p.x, y: p.y, country: hit ? hit.dataset.c : null };
       $("geo-ok").disabled = false;
       $("geo-tip").classList.add("hidden");
       Sounds.play("click");
       drawMarks();
-    });
-    svg.addEventListener("pointercancel", () => { down = null; });
+    }
+    svg.addEventListener("pointerup", (e) => endPointer(e, false));
+    svg.addEventListener("pointercancel", (e) => endPointer(e, true));
+    // Empêche le zoom de la page entière sur iPhone pendant le pincement
+    ["gesturestart", "gesturechange"].forEach((t) => svg.addEventListener(t, (e) => e.preventDefault()));
     svg.addEventListener("wheel", (e) => { e.preventDefault(); const p = toMap(e); zoom(e.deltaY < 0 ? 1.4 : 1 / 1.4, p.x, p.y); }, { passive: false });
     $("geo-zin").onclick = () => zoom(1.8, geo.guess && geo.guess.x, geo.guess && geo.guess.y);
     $("geo-zout").onclick = () => zoom(1 / 1.8);
@@ -2623,16 +2709,6 @@
     setTimeout(() => t.remove(), 2400);
   }
 
-  // ---------- Mode nuit ----------
-  function setNight(on) {
-    document.body.classList.toggle("night", on);
-    $("night-btn").textContent = on ? "☀️ Jour" : "🌙 Nuit";
-    storage.set("fqf-night", on ? "1" : "0");
-    const meta = document.querySelector('meta[name="theme-color"]');
-    if (meta) meta.setAttribute("content", on ? "#05140c" : "#0f6b34");
-  }
-  $("night-btn").onclick = () => setNight(!document.body.classList.contains("night"));
-  setNight(storage.get("fqf-night") === "1");
 
   // ---------- Boutique ----------
   const SHOP_PACK = { id: "pack", icon: "🎁", name: "Pack trio", desc: "Un exemplaire de chaque joker, à prix réduit.", price: 75 };
@@ -2745,6 +2821,7 @@
 
   document.addEventListener("keydown", (e) => {
     if (!$("screen-quiz").classList.contains("active")) return;
+    if (e.target && e.target.tagName === "INPUT") return;
     const q = state.list[state.index];
     const k = e.key.toUpperCase();
     let idx = LETTERS.indexOf(k);
@@ -2763,7 +2840,7 @@
 
   // ---------- Mise à jour automatique ----------
   // À l'ouverture, on compare la version de l'app avec celle publiée en ligne.
-  const APP_VERSION = "5.1";
+  const APP_VERSION = "6.0";
   function checkForUpdate() {
     if (!location.protocol.startsWith("http")) return;
     fetch(`version.json?t=${Date.now()}`, { cache: "no-store" })
@@ -2801,5 +2878,5 @@
   renderBest();
   renderWallet();
   renderAvatarHome();
-  setPlay(["classic", "sudden", "rush", "daily", "kits", "geo", "party", "review", "boss", "derby", "whoami", "career", "order", "hilo", "duel"].includes(storage.get("fqf-play")) ? storage.get("fqf-play") : "classic");
+  setPlay(["classic", "sudden", "rush", "daily", "kits", "geo", "party", "review", "boss", "derby", "whoami", "career", "names", "hilo", "duel"].includes(storage.get("fqf-play")) ? storage.get("fqf-play") : "classic");
 })();

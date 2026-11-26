@@ -6,7 +6,7 @@
   <title>La Fête Quiz</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" />
-  <link rel="stylesheet" href="style.css?v=5.1" />
+  <link rel="stylesheet" href="style.css?v=6.0" />
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="apple-touch-icon" href="icons/apple-touch-icon-v3.png" />
   <link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon-v3.png" />
@@ -64,7 +64,6 @@
         </div>
         <div class="wallet-row2">
           <button id="shop-btn" class="btn shop-btn" type="button">🛒 Boutique</button>
-          <button id="night-btn" class="btn night-btn" type="button">🌙 Nuit</button>
         </div>
 
         <div id="play-chips" role="radiogroup" aria-label="Type de partie">
@@ -74,7 +73,7 @@
             <button class="mode" data-play="sudden" role="radio" aria-checked="false"><span class="mode-ico">💀</span><b>Mort subite</b><small>Une erreur et c'est fini</small></button>
             <button class="mode" data-play="rush" role="radio" aria-checked="false"><span class="mode-ico">⏳</span><b>Contre-la-montre</b><small>60 s chrono</small></button>
             <button class="mode" data-play="daily" role="radio" aria-checked="false"><span class="mode-ico">📅</span><b>Défi du jour</b><small id="daily-small">10 questions</small></button>
-            <button class="mode" data-play="boss" role="radio" aria-checked="false"><span class="mode-ico">🥳</span><b>Battre La Fête</b><small id="boss-small">Niveau 1</small></button>
+            <button class="mode" data-play="boss" role="radio" aria-checked="false"><span class="mode-ico">🥳</span><b>Battre La Fête</b><small id="boss-small">76 % de réussite</small></button>
             <button class="mode" data-play="review" role="radio" aria-checked="false"><span class="mode-ico">📚</span><b>Révision</b><small id="review-small">Tes erreurs</small></button>
           </div>
           <h2>Jeux foot</h2>
@@ -84,8 +83,8 @@
             <button class="mode" data-play="derby" role="radio" aria-checked="false"><span class="mode-ico">⚔️</span><b>Derbys</b><small>Trouve le rival</small></button>
             <button class="mode" data-play="whoami" role="radio" aria-checked="false"><span class="mode-ico">🕵️</span><b>Qui suis-je ?</b><small>Indice par indice</small></button>
             <button class="mode" data-play="career" role="radio" aria-checked="false"><span class="mode-ico">🧳</span><b>Parcours</b><small>Devine le joueur</small></button>
-            <button class="mode" data-play="order" role="radio" aria-checked="false"><span class="mode-ico">📜</span><b>Le bon ordre</b><small>Remets dans l'ordre</small></button>
-            <button class="mode" data-play="hilo" role="radio" aria-checked="false"><span class="mode-ico">↕️</span><b>Plus ou moins</b><small>Plus ancien ?</small></button>
+            <button class="mode" data-play="names" role="radio" aria-checked="false"><span class="mode-ico">✍️</span><b>Trouve le prénom</b><small>Écris le prénom</small></button>
+            <button class="mode" data-play="hilo" role="radio" aria-checked="false"><span class="mode-ico">↕️</span><b>Plus ou moins</b><small>Lequel a le plus ?</small></button>
           </div>
           <h2>À plusieurs</h2>
           <div class="play-grid">
@@ -163,7 +162,7 @@
         <p class="best" id="best-score"></p>
         <button id="trophies-btn" class="btn trophies-btn">🏆 Mes trophées</button>
       </div>
-      <p class="app-version">Version 5.1 · essai gameplay</p>
+      <p class="app-version">Version 6.0</p>
     </section>
 
     <!-- ÉCRAN DE QUESTION -->
@@ -346,18 +345,18 @@
     </section>
   </main>
 
-  <script src="questions.js?v=5.1"></script>
-  <script src="questions-plus.js?v=5.1"></script>
-  <script src="questions-extra.js?v=5.1"></script>
-  <script src="questions-multi.js?v=5.1"></script>
-  <script src="questions-cr7.js?v=5.1"></script>
-  <script src="clubs.js?v=5.1"></script>
-  <script src="geo-map.js?v=5.1"></script>
-  <script src="games-data.js?v=5.1"></script>
-  <script src="trophies.js?v=5.1"></script>
-  <script src="sounds.js?v=5.1"></script>
-  <script src="legend.js?v=5.1"></script>
-  <script src="app.js?v=5.1"></script>
+  <script src="questions.js?v=6.0"></script>
+  <script src="questions-plus.js?v=6.0"></script>
+  <script src="questions-extra.js?v=6.0"></script>
+  <script src="questions-multi.js?v=6.0"></script>
+  <script src="questions-cr7.js?v=6.0"></script>
+  <script src="clubs.js?v=6.0"></script>
+  <script src="geo-map.js?v=6.0"></script>
+  <script src="games-data.js?v=6.0"></script>
+  <script src="trophies.js?v=6.0"></script>
+  <script src="sounds.js?v=6.0"></script>
+  <script src="legend.js?v=6.0"></script>
+  <script src="app.js?v=6.0"></script>
   <script>
     // Installation hors ligne (uniquement quand le site est servi en https)
     if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
