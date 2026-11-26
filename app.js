@@ -103,6 +103,10 @@
     timeMax: TIME_SINGLE,
     answered: false,
     selected: new Set(),
+    play: "classic",
+    inGame: false,
+    coinsEarned: 0,
+    players: [],
   };
 
   const storage = {
@@ -124,6 +128,7 @@
     correct: 0, games: 0, bestStreak: 0, hard: 0, multi: 0, origins: 0, fast: 0,
     zenGames: 0, cr7Games: 0, cr7Correct: 0, cr7Perfect: 0, cr7BestStreak: 0,
     perfect10: 0, perfect20: 0, marathon: 0, fullGames: 0,
+    suddenBest: 0, rushBest: 0, dailyBestStreak: 0, partyGames: 0, reviewFixed: 0, purchases: 0, jokersUsed: 0,
   };
   let stats = { ...STAT_DEFAULTS };
   try { stats = { ...STAT_DEFAULTS, ...JSON.parse(storage.get(STATS_KEY) || "{}") }; } catch { /* valeurs par défaut */ }
@@ -132,6 +137,35 @@
   let everSeen = new Set();
   try { everSeen = new Set(JSON.parse(storage.get(EVER_KEY) || "[]")); } catch { everSeen = new Set(); }
   const saveStats = () => storage.set(STATS_KEY, JSON.stringify(stats));
+
+  // ---------- Pièces, jokers, erreurs à réviser, défi du jour ----------
+  const readJSON = (key, def) => { try { return { ...def, ...JSON.parse(storage.get(key) || "{}") }; } catch { return { ...def }; } };
+  let coins = Number(storage.get("fqf-coins"));
+  if (storage.get("fqf-coins") === null || Number.isNaN(coins)) {
+    // Cadeau de bienvenue : 50 pièces + la récompense des trophées déjà gagnés
+    coins = 50 + TROPHIES.filter((t) => unlocked[t.id]).reduce((n, t) => n + (TROPHY_REWARD[t.tier] || 0), 0);
+    storage.set("fqf-coins", String(coins));
+  }
+  let jokers = readJSON("fqf-jokers", { fifty: 1, time: 1, skip: 1 });
+  const saveJokers = () => storage.set("fqf-jokers", JSON.stringify(jokers));
+  let missed = new Set();
+  try { missed = new Set(JSON.parse(storage.get("fqf-missed") || "[]")); } catch { missed = new Set(); }
+  const saveMissed = () => storage.set("fqf-missed", JSON.stringify([...missed]));
+  let daily = readJSON("fqf-daily", { last: "", streak: 0, best: 0, scores: {} });
+  const saveDaily = () => storage.set("fqf-daily", JSON.stringify(daily));
+  function addCoins(n) {
+    if (!n) return;
+    coins += n;
+    storage.set("fqf-coins", String(coins));
+    if (state && state.inGame) state.coinsEarned += n;
+    renderWallet();
+  }
+  function renderWallet() {
+    const h = document.getElementById("home-coins");
+    if (h) h.textContent = `🪙 ${coins}`;
+    const sc = document.getElementById("shop-coins");
+    if (sc) sc.textContent = `🪙 ${coins}`;
+  }
   const saveEver = () => storage.set(EVER_KEY, JSON.stringify([...everSeen]));
 
   const fullStats = () => ({
@@ -156,6 +190,7 @@
         if (!unlocked[t.id] && t.value(s, unlocked) >= trophyGoal(t)) {
           unlocked[t.id] = new Date().toISOString().slice(0, 10);
           fresh.push(t);
+          addCoins(TROPHY_REWARD[t.tier] || 0);
           changed = true;
         }
       });
@@ -297,7 +332,7 @@
     const pool = currentPool();
     const fresh = pool.filter((q) => !seen.has(q.key)).length;
     const info = $("fresh-info");
-    $("start-btn").disabled = pool.length === 0;
+    updateStartState();
     if (!pool.length) { info.textContent = "Aucune question ne correspond à ces filtres. Élargis ta sélection."; return; }
     info.innerHTML = fresh === pool.length
       ? `🆕 ${fresh} questions jamais vues dans cette sélection.`
@@ -329,6 +364,132 @@
   });
   setMode(storage.get("fqf-mode") === "detente" ? "detente" : "chrono");
 
+  // ---------- Type de partie ----------
+  const RUSH_TIME = 60;
+  const DAILY_COUNT = 10;
+  const ALL_BY_KEY = new Map();
+  [BANKS.general, BANKS.cr7].forEach((b) => b.questions.forEach((q) => ALL_BY_KEY.set(q.key, q)));
+  const todayStr = (d = new Date()) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  const yesterdayStr = () => { const d = new Date(); d.setDate(d.getDate() - 1); return todayStr(d); };
+
+  // Générateur pseudo-aléatoire « graine » : le défi du jour est le même toute la journée
+  function seeded(str) {
+    let h = 1779033703 ^ str.length;
+    for (let i = 0; i < str.length; i++) { h = Math.imul(h ^ str.charCodeAt(i), 3432918353); h = (h << 13) | (h >>> 19); }
+    return () => {
+      h = Math.imul(h ^ (h >>> 16), 2246822507); h = Math.imul(h ^ (h >>> 13), 3266489909);
+      return ((h ^= h >>> 16) >>> 0) / 4294967296;
+    };
+  }
+  const seededShuffle = (arr, rnd) => {
+    const a = arr.slice();
+    for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
+    return a;
+  };
+  function dailyQuestions() {
+    const rnd = seeded(`la-fete-quiz-${todayStr()}`);
+    const qs = BANKS.general.questions.filter((q) => !q.multi);
+    const take = (diff, n) => seededShuffle(qs.filter((q) => q.diff === diff), rnd).slice(0, n);
+    return [...take("f", 3), ...take("m", 4), ...take("d", 3)]
+      .map((q) => ({ ...q, shuffled: seededShuffle(q.answers, rnd) }));
+  }
+
+  // Joueurs du mode Soirée (prénoms mémorisés)
+  let partyNames = [];
+  try { partyNames = JSON.parse(storage.get("fqf-party") || "[]"); } catch { partyNames = []; }
+  if (!Array.isArray(partyNames) || partyNames.length < 2) partyNames = ["Joueur 1", "Joueur 2"];
+  const saveParty = () => storage.set("fqf-party", JSON.stringify(partyNames));
+  function renderParty() {
+    const wrap = $("party-players");
+    wrap.innerHTML = "";
+    partyNames.forEach((name, i) => {
+      const row = document.createElement("div");
+      row.className = "pp-row";
+      row.innerHTML = `<span class="pp-num">${i + 1}</span><input class="pp-input" maxlength="16" type="text" /><button class="pp-del" type="button" aria-label="Retirer">✕</button>`;
+      const inp = row.querySelector("input");
+      inp.value = name;
+      inp.placeholder = `Joueur ${i + 1}`;
+      inp.oninput = () => { partyNames[i] = inp.value; saveParty(); };
+      const del = row.querySelector(".pp-del");
+      del.disabled = partyNames.length <= 2;
+      del.onclick = () => { partyNames.splice(i, 1); saveParty(); renderParty(); };
+      wrap.appendChild(row);
+    });
+    $("party-add").disabled = partyNames.length >= 6;
+  }
+  $("party-add").onclick = () => {
+    if (partyNames.length >= 6) return;
+    partyNames.push(`Joueur ${partyNames.length + 1}`);
+    saveParty();
+    renderParty();
+    const inputs = document.querySelectorAll(".pp-input");
+    inputs[inputs.length - 1].select();
+  };
+
+  const PLAY_INFO = {
+    classic: "",
+    sudden: "💀 Toutes les questions de ta sélection, jusqu'à la première erreur. Combien de bonnes réponses d'affilée ?",
+    rush: "⏳ 60 secondes au total. Bonne réponse : <b>+2 s</b>. Erreur : <b>−3 s</b>. Pas de temps limite par question.",
+    daily: "",
+    party: "🎉 Passez-vous le téléphone ! Chacun répond à son tour, le meilleur score gagne. (Sans jokers ni pièces.)",
+    review: "",
+  };
+  function setPlay(play) {
+    state.play = play;
+    document.querySelectorAll("#play-chips .mode").forEach((m) => {
+      const on = m.dataset.play === play;
+      m.classList.toggle("active", on);
+      m.setAttribute("aria-checked", on ? "true" : "false");
+    });
+    storage.set("fqf-play", play);
+    updatePlayUI();
+  }
+  document.querySelectorAll("#play-chips .mode").forEach((m) => { m.onclick = () => setPlay(m.dataset.play); });
+
+  function updatePlayUI() {
+    const p = state.play;
+    const doneToday = daily.scores[todayStr()];
+    $("daily-small").textContent = doneToday !== undefined ? `✅ Fait : ${doneToday}/${DAILY_COUNT}` : (daily.streak && daily.last === yesterdayStr() ? `🔥 Série : ${daily.streak} j` : "10 questions par jour");
+    $("review-small").textContent = missed.size ? `${missed.size} erreur${missed.size > 1 ? "s" : ""} à revoir` : "Aucune erreur";
+    let info = PLAY_INFO[p];
+    if (p === "daily") {
+      info = doneToday !== undefined
+        ? `📅 Défi d'aujourd'hui déjà relevé : <b>${doneToday}/${DAILY_COUNT}</b>. Tu peux rejouer pour le plaisir (sans récompense). Reviens demain !`
+        : `📅 Les mêmes 10 questions toute la journée (3 faciles, 4 moyennes, 3 difficiles). Récompense : <b>+30 🪙</b>.${daily.streak && daily.last === yesterdayStr() ? ` Série en cours : <b>${daily.streak} jour${daily.streak > 1 ? "s" : ""}</b> 🔥` : ""}`;
+    }
+    if (p === "review") {
+      info = missed.size
+        ? `📚 Rejoue les <b>${missed.size}</b> question${missed.size > 1 ? "s" : ""} que tu as ratée${missed.size > 1 ? "s" : ""}. Une bonne réponse la retire de la liste.`
+        : "📚 Aucune erreur à revoir pour l'instant. Les questions ratées dans les autres modes arriveront ici.";
+    }
+    $("play-info").innerHTML = info;
+    $("play-info").classList.toggle("hidden", !info);
+    $("party-setup").classList.toggle("hidden", p !== "party");
+    if (p === "party") renderParty();
+    $("sec-theme").classList.toggle("hidden", p === "daily" || p === "review");
+    $("sec-filters").classList.toggle("hidden", p === "daily" || p === "review");
+    $("sec-timer").classList.toggle("hidden", p === "rush");
+    $("sec-count").classList.toggle("hidden", p === "sudden" || p === "rush" || p === "daily");
+    $("count-title").textContent = p === "party" ? "Questions par joueur" : "Nombre de questions";
+    document.querySelectorAll("#count-chips .chip").forEach((b) => {
+      const big = ["50", "100", "all"].includes(b.dataset.count);
+      b.classList.toggle("hidden", p === "party" && big);
+    });
+    if (p === "party" && ["50", "100", "all"].includes(state.count)) {
+      document.querySelector('#count-chips .chip[data-count="10"]').click();
+    }
+    $("start-btn").textContent = p === "daily" ? (doneToday !== undefined ? "Rejouer le défi" : "Relever le défi !")
+      : p === "party" ? "Lancer la soirée !"
+      : p === "review" ? "Réviser !"
+      : "Coup d'envoi !";
+    $("fresh-info").classList.toggle("hidden", p === "daily" || p === "review");
+    updateStartState();
+  }
+  function updateStartState() {
+    const p = state.play;
+    $("start-btn").disabled = p === "review" ? missed.size === 0 : p === "daily" ? false : currentPool().length === 0;
+  }
+
 
   const bestKey = () => (state.theme === "cr7" ? "fqf-best-cr7" : "fqf-best");
 
@@ -337,19 +498,15 @@
     $("best-score").textContent = best ? `🏅 Ton meilleur score : ${best}` : "";
     const got = TROPHIES.filter((t) => unlocked[t.id]).length;
     $("trophies-btn").innerHTML = `🏆 Mes trophées <span>${got} / ${TROPHIES.length}</span>`;
+    renderWallet();
+    if ($("play-info")) updatePlayUI();
     updateSummaries();
     renderFresh();
   }
 
   // ---------- Partie ----------
-  function start() {
-    Sounds.unlock();
-
-    const pool = currentPool();
-    if (!pool.length) return;
-    const n = state.count === "all" ? pool.length : Math.min(Number(state.count), pool.length);
-
-    // Priorité aux questions jamais vues
+  // Choisit n questions de la sélection, en priorité celles jamais vues
+  function pickFromPool(pool, n) {
     const fresh = shuffle(pool.filter((q) => !seen.has(q.key)));
     let chosen = fresh.slice(0, n);
     if (chosen.length < n) {
@@ -359,14 +516,38 @@
       const rest = shuffle(pool.filter((q) => !already.has(q.key)));
       chosen = chosen.concat(rest.slice(0, n - chosen.length));
     }
+    return chosen.map((q) => ({ ...q, shuffled: shuffle(q.answers) }));
+  }
 
-    state.list = chosen.map((q) => ({ ...q, shuffled: shuffle(q.answers) }));
+  function start() {
+    Sounds.unlock();
+    const p = state.play;
+    clearTimeout(state.autoNext);
+    clearInterval(state.rushTick);
 
-    // Question bonus : apparaît souvent (environ une partie sur deux), à une place au hasard.
-    // Jamais en mode Superfan CR7.
-    if (state.theme !== "cr7" && Math.random() < BONUS_CHANCE) {
-      const pos = Math.floor(Math.random() * (state.list.length + 1));
-      state.list.splice(pos, 0, { ...BONUS_QUESTION, shuffled: shuffle(BONUS_QUESTION.answers) });
+    if (p === "daily") {
+      state.list = dailyQuestions();
+    } else if (p === "review") {
+      const list = [...missed].map((k) => ALL_BY_KEY.get(k)).filter(Boolean);
+      if (!list.length) return;
+      const n = state.count === "all" ? list.length : Math.min(Number(state.count), list.length);
+      state.list = shuffle(list).slice(0, n).map((q) => ({ ...q, shuffled: shuffle(q.answers) }));
+    } else {
+      const pool = currentPool();
+      if (!pool.length) return;
+      let n;
+      if (p === "sudden" || p === "rush") n = pool.length;
+      else if (p === "party") {
+        state.players = partyNames.map((nm, i) => ({ name: (nm || "").trim() || `Joueur ${i + 1}`, score: 0, streak: 0, best: 0 }));
+        n = Math.min(Number(state.count) * state.players.length, pool.length);
+        n -= n % state.players.length; // même nombre de questions pour tout le monde
+      } else n = state.count === "all" ? pool.length : Math.min(Number(state.count), pool.length);
+      state.list = pickFromPool(pool, n);
+      // Question bonus : environ une partie sur deux, à une place au hasard (jamais en Superfan CR7)
+      if ((p === "classic") && state.theme !== "cr7" && Math.random() < BONUS_CHANCE) {
+        const pos = Math.floor(Math.random() * (state.list.length + 1));
+        state.list.splice(pos, 0, { ...BONUS_QUESTION, shuffled: shuffle(BONUS_QUESTION.answers) });
+      }
     }
     state.index = 0;
     state.score = 0;
@@ -374,17 +555,104 @@
     state.bestStreak = 0;
     state.mistakes = [];
     state.newTrophies = [];
-    state.isAll = state.count === "all";
+    state.isAll = p === "classic" && state.count === "all";
+    state.inGame = true;
+    state.coinsEarned = 0;
+    state.answeredCount = 0;
+    state.fixed = 0;
+    state.usedJokers = 0;
+    state.turnReady = false;
+    state.suddenOver = false;
+    state.timerOn = p !== "rush" && state.timer;
+    document.body.dataset.play = p;
     show("quiz");
     Sounds.play("start");
+    if (p === "rush") startRush();
     renderQuestion();
+  }
+
+  // ---------- Contre-la-montre : un seul chrono pour toute la partie ----------
+  function startRush() {
+    state.rushEnd = Date.now() + RUSH_TIME * 1000;
+    clearInterval(state.rushTick);
+    state.rushTick = setInterval(drawRush, 200);
+    drawRush();
+  }
+  function rushAdd(sec) {
+    state.rushEnd += sec * 1000;
+    const t = $("q-timer");
+    const pop = document.createElement("span");
+    pop.className = `time-pop ${sec > 0 ? "plus" : "minus"}`;
+    pop.textContent = `${sec > 0 ? "+" : "−"}${Math.abs(sec)} s`;
+    t.appendChild(pop);
+    setTimeout(() => pop.remove(), 900);
+    drawRush();
+  }
+  function drawRush() {
+    if (!state.inGame || state.play !== "rush") return;
+    const left = Math.max(0, (state.rushEnd - Date.now()) / 1000);
+    const t = $("q-timer");
+    const pops = [...t.querySelectorAll(".time-pop")];
+    t.classList.remove("off");
+    t.innerHTML = `<span class="timer-num">${Math.ceil(left)}</span>`;
+    pops.forEach((x) => t.appendChild(x));
+    t.style.setProperty("--p", `${Math.min(100, (left / RUSH_TIME) * 100)}%`);
+    t.classList.toggle("warn", left <= 10);
+    $("progress-bar").style.width = `${Math.min(100, (left / RUSH_TIME) * 100)}%`;
+    if (left <= 0) {
+      clearInterval(state.rushTick);
+      clearTimeout(state.autoNext);
+      Sounds.play("timeout");
+      finish();
+    }
+  }
+
+  // Mode Soirée : écran « Au tour de… » avant chaque question
+  function showTurn() {
+    const pl = state.players[state.index % state.players.length];
+    const ov = document.createElement("div");
+    ov.className = "turn-overlay";
+    ov.innerHTML = `<div class="turn-card"><div class="turn-kicker">Question ${state.index + 1} / ${state.list.length}</div>
+      <div class="turn-title">Au tour de</div><div class="turn-name"></div>
+      <div class="turn-scores"></div>
+      <button class="btn primary big" type="button">Je suis prêt !</button>
+      <button class="btn ghost turn-stop" type="button">Arrêter la soirée</button></div>`;
+    ov.querySelector(".turn-name").textContent = `${pl.name} 🎤`;
+    const sc = ov.querySelector(".turn-scores");
+    state.players.forEach((x) => {
+      const chip = document.createElement("span");
+      chip.className = "turn-chip" + (x === pl ? " me" : "");
+      chip.textContent = `${x.name} · ${x.score}`;
+      sc.appendChild(chip);
+    });
+    const stop = ov.querySelector(".turn-stop");
+    stop.onclick = () => {
+      if (!stop.classList.contains("armed")) { stop.classList.add("armed"); stop.textContent = "Sûr ? Appuie encore"; return; }
+      ov.remove();
+      document.body.classList.remove("turn-wait");
+      state.inGame = false;
+      renderBest();
+      show("home");
+    };
+    ov.querySelector(".btn.primary").onclick = () => {
+      ov.remove();
+      document.body.classList.remove("turn-wait");
+      state.turnReady = true;
+      renderQuestion();
+    };
+    document.body.appendChild(ov);
+    document.body.classList.add("turn-wait");
+    Sounds.play("click");
   }
 
   function renderQuestion() {
     const q = state.list[state.index];
     const total = state.list.length;
+    if (state.play === "party" && !state.turnReady) { showTurn(); return; }
+    state.turnReady = false;
     state.answered = false;
     state.selected = new Set();
+    state.usedHere = new Set();
 
     if (!q.bonus) {
       seen.add(q.key);
@@ -394,10 +662,8 @@
     }
     state.qStart = Date.now();
 
-    $("q-num").textContent = `${state.index + 1}/${total}`;
-    $("q-score").textContent = state.score;
-    $("q-streak").textContent = `${state.streak} 🔥`;
-    $("progress-bar").style.width = `${(state.index / total) * 100}%`;
+    renderScoreboard();
+    if (state.play !== "rush") $("progress-bar").style.width = state.play === "sudden" ? "0%" : `${(state.index / total) * 100}%`;
     $("q-cat").textContent = q.cat;
     const d = diffOf(q.diff);
     $("q-diff").textContent = `${d.stars} ${d.label}`;
@@ -430,7 +696,91 @@
       wrap.appendChild(b);
     });
 
-    startTimer(q.multi ? TIME_MULTI : TIME_SINGLE);
+    renderJokers();
+    if (state.play !== "rush") startTimer(q.multi ? TIME_MULTI : TIME_SINGLE);
+  }
+
+  // Tableau d'affichage selon le type de partie
+  function renderScoreboard() {
+    const labels = document.querySelectorAll(".scoreboard .sb-label");
+    const total = state.list.length;
+    if (state.play === "party") {
+      const pl = state.players[state.index % state.players.length];
+      labels[0].textContent = "Joueur"; labels[1].textContent = "Score"; labels[2].textContent = "Question";
+      $("q-num").textContent = pl.name;
+      $("q-score").textContent = pl.score;
+      $("q-streak").textContent = `${state.index + 1}/${total}`;
+      return;
+    }
+    labels[0].textContent = "Question"; labels[1].textContent = "Score"; labels[2].textContent = "Série";
+    $("q-num").textContent = state.play === "sudden" || state.play === "rush" ? `${state.index + 1}` : `${state.index + 1}/${total}`;
+    $("q-score").textContent = state.score;
+    $("q-streak").textContent = `${state.streak} 🔥`;
+  }
+
+  // ---------- Jokers ----------
+  const JOKERS = [
+    { id: "fifty", icon: "🌓", label: "50/50", name: "50/50", desc: "Enlève 2 mauvaises réponses.", price: 30 },
+    { id: "time", icon: "⏱️", label: "+10 s", name: "Temps bonus", desc: "Ajoute 10 secondes au chrono.", price: 20 },
+    { id: "skip", icon: "⏭️", label: "Passe", name: "Passe", desc: "Remplace la question par une autre.", price: 40 },
+  ];
+  function jokerUsable(id) {
+    const q = state.list[state.index];
+    if (state.answered || state.usedHere.has(id) || !(jokers[id] > 0)) return false;
+    if (id === "fifty") return q.answers.length - q.correct.length >= 2 && !document.querySelector(".answer.gone");
+    if (id === "time") return state.play === "rush" || state.timerOn;
+    if (id === "skip") return !q.bonus && !!replacementFor();
+    return false;
+  }
+  function renderJokers() {
+    const wrap = $("jokers");
+    wrap.classList.toggle("hidden", state.play === "party");
+    if (state.play === "party") return;
+    wrap.innerHTML = "";
+    JOKERS.forEach((j) => {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "joker";
+      b.disabled = !jokerUsable(j.id);
+      b.innerHTML = `<span class="j-ico">${j.icon}</span><span class="j-lab">${j.label}</span><span class="j-n">×${jokers[j.id] || 0}</span>`;
+      b.onclick = () => useJoker(j.id);
+      wrap.appendChild(b);
+    });
+  }
+  function replacementFor() {
+    const inList = new Set(state.list.map((x) => x.key));
+    let pool;
+    if (state.play === "daily" || state.play === "review") pool = BANKS.general.questions;
+    else pool = currentPool();
+    pool = pool.filter((x) => !inList.has(x.key));
+    return pool.length ? pool : null;
+  }
+  function useJoker(id) {
+    if (!jokerUsable(id)) return;
+    jokers[id]--;
+    saveJokers();
+    stats.jokersUsed++;
+    saveStats();
+    state.usedJokers++;
+    Sounds.play("streak");
+    if (id === "fifty") {
+      const q = state.list[state.index];
+      const good = new Set(q.correct);
+      const wrong = shuffle([...document.querySelectorAll(".answer")].filter((b) => !good.has(b.dataset.answer)));
+      wrong.slice(0, 2).forEach((b) => { b.classList.add("gone"); b.disabled = true; });
+    } else if (id === "time") {
+      if (state.play === "rush") rushAdd(10);
+      else { state.timeLeft += 10; state.timeMax = Math.max(state.timeMax, state.timeLeft); drawTimer(); }
+    } else if (id === "skip") {
+      const pool = replacementFor();
+      const nq = pick(pool);
+      clearInterval(state.tick);
+      state.list[state.index] = { ...nq, shuffled: shuffle(nq.answers) };
+      renderQuestion();
+      state.usedHere.add("skip");
+    }
+    state.usedHere.add(id);
+    renderJokers();
   }
 
   function toggleChoice(ans, btn) {
@@ -445,7 +795,7 @@
   function startTimer(max) {
     clearInterval(state.tick);
     const t = $("q-timer");
-    if (!state.timer) { t.classList.add("off"); return; }
+    if (!state.timerOn) { t.classList.add("off"); return; }
     t.classList.remove("off", "warn");
     state.timeMax = max;
     state.timeLeft = max;
@@ -488,21 +838,25 @@
     });
 
     // Statistiques pour les trophées (enregistrées même si la partie est abandonnée)
-    if (ok) {
+    const counts = state.play !== "party";
+    state.answeredCount++;
+    if (ok && counts) {
       stats.correct++;
       if (q.diff === "d") stats.hard++;
       if (q.multi) stats.multi++;
       if (q.era === "O" && state.theme === "general") stats.origins++;
       if (state.theme === "cr7") stats.cr7Correct++;
-      if (state.timer && Date.now() - state.qStart < 3000) stats.fast++;
+      if (state.timerOn && Date.now() - state.qStart < 3000) stats.fast++;
     }
 
     if (ok) {
       state.score++;
       state.streak++;
       state.bestStreak = Math.max(state.bestStreak, state.streak);
-      stats.bestStreak = Math.max(stats.bestStreak, state.streak);
-      if (state.theme === "cr7") stats.cr7BestStreak = Math.max(stats.cr7BestStreak, state.streak);
+      if (counts) {
+        stats.bestStreak = Math.max(stats.bestStreak, state.streak);
+        if (state.theme === "cr7" && state.play !== "review" && state.play !== "daily") stats.cr7BestStreak = Math.max(stats.cr7BestStreak, state.streak);
+      }
       Sounds.play("correct");
       if (state.streak % 5 === 0) Sounds.play("streak");
     } else {
@@ -511,8 +865,23 @@
       Sounds.play(choice === null ? "timeout" : "wrong");
     }
 
-    $("q-score").textContent = state.score;
-    $("q-streak").textContent = `${state.streak} 🔥`;
+    let gain = 0;
+    if (state.play === "party") {
+      const pl = state.players[state.index % state.players.length];
+      if (ok) { pl.score++; pl.streak++; pl.best = Math.max(pl.best, pl.streak); } else pl.streak = 0;
+    } else {
+      // Pièces gagnées et liste des erreurs à réviser
+      if (ok) gain = q.bonus ? 5 : ({ f: 1, m: 2, d: 3 }[q.diff] || 1);
+      if (!q.bonus) {
+        if (ok) {
+          if (missed.delete(q.key) && state.play === "review") { state.fixed++; stats.reviewFixed++; }
+        } else missed.add(q.key);
+        saveMissed();
+      }
+      addCoins(gain);
+    }
+    if (state.play === "rush") rushAdd(ok ? 2 : -3);
+    renderScoreboard();
     saveStats();
     state.newTrophies.push(...checkTrophies());
 
@@ -533,16 +902,33 @@
     fb.innerHTML = `<strong></strong><span></span>`;
     fb.firstChild.textContent = ok ? title : `${title} ${answerText}`;
     fb.lastChild.textContent = q.explain;
+    if (gain) {
+      const g = document.createElement("em");
+      g.className = "coin-gain";
+      g.textContent = `+${gain} 🪙`;
+      fb.firstChild.appendChild(g);
+    }
     fb.className = `feedback ${ok ? "good" : "bad"}`;
+    renderJokers();
 
     $("validate-btn").classList.add("hidden");
     const next = $("next-btn");
-    next.textContent = state.index === state.list.length - 1 ? "Voir le résultat →" : "Suivante →";
+    const last = state.index === state.list.length - 1 || (state.play === "sudden" && !ok);
+    if (state.play === "sudden" && !ok) state.suddenOver = true;
+    next.textContent = last ? "Voir le résultat →" : "Suivante →";
     next.classList.remove("hidden");
     next.focus({ preventScroll: true });
+    // Contre-la-montre : on enchaîne tout seul
+    if (state.play === "rush") {
+      clearTimeout(state.autoNext);
+      state.autoNext = setTimeout(() => { if (state.inGame && state.answered) nextQuestion(); }, ok ? 650 : 1500);
+    }
   }
 
   function nextQuestion() {
+    clearTimeout(state.autoNext);
+    if (!state.inGame) return;
+    if (state.suddenOver) { finish(); return; }
     if (state.index < state.list.length - 1) {
       state.index++;
       renderQuestion();
@@ -554,50 +940,145 @@
   // ---------- Fin ----------
   function finish() {
     clearInterval(state.tick);
-    const total = state.list.length;
+    clearInterval(state.rushTick);
+    clearTimeout(state.autoNext);
+    document.querySelectorAll(".turn-overlay").forEach((o) => o.remove());
+    document.body.classList.remove("turn-wait");
+    if (!state.inGame) return;
+    const p = state.play;
+    const total = p === "sudden" || p === "rush" ? state.answeredCount : state.list.length;
     const pct = total ? Math.round((state.score / total) * 100) : 0;
     $("progress-bar").style.width = "100%";
 
-    let emoji, title, msg;
+    let emoji, title, msg, scoreText = `${state.score} / ${total}`;
     if (pct === 100) { emoji = "🏆"; title = "Ballon d'Or !"; msg = "Un sans-faute. Tu es le roi de la fête."; }
     else if (pct >= 80) { emoji = "🥇"; title = "Champion !"; msg = "Niveau Ligue des champions. Respect."; }
     else if (pct >= 60) { emoji = "🥈"; title = "Très solide !"; msg = "Tu connais ton foot, encore un petit effort pour le titre."; }
     else if (pct >= 40) { emoji = "🥉"; title = "Pas mal !"; msg = "Milieu de tableau. Un peu de révision et ça passe."; }
     else { emoji = "🟨"; title = "Peut mieux faire…"; msg = "Retour au centre de formation, mais ne lâche rien !"; }
 
+    let recordText = "";
+    const recordFor = (key, val) => {
+      const prev = Number(storage.get(key) || 0);
+      if (!val && !prev) return "";
+      if (val > prev) { storage.set(key, String(val)); return prev ? `🎉 Nouveau record ! (ancien : ${prev})` : "🎉 Premier record !"; }
+      return `🏅 Ton record : ${prev}`;
+    };
+
+    if (p === "sudden") {
+      const n = state.score;
+      emoji = n >= 25 ? "🧊" : n >= 10 ? "💀" : "⚰️";
+      title = n >= 25 ? "Nerfs d'acier !" : n >= 10 ? "Sang-froid !" : n >= 3 ? "Mort subite…" : "Éliminé d'entrée !";
+      scoreText = `${n} bonne${n > 1 ? "s" : ""} réponse${n > 1 ? "s" : ""}`;
+      msg = state.suddenOver ? "La première erreur t'a éliminé." : "Tu as répondu à toutes les questions de la sélection, chapeau !";
+      recordText = recordFor(`fqf-best-sudden-${state.theme}`, n);
+      stats.suddenBest = Math.max(stats.suddenBest, n);
+    } else if (p === "rush") {
+      const n = state.score;
+      emoji = n >= 20 ? "🚀" : n >= 10 ? "⏳" : "⌛";
+      title = "Temps écoulé !";
+      scoreText = `${n} bonne${n > 1 ? "s" : ""} réponse${n > 1 ? "s" : ""}`;
+      msg = `${state.answeredCount} question${state.answeredCount > 1 ? "s" : ""} jouée${state.answeredCount > 1 ? "s" : ""} contre la montre.`;
+      recordText = recordFor(`fqf-best-rush-${state.theme}`, n);
+      stats.rushBest = Math.max(stats.rushBest, n);
+    } else if (p === "daily") {
+      const t = todayStr();
+      if (daily.scores[t] === undefined) {
+        daily.streak = daily.last === yesterdayStr() ? daily.streak + 1 : 1;
+        daily.best = Math.max(daily.best, daily.streak);
+        daily.last = t;
+        daily.scores[t] = state.score;
+        // On ne garde que les 60 derniers jours
+        const keys = Object.keys(daily.scores).sort();
+        while (keys.length > 60) delete daily.scores[keys.shift()];
+        saveDaily();
+        stats.dailyBestStreak = Math.max(stats.dailyBestStreak, daily.streak);
+        addCoins(30);
+        recordText = `📅 Défi du jour réussi : +30 🪙 · Série : ${daily.streak} jour${daily.streak > 1 ? "s" : ""} 🔥`;
+      } else recordText = `📅 Score officiel du jour : ${daily.scores[t]}/${DAILY_COUNT} (partie pour le plaisir)`;
+      title = `Défi du jour : ${title}`;
+    } else if (p === "review") {
+      title = state.fixed ? `${state.fixed} erreur${state.fixed > 1 ? "s" : ""} corrigée${state.fixed > 1 ? "s" : ""} !` : title;
+      msg = missed.size ? `Encore ${missed.size} question${missed.size > 1 ? "s" : ""} à revoir.` : "Plus aucune erreur à revoir, bravo !";
+    } else if (p === "party") {
+      const rank = state.players.slice().sort((x, y) => y.score - x.score);
+      const top = rank[0].score;
+      const winners = rank.filter((x) => x.score === top);
+      emoji = "🎉";
+      title = winners.length > 1 ? `Égalité : ${winners.map((w) => w.name).join(" & ")} !` : `${winners[0].name} gagne !`;
+      scoreText = `${top} / ${total / state.players.length}`;
+      msg = winners.length > 1 ? `${top} bonnes réponses chacun. Il faut une revanche !` : "Le roi de la soirée, c'est lui ! 👑";
+      const box = $("party-rank");
+      box.innerHTML = "";
+      const medals = ["🥇", "🥈", "🥉"];
+      let place = -1, prevScore = null;
+      rank.forEach((pl) => {
+        if (pl.score !== prevScore) place++;
+        prevScore = pl.score;
+        const row = document.createElement("div");
+        row.className = `pr-row${place === 0 ? " win" : ""}`;
+        row.innerHTML = `<span class="pr-pos">${medals[place] || place + 1}</span><span class="pr-name"></span><span class="pr-best"></span><b class="pr-score"></b>`;
+        row.querySelector(".pr-name").textContent = pl.name;
+        row.querySelector(".pr-best").textContent = pl.best >= 3 ? `${pl.best} 🔥` : "";
+        row.querySelector(".pr-score").textContent = pl.score;
+        box.appendChild(row);
+      });
+      stats.partyGames++;
+    }
+    $("party-rank").classList.toggle("hidden", p !== "party");
+
     $("end-emoji").textContent = emoji;
     $("end-title").textContent = title;
-    $("end-score").textContent = `${state.score} / ${total}`;
+    $("end-score").textContent = scoreText;
+    $("end-msg").innerHTML = "";
     $("end-msg").textContent = msg;
-    $("end-stats").innerHTML = `
-      <div class="stat"><b>${pct}%</b><span>Réussite</span></div>
-      <div class="stat"><b>${state.bestStreak} 🔥</b><span>Meilleure série</span></div>
-      <div class="stat"><b>${state.mistakes.length}</b><span>Erreurs</span></div>`;
-
-    const prev = storage.get(bestKey() + "-pct");
-    if (total >= 10 && (prev === null || pct > Number(prev))) {
-      storage.set(bestKey() + "-pct", String(pct));
-      storage.set(bestKey(), `${state.score}/${total} (${pct}%)`);
+    if (recordText) {
+      const r = document.createElement("span");
+      r.className = "end-record";
+      r.textContent = recordText;
+      $("end-msg").appendChild(r);
     }
 
-    // Statistiques de fin de partie et trophées
-    stats.games++;
-    if (!state.timer) stats.zenGames++;
-    if (state.theme === "cr7") {
-      stats.cr7Games++;
-      if (total >= 20 && pct === 100) stats.cr7Perfect++;
+    if (p === "classic") {
+      const prev = storage.get(bestKey() + "-pct");
+      if (total >= 10 && (prev === null || pct > Number(prev))) {
+        storage.set(bestKey() + "-pct", String(pct));
+        storage.set(bestKey(), `${state.score}/${total} (${pct}%)`);
+      }
     }
-    if (total >= 10 && pct === 100) stats.perfect10++;
-    if (total >= 20 && pct === 100) stats.perfect20++;
-    if (total >= 50 && pct >= 80) stats.marathon++;
-    if (state.isAll) stats.fullGames++;
+
+    // Statistiques de fin de partie et trophées (pas pour la Soirée : ce ne sont pas tes réponses)
+    if (p !== "party") {
+      stats.games++;
+      if (!state.timerOn && p !== "rush") stats.zenGames++;
+      if (state.theme === "cr7" && p !== "daily" && p !== "review") {
+        stats.cr7Games++;
+        if (p === "classic" && total >= 20 && pct === 100) stats.cr7Perfect++;
+      }
+      if (p === "classic" || p === "daily") {
+        if (total >= 10 && pct === 100) { stats.perfect10++; addCoins(20); }
+        if (total >= 20 && pct === 100) stats.perfect20++;
+      }
+      if (p === "classic" && total >= 50 && pct >= 80) stats.marathon++;
+      if (state.isAll) stats.fullGames++;
+    }
     saveStats();
     state.newTrophies.push(...checkTrophies());
     renderNewTrophies(state.newTrophies);
 
+    const statBox = (v, l) => `<div class="stat"><b>${v}</b><span>${l}</span></div>`;
+    const coinStat = p === "party" ? "" : statBox(`+${state.coinsEarned} 🪙`, "Pièces gagnées");
+    let statsHtml;
+    if (p === "party") statsHtml = statBox(state.players.length, "Joueurs") + statBox(total / state.players.length, "Questions chacun");
+    else if (p === "sudden" || p === "rush") statsHtml = statBox(`${state.bestStreak} 🔥`, "Meilleure série") + statBox(pct + "%", "Réussite") + coinStat;
+    else statsHtml = statBox(pct + "%", "Réussite") + statBox(`${state.bestStreak} 🔥`, "Meilleure série") + coinStat;
+    $("end-stats").innerHTML = statsHtml;
+    state.inGame = false;
+    renderWallet();
+
     const review = $("review");
     review.innerHTML = "";
-    $("review-wrap").classList.toggle("hidden", state.mistakes.length === 0);
+    $("review-wrap").classList.toggle("hidden", state.mistakes.length === 0 || p === "party");
     state.mistakes.forEach(({ q, choice }) => {
       const li = document.createElement("li");
       li.innerHTML = `<div class="rq"></div><div class="ry"></div><div class="rc"></div><div class="re"></div>`;
@@ -609,8 +1090,9 @@
     });
 
     show("end");
-    Sounds.play("end", pct >= 60 || state.newTrophies.length > 0);
-    if (pct >= 80) confetti();
+    const good = p === "party" || p === "daily" || (p === "sudden" ? state.score >= 10 : p === "rush" ? state.score >= 10 : pct >= 60);
+    Sounds.play("end", good || state.newTrophies.length > 0);
+    if (p === "party" || pct >= 80 && p !== "sudden" && p !== "rush" || state.score >= 15 && (p === "sudden" || p === "rush")) confetti();
     // Révélation automatique si le Trophée CR7 Ultime vient d'être débloqué
     if (state.newTrophies.some((t) => t.id === "cr7-ultime")) setTimeout(openLegend, 1800);
   }
@@ -1189,6 +1671,47 @@
     }
   }
 
+  // ---------- Boutique ----------
+  const SHOP_PACK = { id: "pack", icon: "🎁", name: "Pack trio", desc: "Un exemplaire de chaque joker, à prix réduit.", price: 75 };
+  function renderShop() {
+    renderWallet();
+    const wrap = $("shop-items");
+    wrap.innerHTML = "";
+    [...JOKERS, SHOP_PACK].forEach((it) => {
+      const card = document.createElement("div");
+      card.className = `shop-item${it.id === "pack" ? " pack" : ""}`;
+      const owned = it.id === "pack" ? "" : `<span class="si-own">Tu en as <b>${jokers[it.id] || 0}</b></span>`;
+      card.innerHTML = `<div class="si-ico">${it.icon}</div>
+        <div class="si-body"><b class="si-name">${it.name}</b><span class="si-desc">${it.desc}</span>${owned}</div>
+        <button class="btn primary si-buy" type="button">🪙 ${it.price}</button>`;
+      const btn = card.querySelector(".si-buy");
+      btn.disabled = coins < it.price;
+      btn.onclick = () => buy(it, card);
+      wrap.appendChild(card);
+    });
+  }
+  function buy(it, card) {
+    if (coins < it.price) return;
+    coins -= it.price;
+    storage.set("fqf-coins", String(coins));
+    if (it.id === "pack") JOKERS.forEach((j) => { jokers[j.id] = (jokers[j.id] || 0) + 1; });
+    else jokers[it.id] = (jokers[it.id] || 0) + 1;
+    saveJokers();
+    stats.purchases++;
+    saveStats();
+    Sounds.play("correct");
+    const fresh = checkTrophies();
+    renderShop();
+    const toast = document.createElement("div");
+    toast.className = "shop-toast";
+    toast.textContent = fresh.length ? `✅ Acheté ! 🏆 Trophée « ${fresh[0].name} » (+${TROPHY_REWARD[fresh[0].tier]} 🪙)` : `✅ ${it.name} ajouté${it.id === "pack" ? "s" : ""} !`;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 2200);
+  }
+  function openShop() { Sounds.unlock(); renderShop(); show("shop"); }
+  $("shop-btn").onclick = openShop;
+  $("shop-back").onclick = () => { renderBest(); show("home"); };
+
   // ---------- Événements ----------
   $("start-btn").onclick = start;
   $("next-btn").onclick = nextQuestion;
@@ -1216,6 +1739,11 @@
     b.textContent = "✕ Abandonner";
     b.classList.remove("armed");
     clearInterval(state.tick);
+    clearInterval(state.rushTick);
+    clearTimeout(state.autoNext);
+    state.inGame = false;
+    document.querySelectorAll(".turn-overlay").forEach((o) => o.remove());
+    document.body.classList.remove("turn-wait");
     renderBest();
     show("home");
   };
@@ -1226,7 +1754,8 @@
     const k = e.key.toUpperCase();
     let idx = LETTERS.indexOf(k);
     if (idx === -1) idx = ["1", "2", "3", "4", "5", "6"].indexOf(k);
-    if (!state.answered && idx !== -1 && idx < q.shuffled.length) {
+    if (document.querySelector(".turn-overlay")) return;
+    if (!state.answered && idx !== -1 && idx < q.shuffled.length && !document.querySelectorAll(".answer")[idx].disabled) {
       if (q.multi) toggleChoice(q.shuffled[idx], document.querySelectorAll(".answer")[idx]);
       else answer([q.shuffled[idx]]);
     } else if (e.key === "Enter" || e.key === " ") {
@@ -1274,4 +1803,6 @@
 
   renderFilters();
   renderBest();
+  renderWallet();
+  setPlay(["classic", "sudden", "rush", "daily", "party", "review"].includes(storage.get("fqf-play")) ? storage.get("fqf-play") : "classic");
 })();

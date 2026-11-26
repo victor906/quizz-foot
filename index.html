@@ -58,6 +58,27 @@
       </header>
 
       <div class="card">
+        <div class="wallet-row">
+          <span class="coins" id="home-coins">🪙 0</span>
+          <button id="shop-btn" class="btn shop-btn" type="button">🛒 Boutique</button>
+        </div>
+
+        <h2>Type de partie</h2>
+        <div class="play-grid" id="play-chips" role="radiogroup" aria-label="Type de partie">
+          <button class="mode active" data-play="classic" role="radio" aria-checked="true"><span class="mode-ico">🎯</span><b>Classique</b><small>Le quiz habituel</small></button>
+          <button class="mode" data-play="sudden" role="radio" aria-checked="false"><span class="mode-ico">💀</span><b>Mort subite</b><small>Une erreur et c'est fini</small></button>
+          <button class="mode" data-play="rush" role="radio" aria-checked="false"><span class="mode-ico">⏳</span><b>Contre-la-montre</b><small>60 s, un max de réponses</small></button>
+          <button class="mode" data-play="daily" role="radio" aria-checked="false"><span class="mode-ico">📅</span><b>Défi du jour</b><small id="daily-small">10 questions par jour</small></button>
+          <button class="mode" data-play="party" role="radio" aria-checked="false"><span class="mode-ico">🎉</span><b>Soirée</b><small>De 2 à 6 joueurs</small></button>
+          <button class="mode" data-play="review" role="radio" aria-checked="false"><span class="mode-ico">📚</span><b>Révision</b><small id="review-small">Tes erreurs</small></button>
+        </div>
+        <p class="play-info" id="play-info"></p>
+        <div class="party-setup hidden" id="party-setup">
+          <div class="party-players" id="party-players"></div>
+          <button class="btn ghost party-add" id="party-add" type="button">＋ Ajouter un joueur</button>
+        </div>
+
+        <div id="sec-theme">
         <h2>Quiz</h2>
         <div class="mode-row" id="theme-chips" role="radiogroup" aria-label="Quiz">
           <button class="mode active" data-theme="general" role="radio" aria-checked="true">
@@ -68,6 +89,8 @@
           </button>
         </div>
 
+        </div>
+        <div id="sec-timer">
         <h2>Mode de jeu</h2>
         <div class="mode-row" id="mode-chips" role="radiogroup" aria-label="Mode de jeu">
           <button class="mode active" data-mode="chrono" role="radio" aria-checked="true">
@@ -78,7 +101,9 @@
           </button>
         </div>
 
-        <h2>Nombre de questions</h2>
+        </div>
+        <div id="sec-count">
+        <h2 id="count-title">Nombre de questions</h2>
         <div class="chips" id="count-chips">
           <button class="chip" data-count="10">10</button>
           <button class="chip active" data-count="20">20</button>
@@ -87,6 +112,8 @@
           <button class="chip" data-count="all">Tout</button>
         </div>
 
+        </div>
+        <div id="sec-filters">
         <h2>Difficulté</h2>
         <div class="chips diff-row" id="diff-chips"></div>
 
@@ -100,12 +127,14 @@
           <div class="chips" id="cat-chips"></div>
         </details>
 
+        </div>
+
         <button id="start-btn" class="btn primary big">Coup d'envoi !</button>
         <p class="fresh" id="fresh-info"></p>
         <p class="best" id="best-score"></p>
         <button id="trophies-btn" class="btn trophies-btn">🏆 Mes trophées</button>
       </div>
-      <p class="app-version">Version 5.1</p>
+      <p class="app-version">Version 5.1 · essai gameplay</p>
     </section>
 
     <!-- ÉCRAN DE QUESTION -->
@@ -127,6 +156,7 @@
           </div>
           <span id="q-timer" class="timer">20</span>
         </div>
+        <div class="jokers" id="jokers"></div>
         <h2 id="q-text" class="q-text">Question</h2>
         <p id="q-hint" class="hint hidden">Coche toutes les bonnes réponses, puis valide.</p>
         <div id="answers" class="answers"></div>
@@ -146,6 +176,7 @@
         <h2 id="end-title">Coup de sifflet final !</h2>
         <p id="end-score" class="end-score">0 / 20</p>
         <p id="end-msg" class="end-msg"></p>
+        <div id="party-rank" class="party-rank hidden"></div>
         <div id="new-trophies" class="new-trophies hidden"></div>
         <div class="end-stats" id="end-stats"></div>
         <div class="end-actions">
@@ -172,6 +203,27 @@
       <div id="tr-vitrine"></div>
       <div class="tr-grid" id="tr-grid"></div>
     </section>
+    <!-- BOUTIQUE -->
+    <section id="screen-shop" class="screen">
+      <div class="card shop-head">
+        <button id="shop-back" class="btn ghost tr-back" type="button">← Accueil</button>
+        <div class="tr-title">🛒 La Boutique</div>
+        <div class="shop-balance"><span>Tes pièces</span><b id="shop-coins">🪙 0</b></div>
+      </div>
+      <div class="shop-items" id="shop-items"></div>
+      <div class="card shop-help">
+        <h2>Comment gagner des pièces&nbsp;?</h2>
+        <ul>
+          <li><b>+1 / +2 / +3</b> 🪙 par bonne réponse (facile / moyen / difficile)</li>
+          <li><b>+5</b> 🪙 pour la question bonus</li>
+          <li><b>+20</b> 🪙 pour un sans-faute (10 questions ou plus)</li>
+          <li><b>+30</b> 🪙 pour le Défi du jour (une fois par jour)</li>
+          <li><b>+10 à +250</b> 🪙 par trophée débloqué (Bronze → Ultime)</li>
+        </ul>
+        <p class="shop-note">Les jokers s'utilisent pendant les parties, une fois par question chacun. Pas de jokers ni de pièces en mode Soirée, pour que ce soit équitable.</p>
+      </div>
+    </section>
+
     <!-- SALLE DES TROPHÉES -->
     <section id="screen-room" class="screen">
       <div class="room">

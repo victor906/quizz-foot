@@ -1446,3 +1446,96 @@ body.theme-cr7 .tagline { font-weight: 500; }
   box-shadow: 0 14px 30px rgba(0, 0, 0, .45); animation: pop .3s ease;
 }
 .update-bar .btn { padding: 10px 14px; white-space: nowrap; }
+
+/* ---------- Essai gameplay : pièces, boutique, jokers, types de partie ---------- */
+.hidden { display: none !important; }
+.wallet-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin: -4px 0 16px; }
+.coins {
+  display: inline-flex; align-items: center; gap: 6px; font-weight: 800; font-size: 1.05rem;
+  background: linear-gradient(180deg, #fff6d4, #ffe58a); color: #6b4e00; border: 2px solid #f0c33c;
+  padding: 7px 14px; border-radius: 999px; box-shadow: 0 3px 0 #d9a520;
+}
+.shop-btn { background: #1b2a22; color: #fff; padding: 10px 16px; box-shadow: 0 3px 0 #000; }
+.shop-btn:hover { background: #26392f; }
+
+.play-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 12px; }
+.play-grid .mode { padding: 10px 6px; }
+.play-grid .mode b { font-size: .9rem; line-height: 1.15; }
+.play-grid .mode small { font-size: .7rem; line-height: 1.2; }
+@media (max-width: 460px) { .play-grid { grid-template-columns: 1fr 1fr; } }
+.play-info { background: #f2f8f4; border-left: 4px solid var(--grass-2); border-radius: 10px; padding: 10px 12px; font-size: .9rem; margin: 0 0 18px; color: #234; line-height: 1.4; }
+
+.party-setup { margin: -6px 0 18px; }
+.party-players { display: grid; gap: 8px; }
+.pp-row { display: flex; align-items: center; gap: 8px; }
+.pp-num { width: 28px; height: 28px; border-radius: 50%; background: var(--accent); color: var(--accent-ink); font-weight: 800; display: grid; place-items: center; flex: none; }
+.pp-input { flex: 1; min-width: 0; font: inherit; font-weight: 700; padding: 10px 12px; border: 2px solid var(--line); border-radius: 12px; background: #fff; color: var(--ink); }
+.pp-input:focus { outline: none; border-color: var(--grass-2); }
+.pp-del { border: 0; background: #f1f5f2; color: var(--muted); width: 36px; height: 36px; border-radius: 10px; font-size: 1rem; cursor: pointer; }
+.pp-del:disabled { opacity: .35; }
+.party-add { width: 100%; margin-top: 8px; border: 2px dashed var(--line); }
+
+/* Jokers pendant la partie */
+.jokers { display: flex; gap: 8px; margin: -4px 0 14px; }
+.joker {
+  flex: 1; display: flex; align-items: center; justify-content: center; gap: 5px;
+  border: 2px solid #f0c33c; background: #fffaf0; color: #6b4e00; font: inherit; font-weight: 800; font-size: .85rem;
+  border-radius: 12px; padding: 8px 4px; cursor: pointer; transition: transform .1s; white-space: nowrap;
+}
+@media (max-width: 380px) { .joker { font-size: .78rem; gap: 3px; } .j-ico { display: none; } }
+.joker:active:not(:disabled) { transform: scale(.95); }
+.joker:disabled { opacity: .38; cursor: default; filter: grayscale(.7); }
+.j-n { background: #f0c33c; color: #fff; border-radius: 999px; padding: 0 7px; font-size: .75rem; }
+.answer.gone { display: none; }
+.coin-gain { font-style: normal; margin-left: 8px; background: #ffe58a; color: #6b4e00; border-radius: 999px; padding: 1px 8px; font-size: .85em; white-space: nowrap; }
+
+/* Contre-la-montre */
+.timer { position: relative; }
+.time-pop { position: absolute; left: 50%; top: -6px; transform: translateX(-50%); font-weight: 900; font-size: .9rem; white-space: nowrap; animation: timepop .9s ease-out forwards; pointer-events: none; }
+.time-pop.plus { color: var(--good); }
+.time-pop.minus { color: var(--bad); }
+@keyframes timepop { from { opacity: 1; transform: translate(-50%, 0); } to { opacity: 0; transform: translate(-50%, -26px); } }
+body[data-play="rush"] #progress-bar { background: linear-gradient(90deg, #e0453a, #ffd23f); transition: width .2s linear; }
+
+/* Soirée : « Au tour de… » */
+.turn-overlay { position: fixed; inset: 0; z-index: 60; background: rgba(6, 30, 16, .88); display: grid; place-items: center; padding: 16px; animation: fadein .25s; }
+.turn-card { background: var(--card); border-radius: 22px; padding: 26px 22px; width: min(420px, 100%); text-align: center; box-shadow: var(--shadow); }
+.turn-kicker { color: var(--muted); font-weight: 700; font-size: .85rem; text-transform: uppercase; letter-spacing: .08em; }
+.turn-title { font-size: 1.1rem; margin-top: 10px; color: var(--muted); }
+.turn-name { font-family: Oswald, sans-serif; font-size: 2.3rem; font-weight: 700; color: var(--grass-1); margin: 2px 0 14px; word-break: break-word; }
+.turn-scores { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; margin-bottom: 18px; }
+.turn-chip { background: #eef3f0; border-radius: 999px; padding: 5px 12px; font-size: .85rem; font-weight: 700; color: var(--muted); }
+.turn-chip.me { background: var(--accent); color: var(--accent-ink); }
+@keyframes fadein { from { opacity: 0; } }
+
+/* Fin de partie */
+.end-record { display: block; margin-top: 8px; font-weight: 800; color: #6b4e00; }
+.party-rank { display: grid; gap: 8px; margin: 6px 0 18px; text-align: left; }
+.pr-row { display: flex; align-items: center; gap: 10px; background: #f4f7f5; border-radius: 12px; padding: 10px 14px; }
+.pr-row.win { background: linear-gradient(90deg, #fff1b8, #ffe58a); }
+.pr-pos { font-size: 1.3rem; width: 30px; text-align: center; }
+.pr-name { flex: 1; font-weight: 800; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pr-best { color: var(--muted); font-size: .85rem; }
+.pr-score { font-size: 1.3rem; font-family: Oswald, sans-serif; }
+
+/* Boutique */
+.shop-head { text-align: center; padding-top: 54px; position: relative; }
+.shop-balance { margin-top: 10px; display: inline-flex; flex-direction: column; align-items: center; background: linear-gradient(180deg, #fff6d4, #ffe58a); border: 2px solid #f0c33c; border-radius: 18px; padding: 10px 26px; box-shadow: 0 4px 0 #d9a520; }
+.shop-balance span { font-size: .8rem; color: #6b4e00; text-transform: uppercase; letter-spacing: .08em; font-weight: 700; }
+.shop-balance b { font-size: 1.9rem; color: #6b4e00; font-family: Oswald, sans-serif; }
+.shop-items { display: grid; gap: 12px; margin: 16px 0; }
+.shop-item { display: flex; align-items: center; gap: 14px; background: var(--card); border-radius: var(--radius); padding: 14px; box-shadow: var(--shadow); }
+.shop-item.pack { background: linear-gradient(135deg, #fffdf3, #fff1c4); border: 2px solid #f0c33c; }
+.si-ico { font-size: 2rem; width: 54px; height: 54px; flex: none; display: grid; place-items: center; background: #fff6d4; border-radius: 14px; border: 2px solid #f0c33c; }
+.si-body { flex: 1; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.si-name { font-size: 1.05rem; }
+.si-desc { color: var(--muted); font-size: .85rem; }
+.si-own { font-size: .8rem; color: var(--grass-1); margin-top: 2px; }
+.si-buy { flex: none; padding: 10px 14px; white-space: nowrap; }
+.shop-help h2 { margin-top: 0; }
+.shop-help ul { margin: 0; padding-left: 18px; line-height: 1.7; font-size: .92rem; }
+.shop-note { color: var(--muted); font-size: .85rem; margin: 10px 0 0; }
+.shop-toast { position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom)); transform: translateX(-50%); z-index: 70; background: #1b2a22; color: #fff; padding: 12px 18px; border-radius: 14px; font-weight: 700; box-shadow: var(--shadow); animation: fadein .2s; max-width: calc(100% - 32px); text-align: center; }
+body.turn-wait #screen-quiz { visibility: hidden; }
+.turn-stop { margin-top: 10px; font-size: .9rem; }
+.turn-stop.armed { background: var(--bad); color: #fff; }

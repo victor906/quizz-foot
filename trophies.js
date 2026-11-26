@@ -61,3 +61,20 @@ const TROPHY_TIERS = {
   legende: "Légende",
   ultime: "Ultime",
 };
+
+// Trophées des nouveaux types de partie et de la boutique
+TROPHIES.push(
+  { id: "sudden-10", icon: "💀", name: "Sang-froid", desc: "10 bonnes réponses d'affilée en Mort subite", tier: "argent", goal: 10, value: (s) => s.suddenBest },
+  { id: "sudden-25", icon: "🧊", name: "Nerfs d'acier", desc: "25 bonnes réponses d'affilée en Mort subite", tier: "or", goal: 25, value: (s) => s.suddenBest },
+  { id: "rush-10", icon: "⏳", name: "Contre-attaque", desc: "10 bonnes réponses en une partie Contre-la-montre", tier: "bronze", goal: 10, value: (s) => s.rushBest },
+  { id: "rush-20", icon: "🚀", name: "Vitesse lumière", desc: "20 bonnes réponses en une partie Contre-la-montre", tier: "or", goal: 20, value: (s) => s.rushBest },
+  { id: "daily-3", icon: "📅", name: "Rendez-vous", desc: "Faire le Défi du jour 3 jours d'affilée", tier: "bronze", goal: 3, value: (s) => s.dailyBestStreak },
+  { id: "daily-7", icon: "🗓️", name: "Fidèle au poste", desc: "Faire le Défi du jour 7 jours d'affilée", tier: "or", goal: 7, value: (s) => s.dailyBestStreak },
+  { id: "party-1", icon: "🎉", name: "Ambianceur", desc: "Terminer une partie en mode Soirée", tier: "bronze", goal: 1, value: (s) => s.partyGames },
+  { id: "review-10", icon: "📚", name: "Bosseur", desc: "Corriger 10 erreurs en mode Révision", tier: "argent", goal: 10, value: (s) => s.reviewFixed },
+  { id: "shop-1", icon: "🛒", name: "Premier achat", desc: "Acheter un joker à la boutique", tier: "bronze", goal: 1, value: (s) => s.purchases },
+  { id: "joker-10", icon: "🃏", name: "Joueur de cartes", desc: "Utiliser 10 jokers", tier: "argent", goal: 10, value: (s) => s.jokersUsed },
+);
+
+// Pièces gagnées à chaque trophée débloqué
+const TROPHY_REWARD = { bronze: 10, argent: 25, or: 50, legende: 100, ultime: 250 };
