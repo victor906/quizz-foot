@@ -1427,3 +1427,13 @@ body.theme-cr7 .tagline { font-weight: 500; }
 /* Trophée CR7 non débloqué : flouté sous la cloche, aussi dans la salle */
 .room-pedestal.locked .bell-cup { filter: none; }
 .room-pedestal.locked .bell-cup svg { filter: blur(9px) brightness(.85) saturate(.6); }
+/* Emplacement mystère du Trophée CR7 (aucune image du vrai trophée) */
+.mystery-cup { position: relative; display: block; width: 100%; aspect-ratio: 240 / 300; }
+.mc-glow {
+  position: absolute; left: 50%; top: 52%; width: 70%; height: 80%; translate: -50% -50%; border-radius: 45% 45% 30% 30%;
+  background: radial-gradient(ellipse at 50% 40%, rgba(255, 214, 110, .55), rgba(184, 134, 11, .25) 55%, transparent 75%);
+  filter: blur(10px); animation: mc-pulse 2.4s ease-in-out infinite;
+}
+@keyframes mc-pulse { 50% { opacity: .65; scale: .94; } }
+.mystery-cup .st-veil { position: absolute; inset: 0; display: grid; place-items: center; font-size: 3rem; font-weight: 900; color: #ffd76a; text-shadow: 0 2px 12px rgba(0, 0, 0, .8), 0 0 18px rgba(255, 200, 60, .6); }
+@media (prefers-reduced-motion: reduce) { .mc-glow { animation: none; } }

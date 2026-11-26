@@ -951,6 +951,9 @@
   }
 
   // Les vitrines de la salle
+  // Trophée CR7 pas encore gagné : on ne dessine pas la vraie coupe, seulement une lueur et un « ? »
+  const MYSTERY_CUP = '<span class="mystery-cup" aria-hidden="true"><span class="mc-glow"></span><span class="st-veil">?</span></span>';
+
   // Même ordre que la visite 3D : du plus modeste au plus prestigieux
   const ROOM_CASES = [
     { title: "Bronze", tiers: ["bronze"] },
@@ -973,7 +976,7 @@
     ped.innerHTML = `<div class="hped room-hped">
         <span class="hped-beam b1"></span><span class="hped-beam b2"></span><span class="hped-beam b3"></span><span class="hped-pool"></span>
         <div class="bell">
-          <div class="bell-cup">${LegendReveal.miniSvg()}${won ? "" : '<span class="st-veil">?</span>'}</div>
+          <div class="bell-cup">${won ? LegendReveal.miniSvg() : MYSTERY_CUP}</div>
           <span class="bell-glass"></span><span class="bell-knob"></span><span class="bell-ring"></span>
         </div>
         <div class="hped-cap"></div>
@@ -1099,7 +1102,7 @@
        <div class="hped">
          <span class="hped-beam b1"></span><span class="hped-beam b2"></span><span class="hped-beam b3"></span><span class="hped-pool"></span>
          <div class="bell">
-           <div class="bell-cup">${LegendReveal.miniSvg()}${won ? "" : '<span class="st-veil">?</span>'}</div>
+           <div class="bell-cup">${won ? LegendReveal.miniSvg() : MYSTERY_CUP}</div>
            <span class="bell-glass"></span><span class="bell-knob"></span>
            <span class="bell-ring"></span>
          </div>
