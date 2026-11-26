@@ -755,23 +755,112 @@
     legende: ["#e9d5ff", "#9b5de5", "#4c1d95"],
   };
   let cupId = 0;
-  // Petite coupe dessinée, aux couleurs du niveau
-  function cupSvg(tier) {
-    const [l, m, d] = TIER_COLORS[tier] || TIER_COLORS.or;
-    const id = `cup${cupId++}`;
-    return `<svg class="cup" viewBox="0 0 64 80" aria-hidden="true">
-      <defs><linearGradient id="${id}" x1="0" y1="0" x2="1" y2="0">
-        <stop offset="0" stop-color="${d}"/><stop offset=".35" stop-color="${l}"/><stop offset=".6" stop-color="${m}"/><stop offset="1" stop-color="${d}"/>
-      </linearGradient></defs>
-      <path d="M14 12 C2 12 2 34 18 36 M50 12 C62 12 62 34 46 36" fill="none" stroke="url(#${id})" stroke-width="5" stroke-linecap="round"/>
-      <path d="M12 6 H52 C52 34 44 46 32 48 C20 46 12 34 12 6 Z" fill="url(#${id})"/>
-      <ellipse cx="32" cy="6" rx="20" ry="4" fill="${l}"/>
-      <path d="M28 48 H36 L38 60 H26 Z" fill="url(#${id})"/>
-      <rect x="18" y="60" width="28" height="7" rx="2" fill="url(#${id})"/>
-      <rect x="14" y="67" width="36" height="9" rx="2" fill="#2b1d12"/>
-      <path d="M18 12 C19 26 22 36 28 42" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" opacity=".55"/>
-    </svg>`;
+  // Trophées dessinés : une forme différente par niveau.
+  // Renvoie le SVG et la position verticale (en %) où placer l'icône du trophée.
+  function trophyArt(tier) {
+    const n = cupId++;
+    const g = (k) => `t${n}${k}`;
+    const glint = (clip) => `<g clip-path="url(#${g("c")})"><rect class="t-glint" x="0" y="0" width="22" height="100" fill="url(#${g("w")})"/></g>`;
+    const glintDef = `<linearGradient id="${g("w")}" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".5" stop-color="#fff" stop-opacity=".85"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>`;
+
+    if (tier === "bronze") {
+      // Médaille sur ruban
+      let leaves = "";
+      for (let i = 0; i < 14; i++) {
+        const a = (i / 14) * Math.PI * 2;
+        const x = 40 + 21.5 * Math.cos(a), y = 66 + 21.5 * Math.sin(a);
+        leaves += `<ellipse cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" rx="3.2" ry="1.6" fill="#7a431a" opacity=".55" transform="rotate(${(a * 180 / Math.PI + 90).toFixed(0)} ${x.toFixed(1)} ${y.toFixed(1)})"/>`;
+      }
+      return { top: 66, svg: `<svg class="t-art" viewBox="0 0 80 100" aria-hidden="true"><defs>
+        <radialGradient id="${g("m")}" cx=".35" cy=".3" r=".8"><stop offset="0" stop-color="#ffd7ae"/><stop offset=".45" stop-color="#c98a55"/><stop offset="1" stop-color="#6e3f17"/></radialGradient>
+        <radialGradient id="${g("i")}" cx=".4" cy=".35" r=".75"><stop offset="0" stop-color="#ffe6cc"/><stop offset="1" stop-color="#b0703a"/></radialGradient>
+        <clipPath id="${g("c")}"><circle cx="40" cy="66" r="26"/></clipPath>${glintDef}</defs>
+        <path d="M20 0 H35 L46 42 H31 Z" fill="#c0392b"/><path d="M24 0 H28 L37 42 H33 Z" fill="#fff" opacity=".85"/>
+        <path d="M60 0 H45 L34 42 H49 Z" fill="#1f5fa8"/><path d="M56 0 H52 L43 42 H47 Z" fill="#fff" opacity=".85"/>
+        <rect x="34" y="36" width="12" height="8" rx="2" fill="#8a5a2b"/>
+        <circle cx="40" cy="66" r="26" fill="url(#${g("m")})" stroke="#5a3010" stroke-width="2"/>
+        <circle cx="40" cy="66" r="20" fill="none" stroke="#ffe0c0" stroke-width="1" opacity=".6"/>
+        ${leaves}
+        <circle cx="40" cy="66" r="15" fill="url(#${g("i")})" stroke="#7a431a" stroke-width="1.2"/>
+        <path d="M24 56 A18 18 0 0 1 36 47" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" opacity=".6"/>
+        ${glint()}</svg>` };
+    }
+
+    if (tier === "argent") {
+      // Coupe élancée sur socle en marbre
+      return { top: 31, svg: `<svg class="t-art" viewBox="0 0 80 100" aria-hidden="true"><defs>
+        <linearGradient id="${g("s")}" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#5f6a72"/><stop offset=".3" stop-color="#ffffff"/><stop offset=".55" stop-color="#aab4bc"/><stop offset=".8" stop-color="#e9eef2"/><stop offset="1" stop-color="#5f6a72"/></linearGradient>
+        <linearGradient id="${g("b")}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3b3f44"/><stop offset=".5" stop-color="#15171a"/><stop offset="1" stop-color="#2c3035"/></linearGradient>
+        <clipPath id="${g("c")}"><path d="M17 8 H63 C63 38 53 52 40 54 C27 52 17 38 17 8 Z"/><path d="M36 54 H44 L46 70 H34 Z"/></clipPath>${glintDef}</defs>
+        <path d="M19 14 C4 14 4 38 26 42 M61 14 C76 14 76 38 54 42" fill="none" stroke="url(#${g("s")})" stroke-width="4" stroke-linecap="round"/>
+        <path d="M17 8 H63 C63 38 53 52 40 54 C27 52 17 38 17 8 Z" fill="url(#${g("s")})" stroke="#5f6a72" stroke-width="1"/>
+        <ellipse cx="40" cy="8" rx="23" ry="4" fill="#f4f7f9" stroke="#8a949b" stroke-width="1"/>
+        <path d="M20 46 C28 52 52 52 60 46" fill="none" stroke="#7d8891" stroke-width="1.5" opacity=".7"/>
+        <circle cx="40" cy="31" r="11.5" fill="#f7f9fb" stroke="#8a949b" stroke-width="2"/>
+        <path d="M36 54 H44 L46 70 H34 Z" fill="url(#${g("s")})"/>
+        <ellipse cx="40" cy="62" rx="7" ry="3" fill="url(#${g("s")})" stroke="#7d8891" stroke-width=".8"/>
+        <path d="M26 70 H54 L57 76 H23 Z" fill="url(#${g("s")})"/>
+        <rect x="20" y="76" width="40" height="18" rx="2" fill="url(#${g("b")})"/>
+        <rect x="29" y="81" width="22" height="7" rx="1.5" fill="url(#${g("s")})"/>
+        <path d="M22 16 C23 32 27 42 33 48" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" opacity=".7"/>
+        ${glint()}</svg>` };
+    }
+
+    if (tier === "or") {
+      // Grande coupe dorée avec lauriers, étoile et rubis
+      let laurel = "";
+      [-1, 1].forEach((side) => {
+        for (let i = 0; i < 6; i++) {
+          const t = i / 5;
+          const x = 40 + side * (30 - 4 * t), y = 60 - t * 38;
+          laurel += `<ellipse cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" rx="5" ry="2.2" fill="#d4a017" stroke="#7a4d00" stroke-width=".6" transform="rotate(${side * (40 + t * 30)} ${x.toFixed(1)} ${y.toFixed(1)})"/>`;
+        }
+      });
+      return { top: 33, svg: `<svg class="t-art" viewBox="0 0 80 100" aria-hidden="true"><defs>
+        <linearGradient id="${g("o")}" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#7a4800"/><stop offset=".25" stop-color="#ffe27a"/><stop offset=".45" stop-color="#d99c12"/><stop offset=".62" stop-color="#fff5c2"/><stop offset=".82" stop-color="#c58606"/><stop offset="1" stop-color="#6e4300"/></linearGradient>
+        <radialGradient id="${g("r")}" cx=".35" cy=".3" r=".8"><stop offset="0" stop-color="#ff8a93"/><stop offset=".4" stop-color="#e0102b"/><stop offset="1" stop-color="#5c0010"/></radialGradient>
+        <linearGradient id="${g("d")}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6b3f1d"/><stop offset="1" stop-color="#2e1a0b"/></linearGradient>
+        <clipPath id="${g("c")}"><path d="M15 12 H65 C65 42 54 56 40 58 C26 56 15 42 15 12 Z"/><path d="M34 2 L40 -6 L46 2 Z"/></clipPath>${glintDef}</defs>
+        ${laurel}
+        <path d="M17 18 C0 18 2 44 26 48 M63 18 C80 18 78 44 54 48" fill="none" stroke="url(#${g("o")})" stroke-width="5" stroke-linecap="round"/>
+        <path d="M15 12 H65 C65 42 54 56 40 58 C26 56 15 42 15 12 Z" fill="url(#${g("o")})" stroke="#6e4300" stroke-width="1"/>
+        <ellipse cx="40" cy="12" rx="25" ry="4.5" fill="#fff1a6" stroke="#8a5600" stroke-width="1"/>
+        <polygon points="40,-2 42.6,4.4 49.5,4.6 44.1,8.8 46,15.5 40,11.6 34,15.5 35.9,8.8 30.5,4.6 37.4,4.4" fill="#fff5c2" stroke="#b8860b" stroke-width="1" transform="translate(0 -1)"/>
+        <circle cx="40" cy="33" r="12.5" fill="#fff8dc" stroke="#b8860b" stroke-width="2.5"/>
+        <circle cx="21" cy="30" r="3" fill="url(#${g("r")})"/><circle cx="59" cy="30" r="3" fill="url(#${g("r")})"/>
+        <path d="M35 58 H45 L47 66 H33 Z" fill="url(#${g("o")})"/>
+        <ellipse cx="40" cy="66" rx="9" ry="3" fill="#ffe27a" stroke="#8a5600" stroke-width=".8"/>
+        <path d="M37 66 H43 L45 72 H35 Z" fill="url(#${g("o")})"/>
+        <rect x="24" y="72" width="32" height="5" rx="1.5" fill="url(#${g("o")})"/>
+        <rect x="19" y="77" width="42" height="18" rx="2" fill="url(#${g("d")})"/>
+        <rect x="27" y="82" width="26" height="8" rx="1.5" fill="url(#${g("o")})"/>
+        <path d="M20 20 C21 36 26 46 32 52" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" opacity=".55"/>
+        ${glint()}</svg>` };
+    }
+
+    // Légende : cristal violet taillé sur pied doré
+    return { top: 33, svg: `<svg class="t-art" viewBox="0 0 80 100" aria-hidden="true"><defs>
+      <radialGradient id="${g("h")}" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#c084fc" stop-opacity=".75"/><stop offset="1" stop-color="#7c3aed" stop-opacity="0"/></radialGradient>
+      <linearGradient id="${g("k")}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f3e8ff"/><stop offset=".35" stop-color="#c084fc"/><stop offset=".7" stop-color="#7c3aed"/><stop offset="1" stop-color="#3b0764"/></linearGradient>
+      <linearGradient id="${g("o")}" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#7a4800"/><stop offset=".3" stop-color="#ffe27a"/><stop offset=".6" stop-color="#d99c12"/><stop offset="1" stop-color="#6e4300"/></linearGradient>
+      <clipPath id="${g("c")}"><polygon points="40,2 64,20 59,54 40,68 21,54 16,20"/></clipPath>${glintDef}</defs>
+      <circle cx="40" cy="36" r="36" fill="url(#${g("h")})"/>
+      <polygon points="40,2 64,20 59,54 40,68 21,54 16,20" fill="url(#${g("k")})" stroke="#e9d5ff" stroke-width="1.5" stroke-linejoin="round"/>
+      <polygon points="40,2 52,22 40,34 28,22" fill="#fff" opacity=".35"/>
+      <polygon points="16,20 28,22 40,34 21,54" fill="#fff" opacity=".12"/>
+      <polygon points="64,20 52,22 40,34 59,54" fill="#3b0764" opacity=".25"/>
+      <polygon points="21,54 40,34 59,54 40,68" fill="#3b0764" opacity=".35"/>
+      <circle cx="40" cy="34" r="12" fill="#faf5ff" fill-opacity=".85" stroke="#e9d5ff" stroke-width="1.5"/>
+      <path d="M30 62 C34 70 46 70 50 62 L47 72 H33 Z" fill="url(#${g("o")})"/>
+      <rect x="35" y="72" width="10" height="8" fill="url(#${g("o")})"/>
+      <rect x="22" y="80" width="36" height="5" rx="1.5" fill="url(#${g("o")})"/>
+      <rect x="18" y="85" width="44" height="10" rx="2" fill="#1a1026"/>
+      <polygon class="t-spark" points="12,8 13.5,12 17,13 13.5,14 12,18 10.5,14 7,13 10.5,12" fill="#fff"/>
+      <polygon class="t-spark s2" points="68,48 69.2,51 72,52 69.2,53 68,56 66.8,53 64,52 66.8,51" fill="#fff"/>
+      <polygon class="t-spark s3" points="66,6 67,8.5 69.5,9.5 67,10.5 66,13 65,10.5 62.5,9.5 65,8.5" fill="#f3e8ff"/>
+      ${glint()}</svg>` };
   }
+  const cupSvg = (tier) => trophyArt(tier).svg;
 
   function showRoomDetail(t) {
     const box = $("room-detail");
@@ -817,7 +906,8 @@
         const b = document.createElement("button");
         b.type = "button";
         b.className = "room-item";
-        b.innerHTML = `${cupSvg(tier)}<span class="ri-emoji"></span><span class="ri-name"></span>`;
+        const art = trophyArt(tier);
+        b.innerHTML = `<span class="ri-art">${art.svg}<span class="ri-emoji" style="top:${art.top}%"></span></span><span class="ri-name"></span><span class="ri-shadow"></span>`;
         b.querySelector(".ri-emoji").textContent = t.icon;
         b.querySelector(".ri-name").textContent = t.name;
         b.onclick = () => showRoomDetail(t);
