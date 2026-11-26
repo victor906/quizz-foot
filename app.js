@@ -156,8 +156,16 @@
   const saveMissed = () => storage.set("fqf-missed", JSON.stringify([...missed]));
   let daily = readJSON("fqf-daily", { last: "", streak: 0, best: 0, scores: {} });
   const saveDaily = () => storage.set("fqf-daily", JSON.stringify(daily));
+  // Une partie terminée consomme une charge du bonus x2
+  function consumeBoost() {
+    const b = Number(storage.get("fqf-boost") || 0);
+    if (b > 0) { storage.set("fqf-boost", String(b - 1)); return true; }
+    return false;
+  }
   function addCoins(n) {
     if (!n) return;
+    // Bonus « Pièces x2 » acheté en boutique
+    if (state && state.inGame && Number(storage.get("fqf-boost") || 0) > 0) n *= 2;
     coins += n;
     storage.set("fqf-coins", String(coins));
     if (state && state.inGame) state.coinsEarned += n;
@@ -165,7 +173,7 @@
   }
   function renderWallet() {
     const h = document.getElementById("home-coins");
-    if (h) h.textContent = `🪙 ${coins}`;
+    if (h) h.textContent = `🪙 ${coins}${Number(storage.get("fqf-boost") || 0) > 0 ? " 🚀" : ""}`;
     const sc = document.getElementById("shop-coins");
     if (sc) sc.textContent = `🪙 ${coins}`;
   }
@@ -451,7 +459,7 @@
     kits: "👕 Un maillot, quatre clubs… ou l'inverse ! Une quarantaine de maillots bien reconnaissables, aux couleurs de leur tenue domicile. Le drapeau du pays t'aide un peu.",
     geo: "",
     derby: "⚔️ On te donne un club, trouve son grand rival ! La carte te montre ensuite le derby.",
-    whoami: "🕵️ Des indices s'affichent un par un. Trouve le joueur le plus tôt possible : moins d'indices = plus de pièces (jusqu'à +5 🪙).",
+    whoami: "🕵️ Des indices s'affichent un par un. Trouve le joueur le plus tôt possible : moins d'indices = plus de pièces (jusqu'à +12 🪙).",
     career: "🧳 Une suite de clubs, un seul joueur. Qui a eu ce parcours ?",
     names: "✍️ On te donne le nom de famille d'un joueur (des années 80 à aujourd'hui), écris son prénom ! Pas de panique pour l'orthographe : accents et petites fautes sont acceptés.",
     hilo: "↕️ Qui a le plus de titres, de Ballons d'Or, quel club est le plus ancien… Une nouvelle comparaison à chaque manche. Une erreur et c'est fini !",
@@ -481,11 +489,11 @@
     if (p === "daily") {
       info = doneToday !== undefined
         ? `📅 Défi d'aujourd'hui déjà relevé : <b>${doneToday}/${DAILY_COUNT}</b>. Tu peux rejouer pour le plaisir (sans récompense). Reviens demain !`
-        : `📅 Les mêmes 10 questions toute la journée (3 faciles, 4 moyennes, 3 difficiles). Récompense : <b>+30 🪙</b>.${daily.streak && daily.last === yesterdayStr() ? ` Série en cours : <b>${daily.streak} jour${daily.streak > 1 ? "s" : ""}</b> 🔥` : ""}`;
+        : `📅 Les mêmes 10 questions toute la journée (3 faciles, 4 moyennes, 3 difficiles). Récompense : <b>+75 🪙</b>.${daily.streak && daily.last === yesterdayStr() ? ` Série en cours : <b>${daily.streak} jour${daily.streak > 1 ? "s" : ""}</b> 🔥` : ""}`;
     }
     if (p === "boss") {
       const wins = Number(storage.get("fqf-boss-wins") || 0);
-      info = `🥳 Affronte La Fête sur les mêmes questions. Elle a <b>76 % de réussite</b>. Fais mieux qu'elle pour gagner <b>+30 🪙</b> !${wins ? ` Tu l'as déjà battue <b>${wins}</b> fois.` : ""}`;
+      info = `🥳 Affronte La Fête sur les mêmes questions. Elle a <b>76 % de réussite</b>. Fais mieux qu'elle pour gagner <b>+75 🪙</b> !${wins ? ` Tu l'as déjà battue <b>${wins}</b> fois.` : ""}`;
     }
     if (p === "geo") {
       info = GEO_INFO[geoVar];
@@ -1002,9 +1010,9 @@
 
   // ---------- Jokers ----------
   const JOKERS = [
-    { id: "fifty", icon: "🌓", label: "50/50", name: "50/50", desc: "Enlève 2 mauvaises réponses.", price: 30 },
-    { id: "time", icon: "⏱️", label: "+10 s", name: "Temps bonus", desc: "Ajoute 10 secondes au chrono.", price: 20 },
-    { id: "skip", icon: "⏭️", label: "Passe", name: "Passe", desc: "Remplace la question par une autre.", price: 40 },
+    { id: "fifty", icon: "🌓", label: "50/50", name: "50/50", desc: "Enlève 2 mauvaises réponses.", price: 50 },
+    { id: "time", icon: "⏱️", label: "+10 s", name: "Temps bonus", desc: "Ajoute 10 secondes au chrono.", price: 35 },
+    { id: "skip", icon: "⏭️", label: "Passe", name: "Passe", desc: "Remplace la question par une autre.", price: 60 },
   ];
   function jokerUsable(id) {
     const q = state.list[state.index];
@@ -1191,16 +1199,18 @@
       if (ok) { pl.score++; pl.streak++; pl.best = Math.max(pl.best, pl.streak); } else pl.streak = 0;
     } else {
       // Pièces gagnées et liste des erreurs à réviser
-      if (ok) gain = q.bonus ? 5 : q.clues ? Math.max(1, 6 - state.cluesShown) : ({ f: 1, m: 2, d: 3 }[q.diff] || 1);
+      if (ok) gain = q.bonus ? 15 : q.clues ? Math.max(6, 14 - 2 * state.cluesShown) : ({ f: 3, m: 5, d: 8 }[q.diff] || 3);
+      // Série : +10 toutes les 5 bonnes réponses d'affilée
+      if (ok && state.streak > 0 && state.streak % 5 === 0) gain += 10;
       // Maillot flou : réponse rapide = bonus
-      if (ok && q.kitQ && !q.answerKits && Date.now() - state.qStart < 3500) { gain += 2; state.blurBonus = true; } else state.blurBonus = false;
+      if (ok && q.kitQ && !q.answerKits && Date.now() - state.qStart < 3500) { gain += 5; state.blurBonus = true; } else state.blurBonus = false;
       if (!q.bonus && !q.noTrack) {
         if (ok) {
           if (missed.delete(q.key) && state.play === "review") { state.fixed++; stats.reviewFixed++; }
         } else missed.add(q.key);
         saveMissed();
       }
-      addCoins(gain);
+      if (gain && Number(storage.get("fqf-boost") || 0) > 0) { addCoins(gain); gain *= 2; } else addCoins(gain);
     }
     if (state.play === "rush") rushAdd(ok ? 2 : -3);
     // Battre La Fête : l'adversaire répond aussi
@@ -1240,7 +1250,7 @@
     if (q.typeIn && choice && choice[0] === "") fb.firstChild.textContent = `🤷 Dommage ! ${answerText}`;
     fb.lastChild.textContent = q.explain;
     if (bossLine) { const bl = document.createElement("span"); bl.className = "boss-line"; bl.textContent = bossLine; fb.appendChild(bl); }
-    if (state.blurBonus) { const bb = document.createElement("span"); bb.className = "boss-line"; bb.textContent = "🔍 Vu à travers le flou ! +2 🪙 bonus"; fb.appendChild(bb); }
+    if (state.blurBonus) { const bb = document.createElement("span"); bb.className = "boss-line"; bb.textContent = "🔍 Vu à travers le flou ! +5 🪙 bonus"; fb.appendChild(bb); }
     if (gain) {
       const g = document.createElement("em");
       g.className = "coin-gain";
@@ -1252,7 +1262,16 @@
 
     $("validate-btn").classList.add("hidden");
     const next = $("next-btn");
-    const dies = (state.play === "sudden" || state.play === "hilo") && !ok;
+    let dies = (state.play === "sudden" || state.play === "hilo") && !ok;
+    if (dies && jokers.life > 0) {
+      jokers.life--;
+      saveJokers();
+      dies = false;
+      const lf = document.createElement("span");
+      lf.className = "boss-line";
+      lf.textContent = `❤️ Seconde chance utilisée ! La partie continue (il t'en reste ${jokers.life}).`;
+      fb.appendChild(lf);
+    }
     const last = state.index === state.list.length - 1 || dies;
     if (dies) state.suddenOver = true;
     next.textContent = last ? "Voir le résultat →" : "Suivante →";
@@ -1333,8 +1352,8 @@
         while (keys.length > 60) delete daily.scores[keys.shift()];
         saveDaily();
         stats.dailyBestStreak = Math.max(stats.dailyBestStreak, daily.streak);
-        addCoins(30);
-        recordText = `📅 Défi du jour réussi : +30 🪙 · Série : ${daily.streak} jour${daily.streak > 1 ? "s" : ""} 🔥`;
+        addCoins(75);
+        recordText = `📅 Défi du jour réussi : +75 🪙 · Série : ${daily.streak} jour${daily.streak > 1 ? "s" : ""} 🔥`;
       } else recordText = `📅 Score officiel du jour : ${daily.scores[t]}/${DAILY_COUNT} (partie pour le plaisir)`;
       title = `Défi du jour : ${title}`;
     } else if (p === "hilo") {
@@ -1354,8 +1373,8 @@
         emoji = "🏆"; title = `Tu as battu La Fête !`;
         msg = `C'est ta ${wins === 1 ? "première" : `${wins}e`} victoire contre elle.`;
         stats.bossBeaten++;
-        addCoins(30);
-        recordText = "🥳 Victoire : +30 🪙";
+        addCoins(75);
+        recordText = "🥳 Victoire : +75 🪙";
       } else if (me === her) {
         emoji = "🤝"; title = "Match nul !"; msg = "La Fête t'a tenu tête. Rejoue pour la battre !";
       } else {
@@ -1433,7 +1452,7 @@
         if (p === "classic" && total >= 20 && pct === 100) stats.cr7Perfect++;
       }
       if (p === "classic" || p === "daily") {
-        if (total >= 10 && pct === 100) { stats.perfect10++; addCoins(20); }
+        if (total >= 10 && pct === 100) { stats.perfect10++; addCoins(50); }
         if (total >= 20 && pct === 100) stats.perfect20++;
       }
       if (p === "classic" && total >= 50 && pct >= 80) stats.marathon++;
@@ -1443,8 +1462,9 @@
     state.newTrophies.push(...checkTrophies());
     renderNewTrophies(state.newTrophies);
 
+    const boosted = p !== "party" && consumeBoost();
     const statBox = (v, l) => `<div class="stat"><b>${v}</b><span>${l}</span></div>`;
-    const coinStat = p === "party" ? "" : statBox(`+${state.coinsEarned} 🪙`, "Pièces gagnées");
+    const coinStat = p === "party" ? "" : statBox(`+${state.coinsEarned} 🪙${boosted ? " 🚀" : ""}`, boosted ? "Pièces gagnées (x2)" : "Pièces gagnées");
     let statsHtml;
     if (p === "party") statsHtml = statBox(state.players.length, "Joueurs") + statBox(total / state.players.length, "Questions chacun");
     else if (p === "boss") statsHtml = statBox(pct + "%", "Ta réussite") + statBox("76 %", "La Fête") + coinStat;
@@ -2037,11 +2057,13 @@
   function confetti() {
     if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const colors = ["#ffd23f", "#ffffff", "#1fa85a", "#3b82f6", "#e0453a"];
-    for (let i = 0; i < 80; i++) {
+    const celeb = CELEBS.find((x) => x.id === storage.get("fqf-celeb") && ownedCelebs.has(x.id));
+    for (let i = 0; i < (celeb ? 45 : 80); i++) {
       const c = document.createElement("div");
-      c.className = "confetti";
-      c.style.left = `${Math.random() * 100}vw`;
-      c.style.background = colors[i % colors.length];
+      c.className = "confetti" + (celeb ? " emoji" : "");
+      c.style.left = `${Math.random() * 96}vw`;
+      if (celeb) c.textContent = celeb.chars[i % celeb.chars.length];
+      else c.style.background = colors[i % colors.length];
       c.style.animationDuration = `${2 + Math.random() * 2.5}s`;
       c.style.animationDelay = `${Math.random() * 0.8}s`;
       document.body.appendChild(c);
@@ -2308,7 +2330,8 @@
     if (geo.mode === "europe" || geo.mode === "france") stats.geoBest = Math.max(stats.geoBest, sc);
     if (geo.mode === "pays" && nGood === geo.list.length) stats.geoCountryPerfect++;
     if (geo.mode === "monde") stats.worldBest = Math.max(stats.worldBest, sc);
-    addCoins(Math.round(sc / 250));
+    addCoins(Math.round(sc / 100));
+    const boosted = consumeBoost();
     saveStats();
     state.newTrophies.push(...checkTrophies());
     const key = `fqf-best-geo${geo.mode === "europe" ? "" : "-" + geo.mode}`;
@@ -2337,13 +2360,13 @@
     box.classList.remove("hidden");
     if (countryMode()) {
       $("end-stats").innerHTML = `<div class="stat"><b>${nGood} / ${geo.list.length}</b><span>Bonnes réponses</span></div>
-        <div class="stat"><b>+${state.coinsEarned} 🪙</b><span>Pièces gagnées</span></div>`;
+        <div class="stat"><b>+${state.coinsEarned} 🪙${boosted ? " 🚀" : ""}</b><span>Pièces gagnées</span></div>`;
     } else {
       const avg = Math.round(geo.results.reduce((n, x) => n + x.d, 0) / geo.results.length);
       const best = geo.results.reduce((a, x) => (x.d < a.d ? x : a));
       $("end-stats").innerHTML = `<div class="stat"><b>${avg} km</b><span>Écart moyen</span></div>
         <div class="stat"><b>${Math.round(best.d)} km</b><span>Meilleur</span></div>
-        <div class="stat"><b>+${state.coinsEarned} 🪙</b><span>Pièces gagnées</span></div>`;
+        <div class="stat"><b>+${state.coinsEarned} 🪙${boosted ? " 🚀" : ""}</b><span>Pièces gagnées</span></div>`;
     }
     state.inGame = false;
     renderNewTrophies(state.newTrophies);
@@ -2634,18 +2657,54 @@
   const PALETTE = ["#f7f7f5", "#151515", "#d71920", "#14213d", "#1f4fb4", "#74b6e6", "#118a3e", "#ffd200", "#f47a1f", "#5b2b86", "#7a1f3d", "#ff7ac8", "#00b3a4", "#8d99ae"];
   const BASE_PATTERNS = [["plain", "Uni"], ["stripes", "Rayures"], ["hoops", "Cerceaux"], ["halves", "Moitiés"], ["band", "Bande"], ["sash", "Écharpe"], ["diag", "Diagonale"], ["chevron", "Chevron"], ["chest", "Poitrine"]];
   const COLLECTOR = [
-    { id: "stars", name: "Étoiles", icon: "⭐", price: 120, desc: "Un maillot constellé d'étoiles." },
-    { id: "confetti", name: "Confettis La Fête", icon: "🎉", price: 150, desc: "Le maillot officiel de la fête." },
-    { id: "rainbow", name: "Arc-en-ciel", icon: "🌈", price: 200, desc: "Toutes les couleurs à la fois." },
-    { id: "gold", name: "Or massif", icon: "🥇", price: 400, desc: "Réservé aux légendes." },
+    { id: "stars", name: "Étoiles", icon: "⭐", price: 200, desc: "Un maillot constellé d'étoiles." },
+    { id: "confetti", name: "Confettis La Fête", icon: "🎉", price: 250, desc: "Le motif officiel de la fête." },
+    { id: "rainbow", name: "Arc-en-ciel", icon: "🌈", price: 300, desc: "Toutes les couleurs à la fois." },
+    { id: "gold", name: "Or massif", icon: "🥇", price: 600, desc: "Réservé aux légendes." },
+  ];
+  // Maillots légendaires : couleurs, nom et numéro d'un joueur ou d'un moment mythique
+  const W = "#f7f7f5", GOLD = "#d4a017";
+  const LEGENDS = [
+    { id: "zidane98", name: "Zidane 1998", desc: "Le 10 des deux têtes en finale.", price: 600, kit: { b: "#1d3a8f", p: "plain", c: W, t: "#d71920", sn: "Zidane", n: "10", nc: W, stars: 1 } },
+    { id: "maradona86", name: "Maradona 1986", desc: "La main de Dieu et le but du siècle.", price: 600, kit: { b: W, p: "stripes", c: "#74b6e6", t: "#151515", sn: "Maradona", n: "10", nc: "#151515", stars: 2 } },
+    { id: "pele70", name: "Pelé 1970", desc: "Le Roi et sa troisième étoile.", price: 600, kit: { b: "#ffd200", p: "plain", c: "#118a3e", t: "#118a3e", sn: "Pelé", n: "10", nc: "#118a3e", stars: 3 } },
+    { id: "cr7", name: "CR7 Siuuu", desc: "Le numéro 7 le plus célèbre du monde.", price: 777, kit: { b: W, p: "plain", c: GOLD, t: GOLD, sn: "Ronaldo", n: "7", nc: GOLD } },
+    { id: "messi22", name: "Messi Qatar 2022", desc: "Enfin la Coupe du monde.", price: 800, kit: { b: W, p: "stripes", c: "#74b6e6", t: GOLD, sn: "Messi", n: "10", nc: "#151515", stars: 3 } },
+    { id: "cruyff74", name: "Cruyff 1974", desc: "Le football total en orange.", price: 500, kit: { b: "#f47a1f", p: "plain", c: "#151515", t: "#151515", sn: "Cruyff", n: "14", nc: "#151515" } },
+    { id: "platini84", name: "Platini 1984", desc: "9 buts à l'Euro, record absolu.", price: 500, kit: { b: "#1d3a8f", p: "chest", c: W, c2: "#d71920", t: W, sn: "Platini", n: "10", nc: W } },
+    { id: "papin91", name: "Papin OM 1991", desc: "Le roi des papinades, Ballon d'Or.", price: 450, kit: { b: W, p: "plain", c: "#74b6e6", t: "#74b6e6", sn: "Papin", n: "9", nc: "#3f8fd0" } },
+    { id: "r9", name: "Ronaldo 2002", desc: "Il Fenomeno, doublé en finale.", price: 600, kit: { b: "#ffd200", p: "plain", c: "#118a3e", t: "#118a3e", sn: "Ronaldo", n: "9", nc: "#1f4fb4", stars: 5 } },
+    { id: "vanbasten88", name: "Van Basten 1988", desc: "La volée impossible en finale.", price: 500, kit: { b: "#f47a1f", p: "plain", c: W, t: W, sn: "Van Basten", n: "12", nc: W } },
+    { id: "henry04", name: "Henry 2004", desc: "Les Invincibles, 49 matchs sans défaite.", price: 550, kit: { b: "#d71920", p: "plain", c: W, s: W, t: W, sn: "Henry", n: "14", nc: W } },
+    { id: "gerrard05", name: "Gerrard 2005", desc: "Le miracle d'Istanbul.", price: 500, kit: { b: "#d71920", p: "plain", c: W, t: W, sn: "Gerrard", n: "8", nc: W } },
+    { id: "drogba12", name: "Drogba 2012", desc: "La tête puis le tir au but décisif.", price: 500, kit: { b: "#034694", p: "plain", c: W, t: W, sn: "Drogba", n: "11", nc: W } },
+    { id: "kaiser74", name: "Beckenbauer 1974", desc: "Le Kaiser champion du monde.", price: 500, kit: { b: W, p: "plain", c: "#151515", t: "#151515", sn: "Kaiser", n: "5", nc: "#151515", stars: 1 } },
+    { id: "zizou02", name: "Zidane 2002", desc: "La volée de Glasgow.", price: 600, kit: { b: W, p: "plain", c: GOLD, t: GOLD, sn: "Zidane", n: "5", nc: GOLD } },
+    { id: "mbappe18", name: "Mbappé 2018", desc: "La deuxième étoile à 19 ans.", price: 650, kit: { b: "#14213d", p: "plain", c: W, t: "#d71920", sn: "Mbappé", n: "10", nc: W, stars: 2 } },
+    { id: "baggio94", name: "Baggio 1994", desc: "Le Divin Codino.", price: 450, kit: { b: "#1f6fd1", p: "plain", c: W, t: W, sn: "Baggio", n: "10", nc: W, stars: 3 } },
+    { id: "ballondor", name: "Ballon d'Or", desc: "Le maillot de la légende ultime.", price: 1500, kit: { b: "#d4a017", p: "gold", c: "#151515", t: "#151515", sn: "Légende", n: "1", nc: "#151515" } },
+    { id: "lafete", name: "La Fête", desc: "Le maillot du patron de la fête.", price: 999, kit: { b: "#ff2d95", p: "confetti", c: "#ffd23f", t: "#ffd23f", sn: "La Fête", n: "99", nc: "#fff" } },
+  ];
+  // Célébrations : la pluie de fin de partie
+  const CELEBS = [
+    { id: "balls", name: "Pluie de ballons", icon: "⚽", chars: ["⚽"], price: 150 },
+    { id: "stars", name: "Pluie d'étoiles", icon: "⭐", chars: ["⭐", "🌟", "✨"], price: 150 },
+    { id: "goats", name: "Pluie de chèvres", icon: "🐐", chars: ["🐐"], price: 250 },
+    { id: "cups", name: "Pluie de coupes", icon: "🏆", chars: ["🏆", "🥇"], price: 250 },
+    { id: "party", name: "Méga fête", icon: "🥳", chars: ["🥳", "🎉", "🎊", "🍾"], price: 300 },
   ];
   let ownedKits = new Set();
   try { ownedKits = new Set(JSON.parse(storage.get("fqf-kits-owned") || "[]")); } catch { ownedKits = new Set(); }
   const saveOwned = () => storage.set("fqf-kits-owned", JSON.stringify([...ownedKits]));
+  let ownedCelebs = new Set();
+  try { ownedCelebs = new Set(JSON.parse(storage.get("fqf-celebs") || "[]")); } catch { ownedCelebs = new Set(); }
+  const saveCelebs = () => storage.set("fqf-celebs", JSON.stringify([...ownedCelebs]));
   let avatar = readJSON("fqf-avatar", { b: "#d71920", p: "plain", c: "#f7f7f5", s: "", n: "10", name: "" });
   const saveAvatar = () => storage.set("fqf-avatar", JSON.stringify(avatar));
-  const avatarKit = () => ({ b: avatar.b, p: avatar.p, c: avatar.c, s: avatar.s || undefined, t: avatar.c === avatar.b ? "#fff" : avatar.c,
-    n: avatar.n, nc: avatar.p === "gold" ? "#151515" : avatar.c === avatar.b ? "#fff" : avatar.c });
+  const shirtName = () => (avatar.sn !== undefined ? avatar.sn : avatar.name || "");
+  const avatarKit = () => ({ b: avatar.b, p: avatar.p, c: avatar.c, c2: avatar.c2, s: avatar.s || undefined, stars: avatar.stars,
+    t: avatar.t || (avatar.c === avatar.b ? "#fff" : avatar.c), sn: shirtName(), n: avatar.n,
+    nc: avatar.nc || (avatar.p === "gold" ? "#151515" : avatar.c === avatar.b ? "#fff" : avatar.c) });
   function renderAvatarHome() {
     $("avatar-kit").innerHTML = kitSvg(avatarKit(), "kit");
     $("avatar-name").textContent = avatar.name || "Mon maillot";
@@ -2656,6 +2715,8 @@
     renderAvatarEditor();
     renderAvatarHome();
   }
+  // Modifier une couleur ou un motif « défait » le maillot légendaire
+  const unLegend = () => { delete avatar.t; delete avatar.nc; delete avatar.stars; delete avatar.c2; };
   function swatches(id, key, allowNone) {
     const wrap = $(id);
     wrap.innerHTML = "";
@@ -2666,13 +2727,32 @@
       b.style.background = col || "transparent";
       b.title = col ? col : "Comme le maillot";
       b.textContent = col ? "" : "=";
-      b.onclick = () => { avatar[key] = col; avatarChanged(); };
+      b.onclick = () => { avatar[key] = col; unLegend(); avatarChanged(); };
       wrap.appendChild(b);
     });
+  }
+  function wearLegend(l) {
+    const keep = { name: avatar.name };
+    avatar = { ...keep, s: "", ...l.kit };
+    avatarChanged();
   }
   function renderAvatarEditor() {
     $("av-preview").innerHTML = kitSvg(avatarKit(), "kit av-big") + `<div class="av-label"></div>`;
     $("av-preview").lastChild.textContent = avatar.name || "Ton pseudo";
+    // Maillots légendaires possédés
+    const lw = $("av-legends");
+    const mine = LEGENDS.filter((l) => ownedKits.has(l.id));
+    lw.innerHTML = "";
+    $("av-legends-wrap").classList.toggle("hidden", !mine.length);
+    mine.forEach((l) => {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "av-pat";
+      b.innerHTML = kitSvg(l.kit, "kit") + `<span></span>`;
+      b.lastChild.textContent = l.name;
+      b.onclick = () => wearLegend(l);
+      lw.appendChild(b);
+    });
     const pw = $("av-patterns");
     pw.innerHTML = "";
     [...BASE_PATTERNS, ...COLLECTOR.map((c) => [c.id, `${c.icon} ${c.name}`, c])].forEach(([id, label, col]) => {
@@ -2682,7 +2762,7 @@
       b.className = "av-pat" + (avatar.p === id ? " on" : "") + (locked ? " locked" : "");
       b.innerHTML = kitSvg({ b: avatar.b, p: id, c: avatar.c }, "kit") + `<span></span>`;
       b.lastChild.textContent = locked ? `🔒 ${col.price} 🪙` : label;
-      b.onclick = () => { if (locked) { openShop(); return; } avatar.p = id; avatarChanged(); };
+      b.onclick = () => { if (locked) { openShop(); return; } avatar.p = id; unLegend(); avatarChanged(); };
       pw.appendChild(b);
     });
     swatches("av-c1", "b");
@@ -2692,11 +2772,18 @@
   function openAvatar() {
     Sounds.unlock();
     $("av-pseudo").value = avatar.name || "";
+    $("av-sn").value = shirtName();
     $("av-num").value = avatar.n || "";
     renderAvatarEditor();
     show("avatar");
   }
-  $("av-pseudo").oninput = () => { avatar.name = $("av-pseudo").value.slice(0, 14); avatarChanged(); };
+  $("av-pseudo").oninput = () => {
+    const follow = avatar.sn === undefined || avatar.sn === avatar.name;
+    avatar.name = $("av-pseudo").value.slice(0, 14);
+    if (follow) { avatar.sn = avatar.name; $("av-sn").value = avatar.name; }
+    avatarChanged();
+  };
+  $("av-sn").oninput = () => { avatar.sn = $("av-sn").value.slice(0, 12); avatarChanged(); };
   $("av-num").oninput = () => { const v = $("av-num").value.replace(/\D/g, "").slice(0, 2); $("av-num").value = v; avatar.n = v; avatarChanged(); };
   $("avatar-btn").onclick = openAvatar;
   $("av-back").onclick = () => { renderBest(); show("home"); };
@@ -2709,71 +2796,127 @@
     setTimeout(() => t.remove(), 2400);
   }
 
-
   // ---------- Boutique ----------
-  const SHOP_PACK = { id: "pack", icon: "🎁", name: "Pack trio", desc: "Un exemplaire de chaque joker, à prix réduit.", price: 75 };
+  const BONUS_ITEMS = [
+    { id: "pack", icon: "🎁", name: "Pack trio", desc: "Un exemplaire de chaque joker.", price: 120, give: { fifty: 1, time: 1, skip: 1 } },
+    { id: "mega", icon: "📦", name: "Méga pack", desc: "5 exemplaires de chaque joker.", price: 500, give: { fifty: 5, time: 5, skip: 5 } },
+    { id: "life", icon: "❤️", name: "Seconde chance", desc: "En Mort subite et Plus ou moins, annule ta première erreur. Utilisée automatiquement.", price: 80, give: { life: 1 } },
+    { id: "boost", icon: "🚀", name: "Pièces x2", desc: "Tes 3 prochaines parties rapportent deux fois plus de pièces.", price: 200 },
+  ];
+  const boostLeft = () => Number(storage.get("fqf-boost") || 0);
+  function pay(price) {
+    if (coins < price) return false;
+    coins -= price;
+    storage.set("fqf-coins", String(coins));
+    stats.purchases++;
+    saveStats();
+    return true;
+  }
+  function afterBuy(text, sound = "correct") {
+    Sounds.play(sound);
+    const fresh = checkTrophies();
+    renderShop();
+    toast(fresh.length ? `${text} 🏆 « ${fresh[0].name} » (+${TROPHY_REWARD[fresh[0].tier]} 🪙)` : text);
+  }
+  function shopSection(wrap, title, note) {
+    const h = document.createElement("div");
+    h.className = "card shop-sub";
+    h.dataset.tab = title;
+    h.innerHTML = `<h2></h2>${note ? '<p class="shop-note"></p>' : ""}`;
+    h.querySelector("h2").textContent = title;
+    if (note) h.querySelector("p").textContent = note;
+    wrap.appendChild(h);
+  }
+  function shopCard(wrap, { ico, name, desc, own, price, label, owned, onClick, cls = "" }) {
+    const card = document.createElement("div");
+    card.className = `shop-item ${cls}${owned ? " owned" : ""}`;
+    card.innerHTML = `<div class="si-ico"></div><div class="si-body"><b class="si-name"></b><span class="si-desc"></span>${own ? '<span class="si-own"></span>' : ""}</div>
+      <button class="btn primary si-buy" type="button"></button>`;
+    card.querySelector(".si-ico").innerHTML = ico;
+    card.querySelector(".si-name").textContent = name;
+    card.querySelector(".si-desc").textContent = desc;
+    if (own) card.querySelector(".si-own").innerHTML = own;
+    const btn = card.querySelector(".si-buy");
+    btn.textContent = label || `🪙 ${price}`;
+    btn.disabled = !label && coins < price;
+    btn.onclick = onClick;
+    wrap.appendChild(card);
+  }
   function renderShop() {
     renderWallet();
     const wrap = $("shop-items");
     wrap.innerHTML = "";
-    [...JOKERS, SHOP_PACK].forEach((it) => {
-      const card = document.createElement("div");
-      card.className = `shop-item${it.id === "pack" ? " pack" : ""}`;
-      const owned = it.id === "pack" ? "" : `<span class="si-own">Tu en as <b>${jokers[it.id] || 0}</b></span>`;
-      card.innerHTML = `<div class="si-ico">${it.icon}</div>
-        <div class="si-body"><b class="si-name">${it.name}</b><span class="si-desc">${it.desc}</span>${owned}</div>
-        <button class="btn primary si-buy" type="button">🪙 ${it.price}</button>`;
-      const btn = card.querySelector(".si-buy");
-      btn.disabled = coins < it.price;
-      btn.onclick = () => buy(it, card);
-      wrap.appendChild(card);
+    shopSection(wrap, "🃏 Jokers", "À utiliser pendant les parties, un de chaque par question.");
+    JOKERS.forEach((it) => shopCard(wrap, { ico: it.icon, name: it.name, desc: it.desc, price: it.price, own: `Tu en as <b>${jokers[it.id] || 0}</b>`,
+      onClick: () => { if (!pay(it.price)) return; jokers[it.id] = (jokers[it.id] || 0) + 1; saveJokers(); afterBuy(`✅ ${it.name} ajouté !`); } }));
+    shopSection(wrap, "🚀 Bonus");
+    BONUS_ITEMS.forEach((it) => {
+      const own = it.id === "life" ? `Tu en as <b>${jokers.life || 0}</b>` : it.id === "boost" && boostLeft() ? `Actif : encore <b>${boostLeft()}</b> partie${boostLeft() > 1 ? "s" : ""}` : "";
+      shopCard(wrap, { ico: it.icon, name: it.name, desc: it.desc, price: it.price, own, cls: it.id === "mega" ? "pack" : "",
+        onClick: () => {
+          if (!pay(it.price)) return;
+          if (it.id === "boost") storage.set("fqf-boost", String(boostLeft() + 3));
+          else Object.entries(it.give).forEach(([k, v]) => { jokers[k] = (jokers[k] || 0) + v; });
+          saveJokers();
+          afterBuy(`✅ ${it.name} !`);
+        } });
     });
-    const kw = $("shop-kits");
-    kw.innerHTML = "";
+    shopSection(wrap, "⭐ Maillots légendaires", "Les couleurs, le nom et le numéro d'un joueur ou d'un moment mythique. À enfiler dans « Mon maillot ».");
+    LEGENDS.forEach((l) => {
+      const own = ownedKits.has(l.id);
+      shopCard(wrap, { ico: kitSvg(l.kit, "kit"), name: l.name, desc: l.desc, price: l.price, owned: own, cls: "kit-item legend-item",
+        own: own ? "✅ Dans ta collection" : "", label: own ? "Porter" : "",
+        onClick: () => {
+          if (own) { wearLegend(l); openAvatar(); return; }
+          if (!pay(l.price)) return;
+          ownedKits.add(l.id); saveOwned(); stats.kitsBought++; saveStats();
+          afterBuy(`✅ ${l.name} débloqué !`, "legend");
+        } });
+    });
+    shopSection(wrap, "👕 Motifs collector", "De nouveaux motifs pour créer ton propre maillot.");
     COLLECTOR.forEach((it) => {
       const own = ownedKits.has(it.id);
-      const card = document.createElement("div");
-      card.className = "shop-item kit-item" + (own ? " owned" : "");
-      card.innerHTML = `<div class="si-ico">${kitSvg({ b: "#14213d", p: it.id, c: "#ffd200" }, "kit")}</div>
-        <div class="si-body"><b class="si-name">${it.icon} ${it.name}</b><span class="si-desc">${it.desc}</span>${own ? '<span class="si-own">✅ Débloqué</span>' : ""}</div>
-        <button class="btn primary si-buy" type="button">${own ? "Porter" : `🪙 ${it.price}`}</button>`;
-      const btn = card.querySelector(".si-buy");
-      btn.disabled = !own && coins < it.price;
-      btn.onclick = () => {
-        if (own) { avatar.p = it.id; avatarChanged(); openAvatar(); return; }
-        if (coins < it.price) return;
-        coins -= it.price;
-        storage.set("fqf-coins", String(coins));
-        ownedKits.add(it.id);
-        saveOwned();
-        stats.kitsBought++;
-        saveStats();
-        Sounds.play("legend");
-        const fresh = checkTrophies();
-        renderShop();
-        toast(fresh.length ? `✅ ${it.name} débloqué ! 🏆 « ${fresh[0].name} »` : `✅ ${it.name} débloqué ! Va l'enfiler dans « Mon maillot »`);
-      };
-      kw.appendChild(card);
+      shopCard(wrap, { ico: kitSvg({ b: "#14213d", p: it.id, c: "#ffd200" }, "kit"), name: `${it.icon} ${it.name}`, desc: it.desc, price: it.price, owned: own,
+        cls: "kit-item", own: own ? "✅ Débloqué" : "", label: own ? "Porter" : "",
+        onClick: () => {
+          if (own) { avatar.p = it.id; unLegend(); avatarChanged(); openAvatar(); return; }
+          if (!pay(it.price)) return;
+          ownedKits.add(it.id); saveOwned(); stats.kitsBought++; saveStats();
+          afterBuy(`✅ ${it.name} débloqué !`, "legend");
+        } });
+    });
+    shopSection(wrap, "🎉 Célébrations", "Remplace les confettis de fin de partie par une pluie à ton style.");
+    setTimeout(buildShopTabs, 0);
+    const eq = storage.get("fqf-celeb") || "";
+    CELEBS.forEach((c) => {
+      const own = ownedCelebs.has(c.id);
+      shopCard(wrap, { ico: c.icon, name: c.name, desc: c.chars.join(" "), price: c.price, owned: own,
+        own: own ? (eq === c.id ? "✅ Équipée" : "Dans ta collection") : "", label: own ? (eq === c.id ? "Retirer" : "Équiper") : "",
+        onClick: () => {
+          if (own) { storage.set("fqf-celeb", eq === c.id ? "" : c.id); renderShop(); if (eq !== c.id) confetti(); return; }
+          if (!pay(c.price)) return;
+          ownedCelebs.add(c.id); saveCelebs(); storage.set("fqf-celeb", c.id);
+          afterBuy(`✅ ${c.name} équipée !`, "legend");
+          confetti();
+        } });
     });
   }
-  function buy(it, card) {
-    if (coins < it.price) return;
-    coins -= it.price;
-    storage.set("fqf-coins", String(coins));
-    if (it.id === "pack") JOKERS.forEach((j) => { jokers[j.id] = (jokers[j.id] || 0) + 1; });
-    else jokers[it.id] = (jokers[it.id] || 0) + 1;
-    saveJokers();
-    stats.purchases++;
-    saveStats();
-    Sounds.play("correct");
-    const fresh = checkTrophies();
-    renderShop();
-    document.querySelectorAll(".shop-toast").forEach((x) => x.remove());
-    const toast = document.createElement("div");
-    toast.className = "shop-toast";
-    toast.textContent = fresh.length ? `✅ Acheté ! 🏆 Trophée « ${fresh[0].name} » (+${TROPHY_REWARD[fresh[0].tier]} 🪙)` : `✅ ${it.name} ajouté${it.id === "pack" ? "s" : ""} !`;
-    document.body.appendChild(toast);
-    setTimeout(() => toast.remove(), 2200);
+  // Onglets pour aller directement à une section de la boutique
+  function buildShopTabs() {
+    let tabs = document.querySelector(".shop-tabs");
+    if (!tabs) {
+      tabs = document.createElement("div");
+      tabs.className = "shop-tabs";
+      $("shop-items").before(tabs);
+    }
+    tabs.innerHTML = "";
+    document.querySelectorAll("#shop-items .shop-sub").forEach((sec) => {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.textContent = sec.dataset.tab.replace("Maillots légendaires", "Légendes").replace("Motifs collector", "Motifs");
+      b.onclick = () => window.scrollTo({ top: sec.getBoundingClientRect().top + window.scrollY - 60, behavior: "smooth" });
+      tabs.appendChild(b);
+    });
   }
   function openShop() { Sounds.unlock(); renderShop(); show("shop"); }
   $("shop-btn").onclick = openShop;
@@ -2840,7 +2983,7 @@
 
   // ---------- Mise à jour automatique ----------
   // À l'ouverture, on compare la version de l'app avec celle publiée en ligne.
-  const APP_VERSION = "6.1";
+  const APP_VERSION = "6.2";
   function checkForUpdate() {
     if (!location.protocol.startsWith("http")) return;
     fetch(`version.json?t=${Date.now()}`, { cache: "no-store" })
@@ -2866,17 +3009,86 @@
   checkForUpdate();
   document.addEventListener("visibilitychange", () => { if (!document.hidden) checkForUpdate(); });
 
-  // Écran d'ouverture
-  $("w-count").textContent = GENERAL_TOTAL();
+  // ---------- Écran d'ouverture ----------
+  const MODE_CARDS = [
+    { group: "Quiz", items: [
+      ["classic", "🎯", "Classique", "Le quiz habituel, avec filtres", "#1fa85a"],
+      ["sudden", "💀", "Mort subite", "Une erreur et c'est fini", "#3a3a3a"],
+      ["rush", "⏳", "Contre-la-montre", "60 secondes chrono", "#e0453a"],
+      ["daily", "📅", "Défi du jour", "Les mêmes 10 questions pour tous", "#2f7de1"],
+      ["boss", "🥳", "Battre La Fête", "Elle a 76 % de réussite", "#ff2d95"],
+      ["review", "📚", "Révision", "Rejoue tes erreurs", "#7a5af8"],
+    ] },
+    { group: "Jeux foot", items: [
+      ["kits", "👕", "Maillots", "Reconnais les clubs", "#d71920"],
+      ["geo", "🗺️", "Cartes", "Europe, France, monde", "#0d6e9e"],
+      ["derby", "⚔️", "Derbys", "Trouve le grand rival", "#b8860b"],
+      ["whoami", "🕵️", "Qui suis-je ?", "Indice après indice", "#5b2b86"],
+      ["career", "🧳", "Parcours", "Devine le joueur", "#0f6b34"],
+      ["names", "✍️", "Trouve le prénom", "Écris le prénom du joueur", "#f47a1f"],
+      ["hilo", "↕️", "Plus ou moins", "Lequel a le plus ?", "#00a19a"],
+    ] },
+    { group: "À plusieurs", items: [
+      ["party", "🎉", "Soirée", "2 à 6 joueurs, avec ligue", "#ff7a00"],
+      ["duel", "🤺", "Duel", "Face à face sur un téléphone", "#14213d"],
+    ] },
+  ];
+  function goMode(play) {
+    Sounds.unlock();
+    Sounds.play("click");
+    setPlay(play);
+    show("home");
+  }
+  function renderWelcome() {
+    $("w-count").textContent = GENERAL_TOTAL();
+    $("w-nmodes").textContent = MODE_CARDS.reduce((n, g) => n + g.items.length, 0);
+    $("w-tro").textContent = `${TROPHIES.filter((t) => unlocked[t.id]).length}/${TROPHIES.length}`;
+    $("w-coins").textContent = `🪙 ${coins}`;
+    $("w-kit").innerHTML = kitSvg(avatarKit(), "kit");
+    $("w-hello").textContent = avatar.name ? `Salut ${avatar.name} !` : "Crée ton maillot ✏️";
+    const done = daily.scores[todayStr()];
+    $("w-daily-txt").textContent = done !== undefined
+      ? `✅ Relevé aujourd'hui : ${done}/${DAILY_COUNT}${daily.streak > 1 ? ` · série de ${daily.streak} jours 🔥` : ""}`
+      : `10 questions · +75 🪙${daily.streak && daily.last === yesterdayStr() ? ` · série de ${daily.streak} 🔥` : ""}`;
+    $("w-daily").classList.toggle("done", done !== undefined);
+    const wrap = $("w-modes");
+    wrap.innerHTML = "";
+    MODE_CARDS.forEach((g) => {
+      const h = document.createElement("div");
+      h.className = "wm-group";
+      h.textContent = g.group;
+      wrap.appendChild(h);
+      const row = document.createElement("div");
+      row.className = "wm-row";
+      g.items.forEach(([play, ico, name, desc, col]) => {
+        const b = document.createElement("button");
+        b.type = "button";
+        b.className = "wm-card";
+        b.style.setProperty("--c", col);
+        b.innerHTML = `<span class="wm-ico">${ico}</span><b></b><small></small>`;
+        b.querySelector("b").textContent = name;
+        b.querySelector("small").textContent = desc;
+        b.onclick = () => goMode(play);
+        row.appendChild(b);
+      });
+      wrap.appendChild(row);
+    });
+  }
   $("enter-btn").onclick = () => {
     Sounds.unlock();
     Sounds.play("start");
     show("home");
   };
+  $("w-daily").onclick = () => { goMode("daily"); start(); };
+  $("w-me").onclick = openAvatar;
+  $("w-kit-btn").onclick = openAvatar;
+  $("w-shop-btn").onclick = openShop;
+  $("w-tro-btn").onclick = openTrophies;
 
   renderFilters();
   renderBest();
   renderWallet();
   renderAvatarHome();
+  renderWelcome();
   setPlay(["classic", "sudden", "rush", "daily", "kits", "geo", "party", "review", "boss", "derby", "whoami", "career", "names", "hilo", "duel"].includes(storage.get("fqf-play")) ? storage.get("fqf-play") : "classic");
 })();

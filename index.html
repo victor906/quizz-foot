@@ -6,7 +6,7 @@
   <title>La Fête Quiz</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" />
-  <link rel="stylesheet" href="style.css?v=6.1" />
+  <link rel="stylesheet" href="style.css?v=6.2" />
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="apple-touch-icon" href="icons/apple-touch-icon-v3.png" />
   <link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon-v3.png" />
@@ -25,6 +25,10 @@
     <!-- ÉCRAN D'OUVERTURE -->
     <section id="screen-welcome" class="screen active">
       <div class="welcome">
+        <div class="w-top">
+          <button class="w-me" id="w-me" type="button"><span id="w-kit"></span><span class="w-hello" id="w-hello">Bienvenue !</span></button>
+          <span class="coins" id="w-coins">🪙 0</span>
+        </div>
         <div class="w-head" aria-hidden="true">
           <span class="w-rays"></span>
           <span class="ph-shadow w-shadow"></span>
@@ -33,13 +37,24 @@
           <span class="pb-conf c4"></span><span class="pb-conf c5"></span><span class="pb-conf c6"></span>
         </div>
         <h1 class="w-title">La Fête <span>Quiz</span></h1>
-        <p class="w-desc">Un quiz foot spécialement créé pour toi&nbsp;! Teste tes connaissances, de la naissance du foot jusqu'à aujourd'hui, et prouve que tu es le vrai roi de la fête.</p>
-        <ul class="w-features">
-          <li><span>⚽</span><em><b id="w-count">1038</b> questions</em></li>
-          <li><span>🐐</span>Mode Superfan CR7</li>
-          <li><span>🏆</span>Trophées légendaires</li>
-        </ul>
+        <p class="w-desc">Le quiz foot spécialement créé pour toi&nbsp;: questions, cartes, maillots, duels… prouve que tu es le roi de la fête&nbsp;!</p>
         <button id="enter-btn" class="btn primary big w-btn">Jouer&nbsp;!</button>
+        <button class="w-daily" id="w-daily" type="button">
+          <span class="wd-ico">📅</span>
+          <span class="wd-txt"><b>Défi du jour</b><small id="w-daily-txt">10 questions · +75 🪙</small></span>
+          <span class="wd-go">→</span>
+        </button>
+        <div class="w-stats">
+          <div><b id="w-count">1038</b><span>questions</span></div>
+          <div><b id="w-nmodes">15</b><span>modes de jeu</span></div>
+          <div><b id="w-tro">0</b><span>trophées</span></div>
+        </div>
+        <div class="w-modes" id="w-modes"></div>
+        <div class="w-links">
+          <button type="button" id="w-tro-btn">🏆<span>Trophées</span></button>
+          <button type="button" id="w-shop-btn">🛒<span>Boutique</span></button>
+          <button type="button" id="w-kit-btn">👕<span>Mon maillot</span></button>
+        </div>
       </div>
     </section>
 
@@ -61,9 +76,6 @@
         <div class="wallet-row">
           <button id="avatar-btn" class="avatar-btn" type="button" aria-label="Mon maillot"><span id="avatar-kit"></span><span class="av-name" id="avatar-name">Mon maillot</span></button>
           <span class="coins" id="home-coins">🪙 0</span>
-        </div>
-        <div class="wallet-row2">
-          <button id="shop-btn" class="btn shop-btn" type="button">🛒 Boutique</button>
         </div>
 
         <div id="play-chips" role="radiogroup" aria-label="Type de partie">
@@ -160,9 +172,12 @@
         <button id="start-btn" class="btn primary big">Coup d'envoi !</button>
         <p class="fresh" id="fresh-info"></p>
         <p class="best" id="best-score"></p>
-        <button id="trophies-btn" class="btn trophies-btn">🏆 Mes trophées</button>
+        <div class="home-bottom">
+          <button id="trophies-btn" class="btn trophies-btn">🏆 Mes trophées</button>
+          <button id="shop-btn" class="btn shop-btn" type="button">🛒 Boutique</button>
+        </div>
       </div>
-      <p class="app-version">Version 6.1</p>
+      <p class="app-version">Version 6.2</p>
     </section>
 
     <!-- ÉCRAN DE QUESTION -->
@@ -265,8 +280,13 @@
         <div class="tr-title">👕 Mon maillot</div>
         <div class="av-preview" id="av-preview"></div>
         <div class="av-fields">
-          <label>Pseudo <input id="av-pseudo" maxlength="14" type="text" placeholder="Ton pseudo" /></label>
+          <label class="av-full">Pseudo <input id="av-pseudo" maxlength="14" type="text" placeholder="Ton pseudo" /></label>
+          <label>Nom floqué <input id="av-sn" maxlength="12" type="text" placeholder="Sur le maillot" autocapitalize="characters" /></label>
           <label>Numéro <input id="av-num" maxlength="2" inputmode="numeric" type="text" placeholder="10" /></label>
+        </div>
+        <div id="av-legends-wrap" class="hidden">
+          <h2>⭐ Mes maillots légendaires</h2>
+          <div class="av-patterns" id="av-legends"></div>
         </div>
         <h2>Motif</h2>
         <div class="av-patterns" id="av-patterns"></div>
@@ -308,16 +328,16 @@
         <div class="shop-balance"><span>Tes pièces</span><b id="shop-coins">🪙 0</b></div>
       </div>
       <div class="shop-items" id="shop-items"></div>
-      <div class="card shop-sub"><h2>👕 Maillots collector</h2><p class="shop-note">Des motifs exclusifs pour ton maillot (bouton « Mon maillot » sur l'accueil).</p></div>
-      <div class="shop-items" id="shop-kits"></div>
       <div class="card shop-help">
         <h2>Comment gagner des pièces&nbsp;?</h2>
         <ul>
-          <li><b>+1 / +2 / +3</b> 🪙 par bonne réponse (facile / moyen / difficile)</li>
-          <li><b>+5</b> 🪙 pour la question bonus</li>
-          <li><b>+20</b> 🪙 pour un sans-faute (10 questions ou plus)</li>
-          <li><b>+30</b> 🪙 pour le Défi du jour (une fois par jour)</li>
-          <li><b>+10 à +250</b> 🪙 par trophée débloqué (Bronze → Ultime)</li>
+          <li><b>+3 / +5 / +8</b> 🪙 par bonne réponse (facile / moyen / difficile)</li>
+          <li><b>+10</b> 🪙 toutes les 5 bonnes réponses d'affilée</li>
+          <li><b>+15</b> 🪙 pour la question bonus</li>
+          <li><b>+50</b> 🪙 pour un sans-faute (10 questions ou plus)</li>
+          <li><b>+75</b> 🪙 pour le Défi du jour et pour chaque victoire contre La Fête</li>
+          <li><b>jusqu'à +100</b> 🪙 sur les cartes (1 pièce pour 100 points)</li>
+          <li><b>+25 à +600</b> 🪙 par trophée débloqué (Bronze → Ultime)</li>
         </ul>
         <p class="shop-note">Les jokers s'utilisent pendant les parties, une fois par question chacun. Pas de jokers ni de pièces en mode Soirée, pour que ce soit équitable.</p>
       </div>
@@ -345,18 +365,18 @@
     </section>
   </main>
 
-  <script src="questions.js?v=6.1"></script>
-  <script src="questions-plus.js?v=6.1"></script>
-  <script src="questions-extra.js?v=6.1"></script>
-  <script src="questions-multi.js?v=6.1"></script>
-  <script src="questions-cr7.js?v=6.1"></script>
-  <script src="clubs.js?v=6.1"></script>
-  <script src="geo-map.js?v=6.1"></script>
-  <script src="games-data.js?v=6.1"></script>
-  <script src="trophies.js?v=6.1"></script>
-  <script src="sounds.js?v=6.1"></script>
-  <script src="legend.js?v=6.1"></script>
-  <script src="app.js?v=6.1"></script>
+  <script src="questions.js?v=6.2"></script>
+  <script src="questions-plus.js?v=6.2"></script>
+  <script src="questions-extra.js?v=6.2"></script>
+  <script src="questions-multi.js?v=6.2"></script>
+  <script src="questions-cr7.js?v=6.2"></script>
+  <script src="clubs.js?v=6.2"></script>
+  <script src="geo-map.js?v=6.2"></script>
+  <script src="games-data.js?v=6.2"></script>
+  <script src="trophies.js?v=6.2"></script>
+  <script src="sounds.js?v=6.2"></script>
+  <script src="legend.js?v=6.2"></script>
+  <script src="app.js?v=6.2"></script>
   <script>
     // Installation hors ligne (uniquement quand le site est servi en https)
     if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {

@@ -165,11 +165,28 @@ function kitSvg(kit, cls = "kit") {
     <linearGradient id="${id}g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".28"/><stop offset=".55" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".22"/></linearGradient></defs>
     <g clip-path="url(#${id}c)"><rect width="100" height="100" fill="${b}"/>${pat}${sleeves}
       <path d="M4 36 L15 49" stroke="${t}" stroke-width="5"/><path d="M96 36 L85 49" stroke="${t}" stroke-width="5"/>
-      ${kit.n ? `<text x="50" y="68" text-anchor="middle" font-family="Oswald, Impact, sans-serif" font-weight="700" font-size="30" fill="${kit.nc || t}" stroke="rgba(0,0,0,.35)" stroke-width=".8">${String(kit.n).slice(0, 2)}</text>` : ""}
+      ${kitPrint(kit, t)}
       <rect width="100" height="100" fill="url(#${id}g)"/></g>
     <path d="M33 14 Q40 24 50 24 Q60 24 67 14" fill="none" stroke="${t}" stroke-width="4.5" stroke-linecap="round"/>
     <path d="${SHIRT}" fill="none" stroke="rgba(0,0,0,.45)" stroke-width="1.6" stroke-linejoin="round"/>
   </svg>`;
+}
+// Flocage : nom au-dessus du numéro, étoiles éventuelles
+function kitPrint(kit, t) {
+  const col = kit.nc || t;
+  const esc = (x) => String(x).replace(/[<>&"]/g, "");
+  let out = "";
+  if (kit.stars) {
+    const n = Math.min(5, kit.stars);
+    for (let i = 0; i < n; i++) out += `<text x="${50 + (i - (n - 1) / 2) * 7}" y="${kit.sn ? 33 : 38}" text-anchor="middle" font-size="7" fill="#ffd23f" stroke="rgba(0,0,0,.4)" stroke-width=".4">★</text>`;
+  }
+  const name = kit.sn ? esc(kit.sn).toUpperCase().slice(0, 12) : "";
+  if (name) {
+    const fs = Math.min(11, 78 / Math.max(4, name.length) * 1.45);
+    out += `<text x="50" y="${kit.n ? 46 : 58}" text-anchor="middle" font-family="Oswald, Impact, sans-serif" font-weight="700" font-size="${fs.toFixed(1)}" letter-spacing=".4" fill="${col}" stroke="rgba(0,0,0,.3)" stroke-width=".4">${name}</text>`;
+  }
+  if (kit.n) out += `<text x="50" y="${name ? 74 : 68}" text-anchor="middle" font-family="Oswald, Impact, sans-serif" font-weight="700" font-size="${name ? 27 : 30}" fill="${col}" stroke="rgba(0,0,0,.35)" stroke-width=".8">${esc(kit.n).slice(0, 2)}</text>`;
+  return out;
 }
 // Deux maillots identiques ne doivent jamais être proposés dans la même question
 const kitSignature = (k) => [k.b, k.p || "plain", k.c || "", k.s && k.s !== k.b ? k.s : "", k.c2 || ""].join("|");

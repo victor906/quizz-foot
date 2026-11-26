@@ -94,4 +94,4 @@ TROPHIES.push(
 );
 
 // Pièces gagnées à chaque trophée débloqué
-const TROPHY_REWARD = { bronze: 10, argent: 25, or: 50, legende: 100, ultime: 250 };
+const TROPHY_REWARD = { bronze: 25, argent: 60, or: 125, legende: 250, ultime: 600 };
