@@ -27,7 +27,7 @@ sur l'écran d'accueil. Il s'ouvre alors en plein écran avec son icône, et fon
 
 ## Fonctionnalités
 
-- **Trophées** : 32 trophées (bronze, argent, or, légende, et le Trophée CR7 Ultime) à débloquer, définis dans `trophies.js`
+- **Trophées** : 31 trophées (bronze, argent, or, légende, et le Trophée CR7 Ultime) à débloquer, définis dans `trophies.js`
 - **Mode Superfan CR7** : 112 questions uniquement sur Cristiano Ronaldo, de Madère à aujourd'hui (fichier `questions-cr7.js`)
 
 - Choix du nombre de questions (10, 20, 50, 100 ou tout)

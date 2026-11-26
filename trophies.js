@@ -26,7 +26,6 @@ const TROPHIES = [
   { id: "perfect-10", icon: "🎯", name: "Sans-faute", desc: "Faire 100 % sur une partie d'au moins 10 questions", tier: "argent", goal: 1, value: (s) => s.perfect10 },
   { id: "perfect-20", icon: "🏆", name: "Ballon d'Or", desc: "Faire 100 % sur une partie d'au moins 20 questions", tier: "or", goal: 1, value: (s) => s.perfect20 },
   { id: "marathon", icon: "🏃", name: "Marathonien", desc: "Réussir au moins 80 % d'une partie de 50 questions ou plus", tier: "or", goal: 1, value: (s) => s.marathon },
-  { id: "full", icon: "📚", name: "Jusqu'au bout", desc: "Terminer une partie « Tout » sans abandonner", tier: "legende", goal: 1, value: (s) => s.fullGames },
 
   // Types de questions
   { id: "hard-10", icon: "🧠", name: "Tête bien faite", desc: "10 bonnes réponses à des questions difficiles", tier: "argent", goal: 10, value: (s) => s.hard },
