@@ -1,4 +1,4 @@
-# ⚽ Le Foot Quizz de la Fête
+# 🎉 La Fête Quizz
 
 Un site de quiz sur le football : **644 questions**, de la naissance du foot en 1863
 jusqu'en 2026, réparties en 15 catégories (histoire, Coupe du monde, Ligue des champions,

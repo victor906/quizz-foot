@@ -260,7 +260,7 @@ body {
 #validate-btn:disabled { opacity: .45; }
 
 @media (prefers-reduced-motion: reduce) {
-  .ball, .screen, .answer.wrong { animation: none; }
+  .party-ball *, .screen, .answer.wrong { animation: none !important; }
 }
 
 /* ---------- Difficulté et époques ---------- */
@@ -666,3 +666,39 @@ body.theme-cr7 .tagline { font-weight: 500; }
 .d-tip:empty { display: none; }
 .defi-chip { display: inline-block; margin: 3px 0 2px; font-size: .68rem; font-weight: 800; letter-spacing: .04em; color: #8a5a00; background: #fff3c4; border: 1px solid #e9c46a; padding: 1px 8px; border-radius: 999px; }
 .trophy.done.tier-ultime .defi-chip { background: rgba(255, 215, 106, .18); color: #ffd76a; border-color: rgba(255, 215, 106, .5); }
+
+/* ---------- Ballon de fête animé ---------- */
+.party-ball { position: relative; width: 124px; height: 148px; margin: 26px auto -6px; }
+.pb-svg { width: 100%; height: 100%; overflow: visible; }
+.pb-ball, .pb-hat { transform-box: view-box; }
+/* Le ballon rebondit en s'écrasant un peu au sol */
+.pb-ball, .pb-hat { animation: pb-bounce 1.3s cubic-bezier(.45, 0, .55, 1) infinite; transform-origin: 80px 174px; }
+@keyframes pb-bounce {
+  0%, 100% { transform: translateY(0) scale(1.08, .9); }
+  12% { transform: translateY(-6px) scale(.96, 1.05); }
+  50% { transform: translateY(-34px) scale(1, 1); }
+  88% { transform: translateY(-6px) scale(.97, 1.04); }
+}
+/* Le motif du ballon tourne */
+.pb-spin { transform-box: view-box; transform-origin: 80px 118px; animation: pb-roll 2.6s linear infinite; }
+@keyframes pb-roll { to { transform: rotate(360deg); } }
+/* Le chapeau se balance */
+.pb-hat-in { transform-box: view-box; transform-origin: 84px 72px; animation: pb-wobble 1.3s ease-in-out infinite; }
+@keyframes pb-wobble { 0%, 100% { transform: rotate(-8deg); } 50% { transform: rotate(8deg); } }
+.pb-pompom { transform-box: fill-box; transform-origin: center; animation: pb-pop 1.3s ease-in-out infinite; }
+@keyframes pb-pop { 50% { scale: 1.25; } }
+.pb-shadow { transform-box: fill-box; transform-origin: center; animation: pb-shadow 1.3s cubic-bezier(.45, 0, .55, 1) infinite; }
+@keyframes pb-shadow { 0%, 100% { transform: scale(1.1); opacity: .9; } 50% { transform: scale(.6); opacity: .4; } }
+/* Confettis autour du ballon */
+.pb-conf { position: absolute; width: 7px; height: 11px; border-radius: 2px; top: 40%; left: 50%; opacity: 0; animation: pb-conf 2.4s ease-out infinite; }
+.pb-conf.c1 { background: #ffd23f; --x: -70px; --y: -60px; animation-delay: 0s; }
+.pb-conf.c2 { background: #e0453a; --x: 68px; --y: -54px; animation-delay: .4s; }
+.pb-conf.c3 { background: #3b82f6; --x: -80px; --y: 10px; animation-delay: .8s; }
+.pb-conf.c4 { background: #fff; --x: 78px; --y: 16px; animation-delay: 1.2s; }
+.pb-conf.c5 { background: #a855f7; --x: -40px; --y: -80px; animation-delay: 1.6s; }
+.pb-conf.c6 { background: #22c55e; --x: 46px; --y: -84px; animation-delay: 2s; }
+@keyframes pb-conf {
+  0% { opacity: 0; transform: translate(0, 0) rotate(0); }
+  15% { opacity: 1; }
+  100% { opacity: 0; transform: translate(var(--x), var(--y)) rotate(320deg); }
+}
