@@ -30,13 +30,17 @@
         </div>
 
         <h2>Difficulté</h2>
-        <div class="chips" id="diff-chips"></div>
+        <div class="chips diff-row" id="diff-chips"></div>
 
-        <h2>Époques</h2>
-        <div class="chips" id="era-chips"></div>
+        <details class="dropdown" id="era-drop">
+          <summary><span class="dd-title">Époques</span><span class="dd-sum" id="era-summary">Toutes</span></summary>
+          <div class="chips" id="era-chips"></div>
+        </details>
 
-        <h2>Catégories</h2>
-        <div class="chips" id="cat-chips"></div>
+        <details class="dropdown" id="cat-drop">
+          <summary><span class="dd-title">Catégories</span><span class="dd-sum" id="cat-summary">Toutes</span></summary>
+          <div class="chips" id="cat-chips"></div>
+        </details>
 
         <h2>Options</h2>
         <label class="toggle">

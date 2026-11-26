@@ -273,3 +273,29 @@ body {
 .badge.era { background: #e8eefc; color: #23408e; }
 .badge.multi { background: #f1e8fc; color: #5b2a8e; }
 .fresh { color: var(--grass-1); }
+
+/* ---------- Difficulté sur une ligne ---------- */
+.diff-row { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; flex-wrap: nowrap; }
+.diff-row .chip { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; padding: 8px 4px; border-radius: 14px; min-width: 0; line-height: 1.15; text-align: center; }
+.diff-row .chip .dl { font-size: .85rem; }
+.diff-row .chip small { font-size: .72rem; }
+
+/* ---------- Menus déroulants Époques / Catégories ---------- */
+.dropdown { border: 2px solid var(--line); border-radius: 14px; margin-bottom: 12px; background: #f9fcfa; }
+.dropdown summary {
+  list-style: none; cursor: pointer; display: flex; align-items: center; gap: 10px;
+  padding: 12px 14px; font-weight: 700;
+}
+.dropdown summary::-webkit-details-marker { display: none; }
+.dropdown summary::after {
+  content: ""; width: 9px; height: 9px; flex-shrink: 0;
+  border-right: 2.5px solid var(--muted); border-bottom: 2.5px solid var(--muted);
+  transform: rotate(45deg); margin: -4px 4px 0 0; transition: transform .2s;
+}
+.dropdown[open] summary::after { transform: rotate(-135deg); margin-top: 4px; }
+.dropdown summary:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; border-radius: 12px; }
+.dd-title { text-transform: uppercase; letter-spacing: .06em; color: var(--muted); font-size: .9rem; }
+.dd-sum { margin-left: auto; color: var(--grass-1); font-size: .9rem; text-align: right; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dropdown .chips { padding: 0 12px 12px; margin: 0; }
+#diff-chips { margin-bottom: 16px; }
+.dropdown + h2 { margin-top: 18px; }

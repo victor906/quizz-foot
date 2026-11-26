@@ -136,7 +136,7 @@
 
   function renderFilters() {
     renderChipRow("diff-chips",
-      DIFFS.map((d) => ({ id: d.id, html: `<span class="stars">${d.stars}</span> ${d.label}` })),
+      DIFFS.map((d) => ({ id: d.id, html: `<span class="stars">${d.stars}</span><span class="dl">${d.label}</span>` })),
       state.diffs, (id) => QUESTIONS.filter((q) => q.diff === id).length, "Toutes");
     renderChipRow("era-chips",
       ERAS.map((e) => ({ id: e.id, html: e.range ? `${e.label} <em>${e.range}</em>` : e.label })),
@@ -168,7 +168,21 @@
       };
       wrap.appendChild(b);
     });
+    updateSummaries();
     renderFresh();
+  }
+
+  // Résumé affiché à côté des menus déroulants fermés
+  function summaryText(selected, total, labelOf) {
+    if (selected.size === total) return "Toutes";
+    if (selected.size === 0) return "Aucune";
+    if (selected.size === 1) return labelOf([...selected][0]);
+    return `${selected.size} sélectionnées`;
+  }
+  function updateSummaries() {
+    $("era-summary").textContent = summaryText(state.eras, ERAS.length,
+      (id) => { const e = eraOf(id); return e.id === "O" ? "1863-1929" : e.label; });
+    $("cat-summary").textContent = summaryText(state.cats, categories.length, (c) => c);
   }
 
   function renderFresh() {
@@ -197,6 +211,7 @@
   function renderBest() {
     const best = storage.get("fqf-best");
     $("best-score").textContent = best ? `🏅 Ton meilleur score : ${best}` : "";
+    updateSummaries();
     renderFresh();
   }
 
