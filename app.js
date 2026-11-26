@@ -581,6 +581,8 @@
     show("end");
     Sounds.play("end", pct >= 60 || state.newTrophies.length > 0);
     if (pct >= 80) confetti();
+    // Révélation automatique si le Trophée CR7 Ultime vient d'être débloqué
+    if (state.newTrophies.some((t) => t.id === "cr7-ultime")) setTimeout(openLegend, 1800);
   }
 
   // Encadré « Nouveaux trophées » en fin de partie
@@ -637,7 +639,29 @@
       card.querySelector(".t-val").textContent = done
         ? `Débloqué le ${unlocked[t.id].split("-").reverse().join("/")}`
         : `${val} / ${goal}`;
+      if (t.tier === "ultime") {
+        const hint = document.createElement("div");
+        hint.className = "t-hint";
+        hint.textContent = done ? "✨ Touche pour l'admirer" : "🔒 Touche pour voir la malle";
+        card.querySelector(".t-body").appendChild(hint);
+        card.setAttribute("role", "button");
+        card.tabIndex = 0;
+        const go = () => openLegend();
+        card.onclick = go;
+        card.onkeydown = (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); go(); } };
+      }
       grid.appendChild(card);
+    });
+  }
+
+  // Ouvre la malle du Trophée CR7 Ultime
+  function openLegend() {
+    Sounds.unlock();
+    const d = unlocked["cr7-ultime"];
+    LegendReveal.open({
+      unlocked: !!d,
+      date: d ? d.split("-").reverse().join("/") : "",
+      remaining: CR7_TROPHY_IDS.filter((id) => !unlocked[id]).length,
     });
   }
 

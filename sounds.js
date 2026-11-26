@@ -106,6 +106,30 @@ const Sounds = (() => {
         [523, 659, 784, 1047].forEach((f, i) => tone(f, 1.3 + i * 0.13, 0.35, { type: "triangle", vol: 0.22 }));
       }
     },
+    // Malle qui tremble
+    rumble() {
+      tone(60, 0, 0.9, { type: "sine", vol: 0.35, slideTo: 45 });
+      tone(90, 0.15, 0.6, { type: "triangle", vol: 0.12, slideTo: 70 });
+      crowd(0, 1.0, 0.12);
+    },
+    // Ouverture de la malle : grincement puis éclat
+    open() {
+      tone(140, 0, 0.35, { type: "sawtooth", vol: 0.06, slideTo: 90 });
+      tone(2093, 0.3, 1.2, { type: "sine", vol: 0.12 });
+      tone(2637, 0.38, 1.1, { type: "sine", vol: 0.1 });
+      tone(3136, 0.46, 1.0, { type: "sine", vol: 0.08 });
+    },
+    // Fanfare légendaire
+    legend() {
+      [523, 659, 784, 1047, 1319, 1568].forEach((f, i) => tone(f, i * 0.09, 0.5, { type: "triangle", vol: 0.2 }));
+      [262, 330, 392, 523].forEach((f) => tone(f, 0.6, 1.8, { type: "sawtooth", vol: 0.045 }));
+      [1047, 1319, 1568, 2093].forEach((f) => tone(f, 0.6, 1.8, { type: "triangle", vol: 0.09 }));
+      crowd(0.5, 3.2, 0.42);
+    },
+    locked() {
+      tone(110, 0, 0.12, { type: "square", vol: 0.08 });
+      tone(98, 0.14, 0.18, { type: "square", vol: 0.08 });
+    },
     click() {
       tone(1200, 0, 0.04, { type: "square", vol: 0.05 });
     },

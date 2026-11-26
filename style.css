@@ -420,3 +420,184 @@ body.theme-cr7 .tagline { font-weight: 500; }
 .trophy.done.tier-ultime .t-desc, .trophy.done.tier-ultime .t-val { color: rgba(255,255,255,.8); }
 .trophy.done.tier-ultime .t-tier { background: none; color: #ffd76a; }
 .nt.tier-ultime { border-color: #e0b23a; background: linear-gradient(135deg, #fffaf0, #ffe9a8); }
+
+/* =========================================================
+   Révélation légendaire : malle en cuir + Trophée CR7 Ultime
+   ========================================================= */
+.legend-overlay {
+  position: fixed; inset: 0; z-index: 100; overflow: hidden;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: calc(16px + env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) calc(16px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
+  opacity: 0; transition: opacity .35s ease; color: #fff;
+}
+.legend-overlay.in { opacity: 1; }
+.legend-overlay.closing { opacity: 0; }
+.lg-bg { position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 45%, #2b1a05 0%, #0b0703 55%, #000 100%); }
+
+/* Rayons de lumière tournants */
+.lg-rays {
+  position: absolute; left: 50%; top: 42%; width: 260vmax; height: 260vmax; translate: -50% -50%;
+  background: repeating-conic-gradient(from 0deg, rgba(255, 214, 102, .22) 0deg 6deg, transparent 6deg 18deg);
+  -webkit-mask: radial-gradient(circle, #000 0%, transparent 45%); mask: radial-gradient(circle, #000 0%, transparent 45%);
+  opacity: 0; scale: .3; transition: opacity .6s ease, scale 1s cubic-bezier(.2, .8, .2, 1);
+  animation: lg-spin 18s linear infinite; pointer-events: none;
+}
+.open .lg-rays { opacity: 1; scale: 1; }
+@keyframes lg-spin { to { rotate: 360deg; } }
+
+.lg-flash { position: absolute; inset: 0; background: radial-gradient(circle at 50% 45%, #fff 0%, rgba(255, 230, 150, .7) 25%, transparent 60%); opacity: 0; pointer-events: none; }
+.open .lg-flash { animation: lg-flash .9s ease-out; }
+@keyframes lg-flash { 0% { opacity: 0; } 15% { opacity: 1; } 100% { opacity: 0; } }
+
+/* Scène */
+.lg-stage { position: relative; width: 260px; height: 360px; perspective: 900px; flex-shrink: 0; pointer-events: none; }
+.lg-halo {
+  position: absolute; left: 50%; top: 32%; width: 300px; height: 300px; translate: -50% -50%; border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 220, 120, .55), rgba(255, 170, 30, .15) 45%, transparent 70%);
+  opacity: 0; transition: opacity .8s ease;
+}
+.risen .lg-halo { opacity: 1; animation: lg-pulse 2.2s ease-in-out infinite; }
+@keyframes lg-pulse { 50% { scale: 1.12; } }
+
+/* Le trophée monte depuis l'intérieur de la malle (coupé au bord supérieur de la malle) */
+.lg-rise { position: absolute; left: 0; right: 0; top: 0; height: 232px; clip-path: inset(-200px -200px 0 -200px); z-index: 2; }
+.open .lg-rise { z-index: 4; }
+.lg-trophy {
+  position: absolute; left: 50%; bottom: 0; width: 170px; translate: -50% 105%; scale: .5;
+  transition: translate 1.1s cubic-bezier(.17, .9, .25, 1.15), scale 1.1s cubic-bezier(.17, .9, .25, 1.15);
+  filter: drop-shadow(0 0 18px rgba(255, 210, 80, .9)) drop-shadow(0 0 40px rgba(255, 170, 0, .6));
+}
+.risen .lg-trophy { translate: -50% -8%; scale: 1; animation: lg-float 3s ease-in-out 1.1s infinite; }
+@keyframes lg-float { 50% { translate: -50% -14%; } }
+.lg-cup { display: block; width: 100%; height: auto; }
+/* Reflet qui balaie le trophée (découpé à la forme de la coupe) */
+.lg-glint { transform: translateX(-90px) skewX(-20deg); opacity: 0; }
+.risen .lg-glint { opacity: 1; animation: lg-glint 2.6s ease-in-out 1s infinite; }
+@keyframes lg-glint { 0% { transform: translateX(-90px) skewX(-20deg); } 60%, 100% { transform: translateX(260px) skewX(-20deg); } }
+@keyframes lg-sweep { 0% { background-position: 150% 0; } 60%, 100% { background-position: -60% 0; } }
+
+/* ---------- Malle en cuir ---------- */
+.trunk {
+  position: absolute; left: 50%; bottom: 6px; width: 236px; height: 156px; translate: -50% 0;
+  transform-style: preserve-3d; z-index: 3;
+  animation: lg-drop .7s cubic-bezier(.3, 1.4, .5, 1) both;
+}
+@keyframes lg-drop { from { translate: -50% -120vh; } }
+.shake .lg-stage { animation: lg-shake .12s linear infinite; }
+@keyframes lg-shake {
+  0% { rotate: -1.5deg; translate: -4px 0; } 50% { rotate: 1.5deg; translate: 4px -2px; } 100% { rotate: -1.5deg; translate: -4px 0; }
+}
+.leather, .trunk-body, .lid-front {
+  background:
+    radial-gradient(circle at 20% 30%, rgba(255, 255, 255, .07) 0 1px, transparent 2px) 0 0 / 7px 7px,
+    radial-gradient(circle at 70% 60%, rgba(0, 0, 0, .18) 0 1px, transparent 2px) 0 0 / 9px 9px,
+    linear-gradient(160deg, #8a4b22 0%, #6b3517 45%, #4a220d 100%);
+}
+.trunk-body {
+  position: absolute; left: 0; right: 0; bottom: 0; height: 102px; border-radius: 6px 6px 12px 12px;
+  box-shadow: inset 0 0 0 3px #3a1a08, inset 0 0 0 6px rgba(255, 214, 160, .12), 0 18px 30px rgba(0, 0, 0, .6);
+}
+.trunk-body::before, .lid-front::before {
+  content: ""; position: absolute; inset: 9px; border: 2px dashed rgba(255, 214, 160, .45); border-radius: 6px; pointer-events: none;
+}
+.trunk-lid {
+  position: absolute; left: -4px; right: -4px; bottom: 98px; height: 58px; z-index: 5;
+  transform-origin: 50% 100%; transform: rotateX(0deg);
+  transition: transform .75s cubic-bezier(.3, 1.3, .5, 1);
+}
+.open .trunk-lid { transform: translateY(-6px) rotateX(72deg); z-index: 1; filter: brightness(.75); }
+.lid-front {
+  position: absolute; inset: 0; border-radius: 40px 40px 6px 6px / 26px 26px 6px 6px;
+  box-shadow: inset 0 0 0 3px #3a1a08, inset 0 -8px 12px rgba(0, 0, 0, .35), 0 6px 10px rgba(0, 0, 0, .4);
+  backface-visibility: hidden;
+}
+.lid-front::before { border-radius: 34px 34px 4px 4px / 20px 20px 4px 4px; }
+.strap { position: absolute; top: 0; bottom: 0; width: 18px; background: linear-gradient(90deg, #8a5a00, #ffd76a 45%, #c99a06 60%, #7a4d00); box-shadow: 0 0 0 2px rgba(0, 0, 0, .35); }
+.strap.s1 { left: 34px; } .strap.s2 { right: 34px; }
+.lid-front .strap { border-radius: 4px 4px 0 0; }
+.lid-plate {
+  position: absolute; left: 50%; top: 50%; translate: -50% -40%; padding: 3px 12px; border-radius: 6px;
+  font-weight: 900; font-size: .9rem; letter-spacing: .1em; color: #3a2400;
+  background: linear-gradient(180deg, #fff1a6, #c99a06); box-shadow: 0 2px 0 #6b4400;
+}
+.corner { position: absolute; width: 22px; height: 22px; background: linear-gradient(135deg, #ffe17a, #a86f00); }
+.corner.c1 { left: -2px; top: -2px; border-radius: 6px 0 10px 0; } .corner.c2 { right: -2px; top: -2px; border-radius: 0 6px 0 10px; }
+.corner.c3 { left: -2px; bottom: -2px; border-radius: 0 10px 0 12px; } .corner.c4 { right: -2px; bottom: -2px; border-radius: 10px 0 12px 0; }
+.lock {
+  position: absolute; left: 50%; top: -6px; translate: -50% 0; width: 40px; height: 46px; border-radius: 6px 6px 14px 14px; z-index: 6;
+  background: linear-gradient(180deg, #fff1a6, #d9a01a 50%, #8a5a00); box-shadow: 0 3px 6px rgba(0, 0, 0, .5), inset 0 0 0 2px rgba(255, 255, 255, .35);
+  transition: rotate .4s ease, translate .4s ease;
+}
+.keyhole { position: absolute; left: 50%; top: 14px; width: 9px; height: 9px; translate: -50% 0; background: #2a1600; border-radius: 50%; }
+.keyhole::after { content: ""; position: absolute; left: 2px; top: 6px; width: 5px; height: 11px; background: #2a1600; border-radius: 0 0 2px 2px; }
+.open .lock { rotate: -25deg; translate: -40% 6px; }
+.handle { position: absolute; top: 46px; width: 40px; height: 14px; left: -24px; border: 5px solid #3a1a08; border-right: 0; border-radius: 10px 0 0 10px; }
+/* Lumière qui s'échappe de la malle pendant qu'elle tremble */
+.trunk-glow {
+  position: absolute; left: 10%; right: 10%; bottom: 92px; height: 18px; border-radius: 50%;
+  background: radial-gradient(ellipse, rgba(255, 230, 140, 1), rgba(255, 180, 40, .6) 40%, transparent 70%);
+  opacity: 0; filter: blur(4px); z-index: 4; transition: opacity .4s;
+}
+.shake .trunk-glow { opacity: 1; animation: lg-flicker .18s infinite; }
+.open .trunk-glow { opacity: 1; height: 60px; bottom: 70px; filter: blur(10px); }
+@keyframes lg-flicker { 50% { opacity: .55; } }
+
+/* Chaînes de la malle verrouillée */
+.chains { display: none; }
+.is-locked .chains { display: block; }
+.chains span {
+  position: absolute; left: -12px; right: -12px; top: 64px; height: 12px; z-index: 7;
+  background: repeating-linear-gradient(90deg, #9aa3a8 0 14px, #4b5358 14px 16px, transparent 16px 18px);
+  border-radius: 6px; box-shadow: 0 2px 4px rgba(0, 0, 0, .6);
+}
+.chains span:first-child { rotate: 14deg; } .chains span:last-child { rotate: -14deg; }
+.is-locked .lg-bg { background: radial-gradient(ellipse at 50% 45%, #1d1d1d 0%, #070707 70%); }
+
+/* Scintillements */
+.lg-sparkles { position: absolute; inset: 0; pointer-events: none; z-index: 6; }
+.lg-spark {
+  position: absolute; width: var(--sz); height: var(--sz); border-radius: 50%;
+  background: radial-gradient(circle, #fff, #ffd76a 50%, transparent 70%);
+  animation: lg-twinkle 1.4s ease-in-out forwards;
+}
+.lg-spark.star { width: auto; height: auto; background: none; color: #ffe9a8; font-size: var(--sz); text-shadow: 0 0 10px #ffc83a, 0 0 20px #ff9d00; }
+@keyframes lg-twinkle { 0% { opacity: 0; scale: .2; } 40% { opacity: 1; scale: 1.2; } 100% { opacity: 0; scale: .4; translate: 0 -24px; } }
+
+/* Texte */
+.lg-text { position: relative; z-index: 7; text-align: center; margin-top: 10px; opacity: 0; translate: 0 14px; transition: opacity .6s ease, translate .6s ease; pointer-events: none; }
+.show-text .lg-text { opacity: 1; translate: 0 0; }
+.lg-rarity { font-size: .8rem; font-weight: 900; letter-spacing: .3em; color: #ffd76a; text-shadow: 0 0 12px rgba(255, 200, 60, .8); }
+.lg-title {
+  margin: 6px 0 6px; font-size: clamp(1.7rem, 7vw, 2.4rem); font-weight: 900; line-height: 1.05; text-transform: uppercase; text-wrap: balance;
+  background: linear-gradient(100deg, #b8860b 0%, #fff3b8 20%, #e0b23a 40%, #fffbe6 50%, #c99a06 60%, #ffe17a 80%, #b8860b 100%);
+  background-size: 250% 100%; -webkit-background-clip: text; background-clip: text; color: transparent;
+  animation: lg-text-shine 3s linear infinite; filter: drop-shadow(0 2px 8px rgba(255, 180, 0, .45));
+}
+.is-locked .lg-title { animation: none; background: none; color: #bfc6ca; filter: none; }
+.is-locked .lg-rarity { color: #bfc6ca; text-shadow: none; }
+@keyframes lg-text-shine { to { background-position: -250% 0; } }
+.lg-sub { margin: 0; color: rgba(255, 255, 255, .85); max-width: 32ch; margin-inline: auto; }
+.lg-close {
+  position: relative; z-index: 8; margin-top: 18px; background: rgba(255, 255, 255, .12); color: #fff;
+  border: 2px solid rgba(255, 215, 106, .6); padding: 10px 26px;
+}
+.lg-close:hover { background: rgba(255, 255, 255, .2); }
+
+/* ---------- Carte du trophée Ultime dans la liste ---------- */
+.trophy.tier-ultime { cursor: pointer; position: relative; overflow: hidden; }
+.trophy.tier-ultime .t-hint { font-size: .74rem; font-weight: 700; margin-top: 4px; color: #b8860b; }
+.trophy.done.tier-ultime .t-hint { color: #ffd76a; }
+.trophy.done.tier-ultime::after {
+  content: ""; position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(110deg, transparent 30%, rgba(255, 240, 190, .55) 45%, transparent 60%);
+  background-size: 250% 100%; animation: lg-sweep 3.2s ease-in-out infinite;
+}
+.trophy.done.tier-ultime .t-ico { animation: lg-glow 1.8s ease-in-out infinite; }
+@keyframes lg-glow { 50% { box-shadow: 0 0 18px 4px rgba(255, 210, 80, .85); } }
+.trophy.done.tier-ultime .t-name { color: #ffe9a8; }
+
+@media (prefers-reduced-motion: reduce) {
+  .lg-rays, .risen .lg-trophy, .risen .lg-glint, .lg-title, .trophy.done.tier-ultime::after,
+  .trophy.done.tier-ultime .t-ico, .risen .lg-halo, .shake .lg-stage, .trunk { animation: none; }
+  .lg-trophy, .trunk-lid, .lg-rays { transition: none; }
+}
