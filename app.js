@@ -901,20 +901,33 @@
   function showRoomDetail(t) {
     const box = $("room-detail");
     if (!t) { box.classList.add("hidden"); return; }
-    box.className = `room-detail tier-${t.tier}`;
+    const done = !!unlocked[t.id];
+    box.className = `room-detail tier-${t.tier}${done ? "" : " is-locked"}`;
     box.innerHTML = `<span class="rd-ico"></span><div class="rd-txt"><b></b><span class="rd-tier"></span><p></p><small></small></div>
       <button class="rd-close" type="button" aria-label="Fermer">✕</button>`;
-    box.querySelector(".rd-ico").textContent = t.icon;
+    box.querySelector(".rd-ico").textContent = done ? t.icon : "🔒";
     box.querySelector("b").textContent = t.name;
     box.querySelector(".rd-tier").textContent = TROPHY_TIERS[t.tier];
     box.querySelector("p").textContent = t.desc;
-    box.querySelector("small").textContent = `Débloqué le ${unlocked[t.id].split("-").reverse().join("/")}`;
+    const goal = trophyGoal(t);
+    box.querySelector("small").textContent = done
+      ? `Débloqué le ${unlocked[t.id].split("-").reverse().join("/")}`
+      : `À débloquer · ${Math.min(t.value(fullStats(), unlocked), goal)} / ${goal}`;
     box.querySelector(".rd-close").onclick = () => showRoomDetail(null);
   }
 
+  // Les vitrines de la salle
+  const ROOM_CASES = [
+    { title: "Légende & Or", tiers: ["legende", "or"] },
+    { title: "Argent", tiers: ["argent"] },
+    { title: "Bronze", tiers: ["bronze"] },
+  ];
+
   function renderRoom() {
-    const got = TROPHIES.filter((t) => unlocked[t.id] && t.tier !== "ultime");
-    $("room-count").textContent = `${TROPHIES.filter((t) => unlocked[t.id]).length} / ${TROPHIES.length}`;
+    const total = TROPHIES.filter((t) => unlocked[t.id]).length;
+    $("room-count").textContent = `${total} / ${TROPHIES.length}`;
+    $("room-num").textContent = total;
+    $("room-label").textContent = total > 1 ? "TROPHÉES" : "TROPHÉE";
     showRoomDetail(null);
 
     // Piédestal central : le Trophée CR7 Ultime
@@ -927,28 +940,29 @@
       <div class="rp-hint">${won ? "✨ Touche pour le voir sortir de la malle" : `🔒 Débloque les 5 trophées Superfan (${CR7_TROPHY_IDS.filter((id) => unlocked[id]).length} / 5)`}</div>`;
     ped.onclick = () => openLegend(won);
 
-    // Étagères par niveau
-    const shelves = $("room-shelves");
-    shelves.innerHTML = "";
-    $("room-empty").classList.toggle("hidden", got.length > 0);
-    TIER_ORDER.forEach((tier) => {
-      const list = got.filter((t) => t.tier === tier);
-      if (!list.length) return;
-      const sh = document.createElement("section");
-      sh.className = `shelf tier-${tier}`;
-      sh.innerHTML = `<div class="shelf-label">${TROPHY_TIERS[tier]} <small>${list.length}</small></div><div class="shelf-items"></div><div class="shelf-plank"></div>`;
-      const items = sh.querySelector(".shelf-items");
+    // Vitrines éclairées : une niche par trophée (sombre tant qu'il n'est pas gagné)
+    const cases = $("room-cases");
+    cases.innerHTML = "";
+    ROOM_CASES.forEach((c) => {
+      const list = TROPHIES.filter((t) => c.tiers.includes(t.tier));
+      const n = list.filter((t) => unlocked[t.id]).length;
+      const el = document.createElement("section");
+      el.className = "case";
+      el.innerHTML = `<div class="case-sign">${c.title} <b>${n}/${list.length}</b></div><div class="case-grid"></div>`;
+      const grid = el.querySelector(".case-grid");
       list.forEach((t) => {
+        const done = !!unlocked[t.id];
         const b = document.createElement("button");
         b.type = "button";
-        b.className = "room-item";
-        const art = trophyArt(tier, t.icon);
-        b.innerHTML = `<span class="ri-art">${art.svg}</span><span class="ri-name"></span><span class="ri-shadow"></span>`;
-        b.querySelector(".ri-name").textContent = t.name;
+        b.className = `niche tier-${t.tier}${done ? " lit" : " dark"}`;
+        b.setAttribute("aria-label", done ? t.name : `${t.name} (à débloquer)`);
+        const art = trophyArt(t.tier, done ? t.icon : "");
+        b.innerHTML = `<span class="n-light"></span><span class="n-art">${art.svg}</span>${done ? "" : '<span class="n-lock">🔒</span>'}<span class="n-name"></span>`;
+        b.querySelector(".n-name").textContent = done ? t.name : "???";
         b.onclick = () => showRoomDetail(t);
-        items.appendChild(b);
+        grid.appendChild(b);
       });
-      shelves.appendChild(sh);
+      cases.appendChild(el);
     });
   }
 

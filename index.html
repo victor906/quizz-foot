@@ -4,6 +4,8 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>La Fête Quiz</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" />
   <link rel="stylesheet" href="style.css" />
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="apple-touch-icon" href="icons/apple-touch-icon-v3.png" />
@@ -103,7 +105,7 @@
         <p class="best" id="best-score"></p>
         <button id="trophies-btn" class="btn trophies-btn">🏆 Mes trophées</button>
       </div>
-      <p class="app-version">Version 4.0</p>
+      <p class="app-version">Version 4.1</p>
     </section>
 
     <!-- ÉCRAN DE QUESTION -->
@@ -173,14 +175,20 @@
     <!-- SALLE DES TROPHÉES -->
     <section id="screen-room" class="screen">
       <div class="room">
+        <div class="room-ceiling" aria-hidden="true"></div>
         <div class="room-head">
           <button id="room-back" class="btn ghost room-back" type="button">← Trophées</button>
-          <div class="room-title">🏛️ Salle des trophées</div>
           <div class="room-count" id="room-count">0 / 0</div>
         </div>
-        <button id="room-pedestal" class="room-pedestal" type="button"></button>
-        <div id="room-shelves" class="room-shelves"></div>
-        <p id="room-empty" class="room-empty hidden">Tes étagères sont encore vides. Joue des parties pour débloquer tes premiers trophées et les exposer ici !</p>
+        <div class="room-layout">
+          <div class="room-wall">
+            <div class="wall-title"><span class="wt-num" id="room-num">0</span><span class="wt-label" id="room-label">TROPHÉES</span></div>
+            <div class="wall-crest" aria-hidden="true"><img src="icons/tete-fete.png" alt="" width="320" height="624" /><span>LA FÊTE QUIZ</span></div>
+            <button id="room-pedestal" class="room-pedestal" type="button"></button>
+          </div>
+          <div id="room-cases" class="room-cases"></div>
+        </div>
+        <div class="room-floor" aria-hidden="true"><span>ICI C'EST LA FÊTE</span></div>
         <div id="room-detail" class="room-detail hidden"></div>
       </div>
     </section>

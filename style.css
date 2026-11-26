@@ -932,3 +932,136 @@ body.theme-cr7 .tagline { font-weight: 500; }
   filter: grayscale(1) sepia(1) hue-rotate(225deg) saturate(3) brightness(.6) contrast(1.5)
           drop-shadow(0 .6px 0 rgba(250, 245, 255, .95)) drop-shadow(0 -.6px 0 rgba(59, 7, 100, .55));
 }
+
+/* =========================================================
+   Salle des trophées, version « musée » (murs noirs, LED, niches)
+   ========================================================= */
+.room {
+  --led: #ff9a3c;
+  background:
+    radial-gradient(ellipse at 50% -10%, rgba(255, 154, 60, .18), transparent 45%),
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, .018) 0 1px, transparent 1px 70px),
+    linear-gradient(180deg, #121214 0%, #0b0b0d 60%, #070708 100%);
+  padding: 0 max(12px, env(safe-area-inset-left, 0px)) 0;
+  box-shadow: inset 0 0 120px rgba(0, 0, 0, .8);
+}
+.room-ceiling { height: 6px; margin: 0 -12px 0; background: linear-gradient(90deg, transparent, var(--led) 20%, var(--led) 80%, transparent); box-shadow: 0 0 18px 4px rgba(255, 154, 60, .55); }
+.room-head { grid-template-columns: auto 1fr; padding-top: 10px; margin-bottom: 0; }
+.room-head .room-count { justify-self: end; font-family: "Oswald", "Arial Narrow", sans-serif; letter-spacing: .06em; }
+.room-layout { display: grid; gap: 22px; }
+
+/* Mur central */
+.room-wall { position: relative; display: flex; flex-direction: column; align-items: center; padding-top: 6px; }
+.wall-title { display: flex; align-items: baseline; gap: 10px; font-family: "Oswald", "Arial Narrow", "Helvetica Neue", sans-serif; font-weight: 700; line-height: 1; }
+.wt-num {
+  font-size: 4.2rem; letter-spacing: -1px; color: #f4efe6;
+  text-shadow: 0 0 18px rgba(255, 154, 60, .35), 0 3px 0 rgba(0, 0, 0, .6);
+}
+.wt-label { font-size: 2rem; letter-spacing: .08em; color: #d9d2c5; font-weight: 500; }
+.wall-crest {
+  position: relative; width: 96px; height: 96px; margin: 12px 0 4px; border-radius: 50%; overflow: hidden;
+  background: radial-gradient(circle at 50% 35%, #1f8a4c, #0f5a31 70%);
+  border: 4px solid #e0b23a; box-shadow: 0 0 0 3px #7a1b1b, 0 0 26px rgba(255, 154, 60, .45);
+}
+.wall-crest img { position: absolute; left: 50%; top: 6px; width: 62px; height: auto; translate: -50% 0; }
+.wall-crest span {
+  position: absolute; left: 0; right: 0; bottom: 7px; text-align: center; font-family: "Oswald", "Arial Narrow", sans-serif;
+  font-size: .62rem; font-weight: 700; letter-spacing: .12em; color: #fff; text-shadow: 0 1px 2px rgba(0, 0, 0, .8);
+}
+.room-pedestal { padding-top: 4px; margin-bottom: 0; }
+.rp-spot {
+  top: -6px; width: 300px; height: 300px;
+  background: conic-gradient(from 160deg at 50% 0%, transparent 0deg, rgba(255, 214, 160, .22) 14deg, rgba(255, 214, 160, .22) 26deg, transparent 40deg);
+}
+.rp-base { background: linear-gradient(180deg, #232326, #0b0b0c 70%); border-top-color: var(--led); box-shadow: 0 0 14px rgba(255, 154, 60, .35), 0 14px 26px rgba(0, 0, 0, .7); }
+.rp-base span { color: #ffd29a; }
+
+/* Vitrines */
+.room-cases { display: grid; gap: 18px; }
+.case {
+  position: relative; padding: 12px 10px 12px; border-radius: 6px;
+  background: linear-gradient(180deg, #0e0e10, #09090a);
+  border: 1px solid #1d1d20;
+  box-shadow: inset 0 0 0 1px rgba(255, 154, 60, .12), 0 0 0 1px #000, 0 18px 30px rgba(0, 0, 0, .6);
+}
+.case::before {
+  content: ""; position: absolute; left: 8px; right: 8px; top: 0; height: 3px; border-radius: 3px;
+  background: var(--led); box-shadow: 0 0 14px 3px rgba(255, 154, 60, .6);
+}
+.case-sign {
+  text-align: center; margin: 4px 0 10px; font-family: "Oswald", "Arial Narrow", sans-serif; font-weight: 500;
+  font-size: .9rem; letter-spacing: .22em; text-transform: uppercase; color: #e9e1d2;
+}
+.case-sign b { color: var(--led); font-weight: 700; letter-spacing: .05em; margin-left: 6px; }
+.case-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+
+/* Une niche par trophée */
+.niche {
+  position: relative; display: flex; flex-direction: column; align-items: center; justify-content: flex-end;
+  min-height: 132px; padding: 10px 4px 8px; border-radius: 4px; overflow: hidden; cursor: pointer;
+  font: inherit; color: #f3e3c2; border: 0;
+  background: linear-gradient(180deg, #19191c 0%, #0f0f11 100%);
+  box-shadow: inset 0 0 0 1px #24242a, inset 0 -10px 18px rgba(0, 0, 0, .6);
+}
+.niche::after { /* tablette lumineuse en bas de la niche */
+  content: ""; position: absolute; left: 6px; right: 6px; bottom: 26px; height: 2px; border-radius: 2px;
+  background: rgba(255, 154, 60, .5); box-shadow: 0 0 10px 2px rgba(255, 154, 60, .35);
+}
+.n-light {
+  position: absolute; left: 50%; top: 0; width: 120%; height: 100%; translate: -50% 0; pointer-events: none;
+  background: radial-gradient(ellipse 55% 75% at 50% 0%, rgba(255, 196, 120, .34), transparent 70%);
+}
+.n-art { position: relative; z-index: 1; width: 56px; margin-bottom: 8px; transition: transform .2s; }
+.n-art .t-art { display: block; width: 100%; height: auto; overflow: visible; filter: drop-shadow(0 6px 6px rgba(0, 0, 0, .7)); }
+.niche.tier-bronze .n-art { width: 50px; }
+.niche.tier-legende.lit .n-art .t-art { filter: drop-shadow(0 0 10px rgba(192, 132, 252, .85)) drop-shadow(0 6px 6px rgba(0, 0, 0, .6)); }
+.niche.tier-or.lit .n-art .t-art { filter: drop-shadow(0 0 8px rgba(255, 210, 63, .6)) drop-shadow(0 6px 6px rgba(0, 0, 0, .6)); }
+.n-name { position: relative; z-index: 1; font-size: .64rem; font-weight: 700; line-height: 1.15; text-align: center; min-height: 2.3em; display: flex; align-items: center; }
+.niche:hover .n-art, .niche:focus-visible .n-art { transform: translateY(-4px) scale(1.06); }
+.niche:focus-visible { outline: 2px solid var(--led); outline-offset: -2px; }
+/* Niche encore vide : silhouette dans l'ombre */
+.niche.dark .n-light { opacity: .25; }
+.niche.dark::after { background: rgba(255, 154, 60, .15); box-shadow: none; }
+.niche.dark .n-art .t-art { filter: brightness(0) opacity(.55); }
+.niche.dark .n-art .t-glint, .niche.dark .n-art .t-spark { display: none; }
+.niche.dark .n-name { color: #5d5a55; letter-spacing: .2em; }
+.n-lock { position: absolute; z-index: 2; top: 44%; left: 50%; translate: -50% -50%; font-size: .95rem; opacity: .65; }
+
+/* Sol en carrelage avec inscription */
+.room-floor {
+  position: relative; margin: 22px -12px 0; height: 120px; overflow: hidden; perspective: 260px;
+  background: linear-gradient(180deg, #0c0c0e, #151518);
+}
+.room-floor::before {
+  content: ""; position: absolute; inset: -40% -30% 0; transform: rotateX(58deg); transform-origin: 50% 100%;
+  background:
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, .05) 0 1px, transparent 1px 60px),
+    repeating-linear-gradient(0deg, rgba(255, 255, 255, .05) 0 1px, transparent 1px 60px),
+    linear-gradient(180deg, #1b1b1f, #0f0f11);
+}
+.room-floor span {
+  position: absolute; left: 0; right: 0; bottom: 26px; text-align: center; z-index: 1;
+  font-family: "Oswald", "Arial Narrow", sans-serif; font-weight: 700; font-size: 1.7rem; letter-spacing: .12em;
+  color: rgba(255, 255, 255, .55); transform: perspective(300px) rotateX(38deg); text-shadow: 0 -1px 0 rgba(0, 0, 0, .9);
+}
+
+.room-detail.is-locked { border-left-color: #6b6b6b; }
+
+/* Tablette / grand écran : vitrines de chaque côté du mur central */
+@media (min-width: 600px) {
+  .case-grid { grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); }
+}
+.app:has(#screen-room.active) { max-width: 1180px; }
+@media (min-width: 1100px) {
+  .room-layout { grid-template-columns: 1fr minmax(240px, 300px) 1fr; align-items: start; }
+  .room-wall { grid-column: 2; grid-row: 1; padding-top: 30px; }
+  .room-cases { display: contents; }
+  .room-cases .case:nth-child(1) { grid-column: 1; grid-row: 1; }
+  .room-cases .case:nth-child(2) { grid-column: 3; grid-row: 1; }
+  .room-cases .case:nth-child(3) { grid-column: 1 / -1; grid-row: 2; }
+  .room-cases .case:nth-child(3) .case-grid { grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); }
+}
+/* Écusson : personnage en haut, bandeau du nom en bas */
+.wall-crest { width: 108px; height: 108px; }
+.wall-crest img { top: 4px; width: 46px; }
+.wall-crest span { bottom: 0; padding: 4px 0 7px; background: linear-gradient(180deg, rgba(122, 27, 27, .0), #7a1b1b 35%); font-size: .58rem; }
