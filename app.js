@@ -105,7 +105,7 @@
   const EVER_KEY = "fqf-ever";
   const STAT_DEFAULTS = {
     correct: 0, games: 0, bestStreak: 0, hard: 0, multi: 0, origins: 0, fast: 0,
-    zenGames: 0, cr7Games: 0, cr7Correct: 0, cr7Perfect: 0,
+    zenGames: 0, cr7Games: 0, cr7Correct: 0, cr7Perfect: 0, cr7BestStreak: 0,
     perfect10: 0, perfect20: 0, marathon: 0, fullGames: 0,
   };
   let stats = { ...STAT_DEFAULTS };
@@ -117,19 +117,32 @@
   const saveStats = () => storage.set(STATS_KEY, JSON.stringify(stats));
   const saveEver = () => storage.set(EVER_KEY, JSON.stringify([...everSeen]));
 
-  const fullStats = () => ({ ...stats, everSeen: everSeen.size });
-  const trophyGoal = (t) => (t.id === "seen-all" ? ALL_QUESTION_COUNT() : t.goal);
+  const fullStats = () => ({
+    ...stats,
+    everSeen: everSeen.size,
+    cr7Seen: BANKS.cr7.questions.filter((q) => everSeen.has(q.key)).length,
+  });
+  const trophyGoal = (t) =>
+    t.id === "seen-all" ? ALL_QUESTION_COUNT()
+    : t.id === "cr7-seen" ? BANKS.cr7.questions.length
+    : t.goal;
 
   // Débloque les trophées atteints et renvoie les nouveaux
   function checkTrophies() {
     const s = fullStats();
     const fresh = [];
-    TROPHIES.forEach((t) => {
-      if (!unlocked[t.id] && t.value(s) >= trophyGoal(t)) {
-        unlocked[t.id] = new Date().toISOString().slice(0, 10);
-        fresh.push(t);
-      }
-    });
+    // Plusieurs passes : un trophée peut en débloquer un autre (Trophée CR7 Ultime)
+    let changed = true;
+    while (changed) {
+      changed = false;
+      TROPHIES.forEach((t) => {
+        if (!unlocked[t.id] && t.value(s, unlocked) >= trophyGoal(t)) {
+          unlocked[t.id] = new Date().toISOString().slice(0, 10);
+          fresh.push(t);
+          changed = true;
+        }
+      });
+    }
     if (fresh.length) storage.set(TROPHY_KEY, JSON.stringify(unlocked));
     return fresh;
   }
@@ -459,6 +472,7 @@
       state.streak++;
       state.bestStreak = Math.max(state.bestStreak, state.streak);
       stats.bestStreak = Math.max(stats.bestStreak, state.streak);
+      if (state.theme === "cr7") stats.cr7BestStreak = Math.max(stats.cr7BestStreak, state.streak);
       Sounds.play("correct");
       if (state.streak % 5 === 0) Sounds.play("streak");
     } else {
@@ -603,7 +617,7 @@
     grid.innerHTML = "";
     TROPHIES.forEach((t) => {
       const goal = trophyGoal(t);
-      const val = Math.min(t.value(s), goal);
+      const val = Math.min(t.value(s, unlocked), goal);
       const done = !!unlocked[t.id];
       const card = document.createElement("div");
       card.className = `trophy tier-${t.tier}${done ? " done" : ""}`;
@@ -619,7 +633,7 @@
       card.querySelector(".t-name").textContent = t.name;
       card.querySelector(".t-tier").textContent = TROPHY_TIERS[t.tier];
       card.querySelector(".t-desc").textContent = t.desc;
-      card.querySelector(".t-bar").style.width = `${goal ? (val / goal) * 100 : 0}%`;
+      card.querySelector(".t-bar").style.width = done ? "100%" : `${goal ? (val / goal) * 100 : 0}%`;
       card.querySelector(".t-val").textContent = done
         ? `Débloqué le ${unlocked[t.id].split("-").reverse().join("/")}`
         : `${val} / ${goal}`;

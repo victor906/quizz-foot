@@ -1,6 +1,7 @@
 // Liste des trophées.
-// value(s) renvoie la progression à partir des statistiques du joueur ; le trophée est débloqué quand value >= goal.
-// Niveaux : "bronze", "argent", "or", "legende".
+// value(s, u) renvoie la progression à partir des statistiques du joueur (s) et des trophées déjà débloqués (u) ;
+// le trophée est débloqué quand value >= goal.
+// Niveaux : "bronze", "argent", "or", "legende", "ultime".
 const TROPHIES = [
   // Bonnes réponses au total
   { id: "goals-10", icon: "⚽", name: "Premier but", desc: "10 bonnes réponses au total", tier: "bronze", goal: 10, value: (s) => s.correct },
@@ -38,9 +39,12 @@ const TROPHIES = [
   { id: "zen-5", icon: "😌", name: "Mode zen", desc: "Terminer 5 parties en mode Détente", tier: "bronze", goal: 5, value: (s) => s.zenGames },
 
   // Superfan CR7
-  { id: "cr7-1", icon: "🐐", name: "Superfan", desc: "Terminer une partie en mode Superfan CR7", tier: "bronze", goal: 1, value: (s) => s.cr7Games },
+  { id: "cr7-1", icon: "⭐", name: "Superfan", desc: "Terminer une partie en mode Superfan CR7", tier: "bronze", goal: 1, value: (s) => s.cr7Games },
   { id: "cr7-50", icon: "🙌", name: "Siuuu !", desc: "50 bonnes réponses en mode Superfan CR7", tier: "or", goal: 50, value: (s) => s.cr7Correct },
-  { id: "cr7-perfect", icon: "7️⃣", name: "Le GOAT", desc: "100 % sur une partie Superfan d'au moins 20 questions", tier: "legende", goal: 1, value: (s) => s.cr7Perfect },
+  { id: "cr7-streak", icon: "7️⃣", name: "Le n°7", desc: "7 bonnes réponses d'affilée en mode Superfan CR7", tier: "argent", goal: 7, value: (s) => s.cr7BestStreak },
+  { id: "cr7-seen", icon: "📕", name: "Biographe", desc: "Découvrir toutes les questions du mode Superfan CR7", tier: "or", goal: 0, value: (s) => s.cr7Seen },
+  { id: "cr7-perfect", icon: "🐐", name: "Le GOAT", desc: "100 % sur une partie Superfan d'au moins 20 questions", tier: "legende", goal: 1, value: (s) => s.cr7Perfect },
+  { id: "cr7-ultime", icon: "🌟", name: "Trophée CR7 Ultime", desc: "Débloquer tous les autres trophées Superfan CR7", tier: "ultime", goal: 5, value: (s, u) => CR7_TROPHY_IDS.filter((id) => u[id]).length },
 
   // Découverte
   { id: "seen-100", icon: "🔎", name: "Curieux", desc: "Découvrir 100 questions différentes", tier: "bronze", goal: 100, value: (s) => s.everSeen },
@@ -48,9 +52,13 @@ const TROPHIES = [
   { id: "seen-all", icon: "🌍", name: "Tour du monde", desc: "Découvrir toutes les questions du jeu", tier: "legende", goal: 0, value: (s) => s.everSeen },
 ];
 
+// Trophées Superfan nécessaires pour le Trophée CR7 Ultime
+const CR7_TROPHY_IDS = ["cr7-1", "cr7-50", "cr7-streak", "cr7-seen", "cr7-perfect"];
+
 const TROPHY_TIERS = {
   bronze: "Bronze",
   argent: "Argent",
   or: "Or",
   legende: "Légende",
+  ultime: "Ultime",
 };
