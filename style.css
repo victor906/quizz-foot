@@ -789,3 +789,99 @@ body.theme-cr7 .tagline { font-weight: 500; }
 @keyframes bonus-wiggle { 0%, 100% { rotate: -3deg; } 50% { rotate: 3deg; } }
 .question-card.is-bonus { box-shadow: 0 0 0 4px #ffb347, 0 18px 40px rgba(0, 0, 0, .25); background: linear-gradient(180deg, #fff8ef, #fff 40%); }
 @media (prefers-reduced-motion: reduce) { .badge.bonus { animation: none; } }
+
+/* ---------- Vitrine = entrée de la salle des trophées ---------- */
+.vitrine .v-cups { display: flex; align-items: flex-end; gap: 2px; flex-shrink: 0; filter: drop-shadow(0 0 10px rgba(255, 200, 60, .6)); }
+.vitrine .v-cups .cup { width: 26px; height: auto; }
+.vitrine .v-cups .cup:nth-child(2) { width: 36px; }
+
+/* ---------- Salle des trophées ---------- */
+#screen-room { margin-inline: calc(-1 * max(16px, env(safe-area-inset-left, 0px))); }
+.room {
+  min-height: 100vh; min-height: 100dvh; color: #fff; border-radius: 22px; overflow: hidden; position: relative;
+  padding: 16px max(14px, env(safe-area-inset-left, 0px)) 120px;
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(255, 214, 120, .22), transparent 55%),
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, .025) 0 2px, transparent 2px 60px),
+    linear-gradient(180deg, #2a1b10 0%, #1a110a 60%, #120c07 100%);
+  box-shadow: inset 0 0 80px rgba(0, 0, 0, .6);
+}
+.room-head { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 8px; margin-bottom: 8px; }
+.btn.room-back { color: #f3e3c2; padding: 8px 10px; }
+.btn.room-back:hover { background: rgba(255, 255, 255, .08); }
+.room-title { text-align: center; font-weight: 900; font-size: 1.15rem; letter-spacing: .02em; color: #ffe7a6; }
+.room-count { font-family: "Courier New", monospace; font-weight: 900; color: #ffd76a; padding-right: 4px; }
+
+/* Piédestal central */
+.room-pedestal {
+  display: flex; flex-direction: column; align-items: center; width: 100%; background: none; border: 0; color: inherit;
+  font: inherit; cursor: pointer; position: relative; padding: 18px 0 6px; margin-bottom: 10px;
+}
+.rp-spot {
+  position: absolute; left: 50%; top: -16px; width: 260px; height: 270px; translate: -50% 0; pointer-events: none;
+  background: conic-gradient(from 160deg at 50% 0%, transparent 0deg, rgba(255, 236, 170, .28) 15deg, rgba(255, 236, 170, .28) 25deg, transparent 40deg);
+  filter: blur(4px);
+}
+.rp-cup { position: relative; width: 118px; z-index: 1; filter: drop-shadow(0 0 18px rgba(255, 200, 60, .75)); animation: lg-float-mini 3s ease-in-out infinite; }
+.rp-cup svg { display: block; width: 100%; height: auto; }
+.room-pedestal.locked .rp-cup { filter: none; animation: none; }
+.room-pedestal.locked .rp-cup svg { filter: blur(9px) brightness(.8) saturate(.6); }
+.rp-veil { position: absolute; inset: 0; display: grid; place-items: center; font-size: 3rem; font-weight: 900; color: #ffd76a; text-shadow: 0 2px 10px rgba(0, 0, 0, .8); }
+.rp-base {
+  margin-top: -2px; width: 190px; padding: 12px 10px 10px; border-radius: 6px 6px 10px 10px; z-index: 1;
+  background: linear-gradient(180deg, #3a3a3a, #111 70%); border-top: 4px solid #e0b23a; box-shadow: 0 12px 24px rgba(0, 0, 0, .6);
+}
+.rp-base span { display: block; text-align: center; font-size: .78rem; font-weight: 900; letter-spacing: .08em; text-transform: uppercase; color: #ffd76a; }
+.rp-hint { margin-top: 8px; font-size: .82rem; color: #f3e3c2; opacity: .9; }
+.room-pedestal:focus-visible { outline: 3px solid var(--accent); outline-offset: 4px; border-radius: 12px; }
+
+/* Étagères */
+.room-shelves { display: grid; gap: 18px; }
+.shelf { position: relative; }
+.shelf-label {
+  display: inline-flex; align-items: center; gap: 6px; margin: 0 0 6px 4px; padding: 3px 12px; border-radius: 6px;
+  font-size: .72rem; font-weight: 900; letter-spacing: .14em; text-transform: uppercase; color: #2a1a0a;
+  background: linear-gradient(180deg, #fff2c4, #d9b25a); box-shadow: 0 2px 4px rgba(0, 0, 0, .5);
+}
+.shelf-label small { font-size: .7rem; opacity: .7; }
+.shelf.tier-legende .shelf-label { background: linear-gradient(180deg, #f0e3ff, #a77be0); }
+.shelf.tier-argent .shelf-label { background: linear-gradient(180deg, #ffffff, #b9c2c9); }
+.shelf.tier-bronze .shelf-label { background: linear-gradient(180deg, #ffe0c2, #c98a55); }
+.shelf-items { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px 4px; padding: 0 4px; position: relative; z-index: 1; }
+.shelf-plank {
+  height: 14px; margin-top: -4px; border-radius: 3px;
+  background: linear-gradient(180deg, #a9743f 0%, #7a4d24 45%, #4e2e12 100%);
+  box-shadow: 0 10px 14px rgba(0, 0, 0, .55), inset 0 2px 0 rgba(255, 255, 255, .18);
+}
+.room-item {
+  position: relative; display: flex; flex-direction: column; align-items: center; width: 74px; padding: 4px 2px 2px;
+  background: none; border: 0; color: #fff; font: inherit; cursor: pointer; border-radius: 10px; transition: transform .15s;
+}
+.room-item:hover, .room-item:focus-visible { transform: translateY(-4px); outline: none; background: rgba(255, 255, 255, .06); }
+.room-item .cup { width: 46px; height: auto; filter: drop-shadow(0 4px 6px rgba(0, 0, 0, .5)); }
+.ri-emoji { position: absolute; top: 12px; font-size: 1.05rem; filter: drop-shadow(0 1px 1px rgba(0, 0, 0, .6)); }
+.ri-name { font-size: .66rem; font-weight: 700; line-height: 1.15; text-align: center; margin-top: 3px; color: #f3e3c2; min-height: 2.3em; }
+.shelf.tier-legende .room-item .cup { filter: drop-shadow(0 0 8px rgba(167, 123, 224, .8)); }
+.shelf.tier-or .room-item .cup { filter: drop-shadow(0 0 7px rgba(255, 210, 63, .6)); }
+
+.room-empty { text-align: center; color: #f3e3c2; opacity: .85; margin: 24px auto; max-width: 30ch; line-height: 1.5; }
+
+/* Fiche du trophée sélectionné */
+.room-detail {
+  position: fixed; left: 50%; bottom: calc(16px + env(safe-area-inset-bottom, 0px)); translate: -50% 0; z-index: 20;
+  width: min(420px, calc(100% - 32px)); display: flex; gap: 12px; align-items: flex-start;
+  background: #fffaf0; color: var(--ink); border-radius: 16px; padding: 12px 14px; border-left: 6px solid #d9b25a;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, .5); animation: pop .25s ease;
+}
+.room-detail.tier-legende { border-left-color: var(--legende); }
+.room-detail.tier-argent { border-left-color: var(--argent); }
+.room-detail.tier-bronze { border-left-color: var(--bronze); }
+.room-detail.tier-or { border-left-color: var(--or); }
+.rd-ico { font-size: 2rem; line-height: 1; }
+.rd-txt { flex: 1; min-width: 0; }
+.rd-txt b { font-size: 1rem; }
+.rd-tier { margin-left: 6px; font-size: .68rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.rd-txt p { margin: 3px 0; font-size: .88rem; color: #4a5a50; }
+.rd-txt small { color: var(--muted); font-size: .76rem; }
+.rd-close { background: none; border: 0; font-size: 1rem; cursor: pointer; color: var(--muted); padding: 2px 4px; }
+@media (prefers-reduced-motion: reduce) { .rp-cup { animation: none; } }

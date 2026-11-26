@@ -650,16 +650,16 @@
     vit.innerHTML = "";
     const won = !!unlocked["cr7-ultime"];
     const have = CR7_TROPHY_IDS.filter((id) => unlocked[id]).length;
+    // Vitrine = entrée de la salle des trophées
+    const nGot = TROPHIES.filter((t) => unlocked[t.id]).length;
     const vb = document.createElement("button");
-    vb.className = `vitrine${won ? "" : " locked"}`;
+    vb.className = "vitrine";
     vb.type = "button";
-    vb.innerHTML = `<div class="v-cup">${LegendReveal.miniSvg()}${won ? "" : '<span class="v-lock">🔒</span>'}</div>
-      <div class="v-txt"><div class="v-kicker">${won ? "✦ VITRINE ✦" : "🔒 VITRINE VERROUILLÉE"}</div>
-      <div class="v-title">Trophée CR7 Ultime</div>
-      <div class="v-cta">${won
-        ? "Touche pour le voir sortir de la malle, en boucle"
-        : `Débloque les 5 trophées Superfan CR7 (${have} / 5). Touche pour voir la malle.`}</div></div>`;
-    vb.onclick = () => openLegend(won);
+    vb.innerHTML = `<div class="v-cups">${cupSvg("bronze")}${cupSvg("or")}${cupSvg("argent")}</div>
+      <div class="v-txt"><div class="v-kicker">✦ VITRINE ✦</div>
+      <div class="v-title">Ma salle des trophées</div>
+      <div class="v-cta">${nGot ? `${nGot} trophée${nGot > 1 ? "s" : ""} exposé${nGot > 1 ? "s" : ""}` : "Aucun trophée exposé pour l'instant"} · Touche pour entrer</div></div>`;
+    vb.onclick = openRoom;
     vit.appendChild(vb);
 
     // Panneau « Défi Superfan » : les 5 trophées à réunir
@@ -746,6 +746,92 @@
     });
   }
 
+  // ---------- Salle des trophées ----------
+  const TIER_ORDER = ["legende", "or", "argent", "bronze"];
+  const TIER_COLORS = {
+    bronze: ["#f2c08d", "#b0703a", "#6e3f17"],
+    argent: ["#ffffff", "#aab4bc", "#5f6a72"],
+    or: ["#fff2a8", "#e0a91e", "#7a4d00"],
+    legende: ["#e9d5ff", "#9b5de5", "#4c1d95"],
+  };
+  let cupId = 0;
+  // Petite coupe dessinée, aux couleurs du niveau
+  function cupSvg(tier) {
+    const [l, m, d] = TIER_COLORS[tier] || TIER_COLORS.or;
+    const id = `cup${cupId++}`;
+    return `<svg class="cup" viewBox="0 0 64 80" aria-hidden="true">
+      <defs><linearGradient id="${id}" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0" stop-color="${d}"/><stop offset=".35" stop-color="${l}"/><stop offset=".6" stop-color="${m}"/><stop offset="1" stop-color="${d}"/>
+      </linearGradient></defs>
+      <path d="M14 12 C2 12 2 34 18 36 M50 12 C62 12 62 34 46 36" fill="none" stroke="url(#${id})" stroke-width="5" stroke-linecap="round"/>
+      <path d="M12 6 H52 C52 34 44 46 32 48 C20 46 12 34 12 6 Z" fill="url(#${id})"/>
+      <ellipse cx="32" cy="6" rx="20" ry="4" fill="${l}"/>
+      <path d="M28 48 H36 L38 60 H26 Z" fill="url(#${id})"/>
+      <rect x="18" y="60" width="28" height="7" rx="2" fill="url(#${id})"/>
+      <rect x="14" y="67" width="36" height="9" rx="2" fill="#2b1d12"/>
+      <path d="M18 12 C19 26 22 36 28 42" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" opacity=".55"/>
+    </svg>`;
+  }
+
+  function showRoomDetail(t) {
+    const box = $("room-detail");
+    if (!t) { box.classList.add("hidden"); return; }
+    box.className = `room-detail tier-${t.tier}`;
+    box.innerHTML = `<span class="rd-ico"></span><div class="rd-txt"><b></b><span class="rd-tier"></span><p></p><small></small></div>
+      <button class="rd-close" type="button" aria-label="Fermer">✕</button>`;
+    box.querySelector(".rd-ico").textContent = t.icon;
+    box.querySelector("b").textContent = t.name;
+    box.querySelector(".rd-tier").textContent = TROPHY_TIERS[t.tier];
+    box.querySelector("p").textContent = t.desc;
+    box.querySelector("small").textContent = `Débloqué le ${unlocked[t.id].split("-").reverse().join("/")}`;
+    box.querySelector(".rd-close").onclick = () => showRoomDetail(null);
+  }
+
+  function renderRoom() {
+    const got = TROPHIES.filter((t) => unlocked[t.id] && t.tier !== "ultime");
+    $("room-count").textContent = `${TROPHIES.filter((t) => unlocked[t.id]).length} / ${TROPHIES.length}`;
+    showRoomDetail(null);
+
+    // Piédestal central : le Trophée CR7 Ultime
+    const ped = $("room-pedestal");
+    const won = !!unlocked["cr7-ultime"];
+    ped.className = `room-pedestal${won ? " won" : " locked"}`;
+    ped.innerHTML = `<div class="rp-spot"></div>
+      <div class="rp-cup">${LegendReveal.miniSvg()}${won ? "" : '<span class="rp-veil">?</span>'}</div>
+      <div class="rp-base"><span>${won ? "Trophée CR7 Ultime" : "Emplacement réservé"}</span></div>
+      <div class="rp-hint">${won ? "✨ Touche pour le voir sortir de la malle" : `🔒 Débloque les 5 trophées Superfan (${CR7_TROPHY_IDS.filter((id) => unlocked[id]).length} / 5)`}</div>`;
+    ped.onclick = () => openLegend(won);
+
+    // Étagères par niveau
+    const shelves = $("room-shelves");
+    shelves.innerHTML = "";
+    $("room-empty").classList.toggle("hidden", got.length > 0);
+    TIER_ORDER.forEach((tier) => {
+      const list = got.filter((t) => t.tier === tier);
+      if (!list.length) return;
+      const sh = document.createElement("section");
+      sh.className = `shelf tier-${tier}`;
+      sh.innerHTML = `<div class="shelf-label">${TROPHY_TIERS[tier]} <small>${list.length}</small></div><div class="shelf-items"></div><div class="shelf-plank"></div>`;
+      const items = sh.querySelector(".shelf-items");
+      list.forEach((t) => {
+        const b = document.createElement("button");
+        b.type = "button";
+        b.className = "room-item";
+        b.innerHTML = `${cupSvg(tier)}<span class="ri-emoji"></span><span class="ri-name"></span>`;
+        b.querySelector(".ri-emoji").textContent = t.icon;
+        b.querySelector(".ri-name").textContent = t.name;
+        b.onclick = () => showRoomDetail(t);
+        items.appendChild(b);
+      });
+      shelves.appendChild(sh);
+    });
+  }
+
+  function openRoom() {
+    renderRoom();
+    show("room");
+  }
+
   function openTrophies() {
     renderTrophies();
     show("trophies");
@@ -775,6 +861,7 @@
   $("trophies-btn").onclick = openTrophies;
   $("end-trophies-btn").onclick = openTrophies;
   $("tr-back").onclick = () => { renderBest(); show("home"); };
+  $("room-back").onclick = openTrophies;
 
   // Double appui pour abandonner (les boîtes confirm() ne marchent pas partout)
   let quitArmed = null;
