@@ -1345,3 +1345,40 @@ body.theme-cr7 .tagline { font-weight: 500; }
   .bell { max-width: 120px; }
   .ped-show { width: 58%; }
 }
+
+/* ---------- Trophées rangés par niveau (menus déroulants) ---------- */
+#tr-grid { display: grid; grid-template-columns: 1fr; gap: 10px; }
+.tier-group { background: #fff; border-radius: 16px; box-shadow: 0 8px 20px rgba(0, 0, 0, .18); overflow: hidden; border-left: 6px solid #d5ddd8; }
+.tier-group.tier-bronze { border-left-color: var(--bronze); }
+.tier-group.tier-argent { border-left-color: var(--argent); }
+.tier-group.tier-or { border-left-color: var(--or); }
+.tier-group.tier-legende { border-left-color: var(--legende); }
+.tier-group.tier-ultime { border-left-color: #e0b23a; background: linear-gradient(135deg, #1a1a1a, #3a2a05 70%, #8a5a00); color: #fff; }
+.tier-group summary {
+  list-style: none; cursor: pointer; display: flex; align-items: center; gap: 12px; padding: 12px 14px;
+}
+.tier-group summary::-webkit-details-marker { display: none; }
+.tier-group summary:focus-visible { outline: 3px solid var(--accent); outline-offset: -3px; }
+.tg-ico { width: 44px; height: 52px; flex-shrink: 0; display: grid; place-items: center; font-size: 1.5rem; }
+.tg-ico svg { width: 100%; height: 100%; overflow: visible; filter: drop-shadow(0 3px 3px rgba(0, 0, 0, .3)); }
+.tg-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 5px; }
+.tg-top { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.tg-name { font-size: 1.08rem; letter-spacing: .02em; }
+.tg-count { font-family: "Oswald", "Arial Narrow", sans-serif; font-weight: 700; font-size: 1.1rem; font-variant-numeric: tabular-nums; color: var(--grass-1); }
+.tier-group.tier-ultime .tg-count { color: #ffd76a; }
+.tg-bar { height: 8px; border-radius: 6px; background: #e6ece8; overflow: hidden; }
+.tier-group.tier-ultime .tg-bar { background: rgba(255, 255, 255, .18); }
+.tg-bar span { display: block; height: 100%; border-radius: 6px; transition: width .5s; }
+.tier-bronze .tg-bar span { background: linear-gradient(90deg, #c98a55, #e9b383); }
+.tier-argent .tg-bar span { background: linear-gradient(90deg, #8a949b, #d3dade); }
+.tier-or .tg-bar span { background: linear-gradient(90deg, #d4a017, #ffe27a); }
+.tier-legende .tg-bar span { background: linear-gradient(90deg, #7b3fd1, #c084fc); }
+.tier-ultime .tg-bar span { background: linear-gradient(90deg, #b8860b, #ffd76a); }
+.tg-sub { font-size: .8rem; color: var(--muted); }
+.tier-group.tier-ultime .tg-sub { color: rgba(255, 255, 255, .8); }
+.tier-group.complete .tg-sub { color: var(--good); font-weight: 700; }
+.tg-chev { width: 10px; height: 10px; flex-shrink: 0; border-right: 2.5px solid currentColor; border-bottom: 2.5px solid currentColor; transform: rotate(45deg); margin: -4px 4px 0; opacity: .55; transition: transform .2s; }
+.tier-group[open] .tg-chev { transform: rotate(-135deg); margin-top: 4px; }
+.tg-body { display: grid; gap: 8px; padding: 0 10px 12px; }
+.tg-body .trophy { box-shadow: none; border: 1px solid var(--line); }
+.tier-group.tier-ultime .tg-body .trophy { border: 0; }

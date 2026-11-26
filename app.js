@@ -636,6 +636,9 @@
   }
 
   // Écran des trophées
+  let openTierGroups = new Set();
+  try { openTierGroups = new Set(JSON.parse(storage.get("fqf-open-tiers") || "[]")); } catch { openTierGroups = new Set(); }
+
   function renderTrophies() {
     const s = fullStats();
     const got = TROPHIES.filter((t) => unlocked[t.id]).length;
@@ -689,6 +692,37 @@
     vit.appendChild(defi);
     const grid = $("tr-grid");
     grid.innerHTML = "";
+    // Trophées rangés par niveau, dans des menus déroulants avec la progression
+    const GROUPS = [
+      { tier: "bronze", label: "Bronze" },
+      { tier: "argent", label: "Argent" },
+      { tier: "or", label: "Or" },
+      { tier: "legende", label: "Légende" },
+      { tier: "ultime", label: "Ultime" },
+    ];
+    const groupBody = {};
+    GROUPS.forEach((gp) => {
+      const list = TROPHIES.filter((t) => t.tier === gp.tier);
+      if (!list.length) return;
+      const got = list.filter((t) => unlocked[t.id]).length;
+      const det = document.createElement("details");
+      det.className = `tier-group tier-${gp.tier}${got === list.length ? " complete" : ""}`;
+      det.open = openTierGroups.has(gp.tier);
+      det.addEventListener("toggle", () => {
+        det.open ? openTierGroups.add(gp.tier) : openTierGroups.delete(gp.tier);
+        storage.set("fqf-open-tiers", JSON.stringify([...openTierGroups]));
+      });
+      const icon = gp.tier === "ultime" ? (unlocked["cr7-ultime"] ? LegendReveal.miniSvg() : "🔒") : cupSvg(gp.tier);
+      det.innerHTML = `<summary>
+          <span class="tg-ico">${icon}</span>
+          <span class="tg-main"><span class="tg-top"><b class="tg-name">${gp.label}</b><span class="tg-count">${got} / ${list.length}</span></span>
+          <span class="tg-bar"><span style="width:${(got / list.length) * 100}%"></span></span>
+          <span class="tg-sub">${got === list.length ? "✅ Tous débloqués !" : `${list.length - got} à débloquer`}</span></span>
+          <span class="tg-chev" aria-hidden="true"></span>
+        </summary><div class="tg-body"></div>`;
+      groupBody[gp.tier] = det.querySelector(".tg-body");
+      grid.appendChild(det);
+    });
     TROPHIES.forEach((t) => {
       const goal = trophyGoal(t);
       const val = Math.min(t.value(s, unlocked), goal);
@@ -729,7 +763,7 @@
         card.onclick = go;
         card.onkeydown = (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); go(); } };
       }
-      grid.appendChild(card);
+      (groupBody[t.tier] || grid).appendChild(card);
     });
   }
 
