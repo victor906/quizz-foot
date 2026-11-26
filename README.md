@@ -1,6 +1,6 @@
 # 🎉 La Fête Quiz
 
-Un site de quiz sur le football : **645 questions** (dont une question bonus), de la naissance du foot en 1863
+Un site de quiz sur le football : **plus de 1 000 questions** (dont une question bonus) + 112 questions Superfan CR7, de la naissance du foot en 1863
 jusqu'en 2026, réparties en 15 catégories (histoire, Coupe du monde, Ligue des champions,
 Ballon d'Or, Équipe de France, clubs, entraîneurs, stades, mercato, légendes, règles, foot féminin…), dont des questions
 à plusieurs bonnes réponses.
@@ -44,7 +44,7 @@ sur l'écran d'accueil. Il s'ouvre alors en plein écran avec son icône, et fon
 
 ## Ajouter des questions
 
-Les questions sont dans `questions.js` et `questions-plus.js`. Chaque question suit ce format
+Les questions sont dans `questions.js`, `questions-plus.js` et `questions-extra.js`. Chaque question suit ce format
 (la bonne réponse en premier, l'ordre est mélangé à l'affichage) :
 
 ```js

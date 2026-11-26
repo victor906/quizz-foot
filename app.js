@@ -56,7 +56,7 @@
 
   // Deux quiz : le quiz général et le mode Superfan Cristiano Ronaldo
   const BANKS = {
-    general: { questions: build([...QUESTIONS_RAW, ...QUESTIONS_PLUS_RAW], QUESTIONS_MULTI_RAW), eras: ERAS_GENERAL },
+    general: { questions: build([...QUESTIONS_RAW, ...QUESTIONS_PLUS_RAW, ...QUESTIONS_EXTRA_RAW], QUESTIONS_MULTI_RAW), eras: ERAS_GENERAL },
     cr7: { questions: build(CR7_RAW, CR7_MULTI_RAW), eras: ERAS_CR7 },
   };
   Object.values(BANKS).forEach((b) => {
