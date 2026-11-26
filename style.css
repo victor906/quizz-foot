@@ -330,3 +330,11 @@ body {
 .mode.superfan.active small { color: rgba(255,255,255,.9); }
 body.theme-cr7 .hero h1 span { color: #ffd76a; }
 body.theme-cr7 .tagline { font-weight: 500; }
+
+/* ---------- Bouton Abandonner ---------- */
+.btn.quit {
+  background: var(--bad-bg); color: var(--bad);
+  border: 2px solid var(--bad); box-shadow: 0 3px 0 rgba(224, 69, 58, .35);
+}
+.btn.quit:hover { background: #fbd5d1; }
+.btn.quit.armed { background: var(--bad); color: #fff; box-shadow: 0 3px 0 #a92d24; }

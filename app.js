@@ -526,12 +526,14 @@
     const b = $("quit-btn");
     if (!quitArmed) {
       b.textContent = "Sûr ? Appuie encore";
-      quitArmed = setTimeout(() => { quitArmed = null; b.textContent = "Abandonner"; }, 3000);
+      b.classList.add("armed");
+      quitArmed = setTimeout(() => { quitArmed = null; b.textContent = "✕ Abandonner"; b.classList.remove("armed"); }, 3000);
       return;
     }
     clearTimeout(quitArmed);
     quitArmed = null;
-    b.textContent = "Abandonner";
+    b.textContent = "✕ Abandonner";
+    b.classList.remove("armed");
     clearInterval(state.tick);
     renderBest();
     show("home");
