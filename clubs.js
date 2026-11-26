@@ -219,3 +219,55 @@ function kitLook(k) {
   if (k.s && colorGroup(k.s) !== colorGroup(k.b)) parts.push("manches-" + colorGroup(k.s));
   return parts.join("|");
 }
+
+// Avatar « Tête de CR7 » : caricature originale en dessin animé (pas une photo)
+function cr7FaceSvg(cls = "face") {
+  const id = `cf${++cr7FaceSvg.n}`;
+  return `<svg class="${cls}" viewBox="0 0 100 100" aria-hidden="true">
+  <defs>
+    <radialGradient id="${id}s" cx=".45" cy=".4" r=".7"><stop offset="0" stop-color="#f0bd8f"/><stop offset=".7" stop-color="#d99a6c"/><stop offset="1" stop-color="#b9774c"/></radialGradient>
+    <linearGradient id="${id}h" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4a2c17"/><stop offset="1" stop-color="#1c0f07"/></linearGradient>
+    <linearGradient id="${id}j" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e1242f"/><stop offset="1" stop-color="#a50e1b"/></linearGradient>
+    <clipPath id="${id}c"><circle cx="50" cy="50" r="49"/></clipPath>
+    <radialGradient id="${id}bg" cx=".5" cy=".4" r=".7"><stop offset="0" stop-color="#fff6cf"/><stop offset=".6" stop-color="#ffd23f"/><stop offset="1" stop-color="#d49a00"/></radialGradient>
+  </defs>
+  <g clip-path="url(#${id}c)">
+  <circle cx="50" cy="50" r="49" fill="url(#${id}bg)"/>
+  <!-- Épaules : maillot rouge, col vert, le 7 -->
+  <path d="M10 100 C12 82 26 76 40 74 H60 C74 76 88 82 90 100 Z" fill="url(#${id}j)"/>
+  <path d="M40 74 L50 84 L60 74" fill="none" stroke="#0a7a3c" stroke-width="4" stroke-linejoin="round"/>
+  <text x="70" y="90" text-anchor="middle" font-family="Oswald, Impact, sans-serif" font-weight="700" font-size="12" fill="#ffd23f">7</text>
+  <!-- Cou -->
+  <path d="M41 62 H59 V77 C55 81 45 81 41 77 Z" fill="#c98558"/>
+  <!-- Oreilles + boucle d'oreille diamant -->
+  <ellipse cx="27" cy="46" rx="5" ry="7.5" fill="url(#${id}s)"/>
+  <ellipse cx="73" cy="46" rx="5" ry="7.5" fill="url(#${id}s)"/>
+  <path d="M27 52.5 l1.4 1.9 l-1.4 1.9 l-1.4 -1.9 Z" fill="#e8f6ff" stroke="#7ec8f0" stroke-width=".6"/>
+  <path d="M73 52.5 l1.4 1.9 l-1.4 1.9 l-1.4 -1.9 Z" fill="#e8f6ff" stroke="#7ec8f0" stroke-width=".6"/>
+  <!-- Visage : mâchoire carrée -->
+  <path d="M29 36 C29 22 38 15 50 15 C62 15 71 22 71 36 V48 C71 58 64 67 56 69 H44 C36 67 29 58 29 48 Z" fill="url(#${id}s)"/>
+  <!-- Cheveux : côtés dégradés courts, mèche relevée sur le dessus -->
+  <path d="M29 38 C27 26 31 17 40 13 C46 10 56 10 62 13 C69 16 72 25 71 38 C69 31 67 28 64 27 C58 25 44 25 37 27 C33 28 31 31 29 38 Z" fill="#6d4a33" opacity=".55"/>
+  <path d="M33 27 C33 15 41 7 53 7 C61 7 69 10 72 17 C70 16 68 16 66 17 C67 20 66 24 63 26 C56 23 44 23 36 27 Z" fill="url(#${id}h)"/>
+  <path d="M44 11 C50 8 60 9 66 14" fill="none" stroke="#7a5236" stroke-width="1.6" stroke-linecap="round" opacity=".8"/>
+  <path d="M40 15 C46 12 54 12 59 15" fill="none" stroke="#7a5236" stroke-width="1.2" stroke-linecap="round" opacity=".6"/>
+  <!-- Sourcils -->
+  <path d="M35 37 C38 34 43 34 46 36" fill="none" stroke="#2a170b" stroke-width="2.6" stroke-linecap="round"/>
+  <path d="M54 36 C57 34 62 34 65 37" fill="none" stroke="#2a170b" stroke-width="2.6" stroke-linecap="round"/>
+  <!-- Yeux -->
+  <ellipse cx="41" cy="42" rx="4.2" ry="3" fill="#fff"/><ellipse cx="59" cy="42" rx="4.2" ry="3" fill="#fff"/>
+  <circle cx="41.6" cy="42.2" r="2.1" fill="#4a2a14"/><circle cx="58.4" cy="42.2" r="2.1" fill="#4a2a14"/>
+  <circle cx="42.2" cy="41.5" r=".7" fill="#fff"/><circle cx="59" cy="41.5" r=".7" fill="#fff"/>
+  <!-- Nez -->
+  <path d="M50 44 C49 49 47 51 47 52.5 C48.5 53.6 51.5 53.6 53 52.5" fill="none" stroke="#a8673f" stroke-width="1.4" stroke-linecap="round"/>
+  <!-- Grand sourire confiant -->
+  <path d="M40 57 C44 62.5 56 62.5 60 57 C56 58.6 44 58.6 40 57 Z" fill="#fff" stroke="#8a3d22" stroke-width="1.3" stroke-linejoin="round"/>
+  <path d="M38.5 56.2 C39.5 55.6 40.5 56.3 40 57" fill="none" stroke="#a8673f" stroke-width="1" stroke-linecap="round"/>
+  <path d="M61.5 56.2 C60.5 55.6 59.5 56.3 60 57" fill="none" stroke="#a8673f" stroke-width="1" stroke-linecap="round"/>
+  <!-- Fossette au menton -->
+  <path d="M49 65 C49.6 66 50.4 66 51 65" fill="none" stroke="#a8673f" stroke-width="1" stroke-linecap="round"/>
+  </g>
+  <circle cx="50" cy="50" r="48.5" fill="none" stroke="#b8860b" stroke-width="1.4"/>
+</svg>`;
+}
+cr7FaceSvg.n = 0;

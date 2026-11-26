@@ -1862,3 +1862,11 @@ body.turn-wait #screen-quiz { visibility: hidden; }
 .secret-ped { margin-top: 10px; }
 .secret-ped .hped-beam, .st-secret .hped-beam { filter: hue-rotate(270deg); }
 .secret-ped .rp-hint { color: #ffb3dd; }
+
+/* Avatars spéciaux (Tête de CR7) */
+.av-faces { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 14px; }
+.av-face { border: 2px solid var(--line); background: #fff; border-radius: 14px; padding: 8px 4px; cursor: pointer; font: inherit; font-size: .72rem; font-weight: 800; color: var(--ink); display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.av-face .kit { width: 56px; height: 56px; }
+.av-face.on { border-color: var(--grass-2); background: #eaf7ef; }
+.av-face.locked .kit { filter: grayscale(1) blur(2px) opacity(.6); }
+.face-av { border-radius: 50%; filter: drop-shadow(0 3px 5px rgba(0,0,0,.3)); }

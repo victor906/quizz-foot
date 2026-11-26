@@ -1571,7 +1571,7 @@
       <p class="defi-intro"></p><ul class="defi-list"></ul>`;
     defi.querySelector(".defi-intro").textContent = won
       ? "Défi réussi ! Tu as réuni les 5 trophées Superfan et gagné le Trophée CR7 Ultime."
-      : `Réunis ces 5 trophées en mode Superfan CR7 pour ouvrir la malle et gagner le Trophée CR7 Ultime… et ${TROPHY_REWARD.ultime.toLocaleString("fr-FR")} 🪙 !`;
+      : `Réunis ces 5 trophées en mode Superfan CR7 pour ouvrir la malle et gagner le Trophée CR7 Ultime… avec ${TROPHY_REWARD.ultime.toLocaleString("fr-FR")} 🪙 et l'avatar Tête de CR7 !`;
     const ul = defi.querySelector(".defi-list");
     CR7_TROPHY_IDS.forEach((id) => {
       const t = TROPHIES.find((x) => x.id === id);
@@ -1686,6 +1686,7 @@
   function celebrateFresh(list) {
     if (list.some((t) => t.id === "secret-fete")) setTimeout(() => openSecret(), 1800);
     else if (list.some((t) => t.id === "cr7-ultime")) setTimeout(openLegend, 1800);
+    if (list.some((t) => t.id === "cr7-ultime")) setTimeout(() => toast("🐐 Nouvel avatar débloqué : la Tête de CR7 ! (dans « Mon maillot »)"), 2600);
   }
   // Trophée secret : la coupe aux grandes oreilles de La Fête
   function openSecret(loop = false) {
@@ -2783,8 +2784,34 @@
   const avatarKit = () => ({ b: avatar.b, p: avatar.p, c: avatar.c, c2: avatar.c2, s: avatar.s || undefined, stars: avatar.stars,
     t: avatar.t || (avatar.c === avatar.b ? "#fff" : avatar.c), sn: shirtName(), n: avatar.n,
     nc: avatar.nc || (avatar.p === "gold" ? "#151515" : avatar.c === avatar.b ? "#fff" : avatar.c) });
+  // Avatars spéciaux (à la place du maillot)
+  const FACES = [
+    { id: "cr7", name: "Tête de CR7", draw: (cls) => cr7FaceSvg(cls), isUnlocked: () => !!unlocked["cr7-ultime"], hint: "Gagne le Trophée CR7 Ultime" },
+  ];
+  const activeFace = () => FACES.find((f) => f.id === avatar.face && f.isUnlocked());
+  const avatarDisplay = (cls) => { const f = activeFace(); return f ? f.draw(`${cls} face-av`) : kitSvg(avatarKit(), cls); };
+  function renderFaces() {
+    const wrap = $("av-faces");
+    wrap.innerHTML = "";
+    const opts = [{ id: "", name: "Mon maillot", draw: (cls) => kitSvg(avatarKit(), cls), isUnlocked: () => true }, ...FACES];
+    opts.forEach((f) => {
+      const ok = f.isUnlocked();
+      const on = (avatar.face || "") === f.id || (!activeFace() && f.id === "");
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "av-face" + (on ? " on" : "") + (ok ? "" : " locked");
+      b.innerHTML = f.draw("kit") + "<span></span>";
+      b.lastChild.textContent = ok ? f.name : `🔒 ${f.name}`;
+      b.onclick = () => {
+        if (!ok) { toast(`🔒 ${f.hint} pour débloquer cet avatar`); return; }
+        avatar.face = f.id;
+        avatarChanged();
+      };
+      wrap.appendChild(b);
+    });
+  }
   function renderAvatarHome() {
-    $("avatar-kit").innerHTML = kitSvg(avatarKit(), "kit");
+    $("avatar-kit").innerHTML = avatarDisplay("kit");
     $("avatar-name").textContent = avatar.name || "Mon maillot";
   }
   function avatarChanged() {
@@ -2794,7 +2821,7 @@
     renderAvatarHome();
   }
   // Modifier une couleur ou un motif « défait » le maillot légendaire
-  const unLegend = () => { delete avatar.t; delete avatar.nc; delete avatar.stars; delete avatar.c2; };
+  const unLegend = () => { delete avatar.t; delete avatar.nc; delete avatar.stars; delete avatar.c2; delete avatar.face; };
   function swatches(id, key, allowNone) {
     const wrap = $(id);
     wrap.innerHTML = "";
@@ -2815,7 +2842,8 @@
     avatarChanged();
   }
   function renderAvatarEditor() {
-    $("av-preview").innerHTML = kitSvg(avatarKit(), "kit av-big") + `<div class="av-label"></div>`;
+    $("av-preview").innerHTML = avatarDisplay("kit av-big") + `<div class="av-label"></div>`;
+    renderFaces();
     $("av-preview").lastChild.textContent = avatar.name || "Ton pseudo";
     // Maillots légendaires possédés
     const lw = $("av-legends");
@@ -3062,7 +3090,7 @@
 
   // ---------- Mise à jour automatique ----------
   // À l'ouverture, on compare la version de l'app avec celle publiée en ligne.
-  const APP_VERSION = "6.5";
+  const APP_VERSION = "6.6";
   function checkForUpdate() {
     if (!location.protocol.startsWith("http")) return;
     fetch(`version.json?t=${Date.now()}`, { cache: "no-store" })

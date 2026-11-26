@@ -43,7 +43,7 @@ const TROPHIES = [
   { id: "cr7-streak", icon: "7️⃣", name: "Le n°7", desc: "7 bonnes réponses d'affilée en mode Superfan CR7", tier: "argent", goal: 7, tip: "Enchaîne 7 bonnes réponses sans te tromper dans une partie Superfan.", value: (s) => s.cr7BestStreak },
   { id: "cr7-seen", icon: "📕", name: "Biographe", desc: "Découvrir toutes les questions du mode Superfan CR7", tier: "or", goal: 0, tip: "Une partie « Tout » en Superfan montre les 112 questions d'un coup.", value: (s) => s.cr7Seen },
   { id: "cr7-perfect", icon: "🐐", name: "Le GOAT", desc: "100 % sur une partie Superfan d'au moins 20 questions", tier: "legende", goal: 1, tip: "Astuce : mode Détente, 20 questions et difficulté « Facile » seulement.", value: (s) => s.cr7Perfect },
-  { id: "cr7-ultime", icon: "🌟", name: "Trophée CR7 Ultime", desc: "Débloquer tous les autres trophées Superfan CR7 · récompense : 5 000 🪙", tier: "ultime", goal: 5, value: (s, u) => CR7_TROPHY_IDS.filter((id) => u[id]).length },
+  { id: "cr7-ultime", icon: "🌟", name: "Trophée CR7 Ultime", desc: "Débloquer tous les autres trophées Superfan CR7 · récompense : 5 000 🪙 + avatar Tête de CR7", tier: "ultime", goal: 5, value: (s, u) => CR7_TROPHY_IDS.filter((id) => u[id]).length },
 
   // Découverte
   { id: "seen-100", icon: "🔎", name: "Curieux", desc: "Découvrir 100 questions différentes", tier: "bronze", goal: 100, value: (s) => s.everSeen },
