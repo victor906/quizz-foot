@@ -260,7 +260,16 @@ const LegendReveal = (() => {
   }
 
   // Petite version du trophée pour la vitrine et la carte
-  const miniSvg = () => TROPHY_SVG.replace('class="lg-cup"', 'class="lg-cup mini"');
+  // Chaque copie a ses propres identifiants : sinon les dégradés d'une copie cachée
+  // (dans un écran masqué) ne s'affichent pas et le trophée paraît transparent.
+  let miniCount = 0;
+  const miniSvg = () => {
+    const k = `m${++miniCount}`;
+    return TROPHY_SVG
+      .replace('class="lg-cup"', 'class="lg-cup mini"')
+      .replace(/id="(c[A-Za-z]+)"/g, `id="$1${k}"`)
+      .replace(/url\(#(c[A-Za-z]+)\)/g, `url(#$1${k})`);
+  };
 
   return { open, close, miniSvg };
 })();
