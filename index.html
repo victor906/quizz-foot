@@ -21,46 +21,11 @@
     <!-- ÉCRAN D'ACCUEIL -->
     <section id="screen-home" class="screen active">
       <header class="hero">
-        <div class="party-ball" aria-hidden="true">
-          <svg viewBox="0 0 160 190" class="pb-svg">
-            <defs>
-              <radialGradient id="pbShade" cx=".35" cy=".3" r=".75">
-                <stop offset="0" stop-color="#ffffff"/><stop offset=".7" stop-color="#eef1ef"/><stop offset="1" stop-color="#b9c2bd"/>
-              </radialGradient>
-              <clipPath id="pbClip"><circle cx="80" cy="118" r="56"/></clipPath>
-            </defs>
-            <!-- Ombre au sol -->
-            <ellipse class="pb-shadow" cx="80" cy="182" rx="40" ry="6" fill="rgba(0,0,0,.28)"/>
-            <!-- Ballon (le motif tourne) -->
-            <g class="pb-ball">
-              <circle cx="80" cy="118" r="56" fill="url(#pbShade)"/>
-              <g clip-path="url(#pbClip)">
-                <g class="pb-spin">
-                  <polygon points="80,96 101,111 93,136 67,136 59,111" fill="#1d2420"/>
-                  <polygon points="80,52 101,60 96,76 64,76 59,60" fill="#1d2420"/>
-                  <polygon points="137,95 147,117 132,132 117,118 124,97" fill="#1d2420"/>
-                  <polygon points="23,95 36,97 43,118 28,132 13,117" fill="#1d2420"/>
-                  <polygon points="117,155 130,165 118,184 98,178 101,160" fill="#1d2420"/>
-                  <polygon points="43,155 59,160 62,178 42,184 30,165" fill="#1d2420"/>
-                  <path d="M80 96 V76 M101 111 L124 97 M93 136 L101 160 M67 136 L59 160 M59 111 L36 97" stroke="#1d2420" stroke-width="3"/>
-                </g>
-              </g>
-              <circle cx="80" cy="118" r="56" fill="none" stroke="#1d2420" stroke-width="2" opacity=".35"/>
-              <ellipse cx="60" cy="92" rx="14" ry="8" fill="#fff" opacity=".7" transform="rotate(-30 60 92)"/>
-            </g>
-            <!-- Chapeau de fête -->
-            <g class="pb-hat"><g class="pb-hat-in">
-              <path d="M58 70 L92 6 L112 76 Z" fill="#e0453a"/>
-              <path d="M66 55 L84 21 L91 25 L72 58 Z" fill="#ffd23f"/>
-              <path d="M76 70 L94 36 L100 41 L84 72 Z" fill="#3b82f6"/>
-              <path d="M96 73 L104 45 L108 60 L104 75 Z" fill="#ffd23f"/>
-              <circle cx="73" cy="44" r="2.6" fill="#fff"/><circle cx="96" cy="58" r="2.6" fill="#fff"/><circle cx="88" cy="30" r="2.2" fill="#fff"/>
-              <path d="M56 70 Q85 82 114 76" fill="none" stroke="#b8860b" stroke-width="5" stroke-linecap="round"/>
-              <g class="pb-pompom">
-                <circle cx="92" cy="7" r="9" fill="#ffd23f"/><circle cx="89" cy="4" r="3.5" fill="#fff4b5"/>
-              </g>
-            </g></g>
-          </svg>
+        <div class="party-head" aria-hidden="true">
+          <span class="ph-shadow"></span>
+          <div class="ph-bob">
+            <img class="ph-face" src="icons/tete-fete.png" alt="" width="320" height="624" />
+          </div>
           <span class="pb-conf c1"></span><span class="pb-conf c2"></span><span class="pb-conf c3"></span>
           <span class="pb-conf c4"></span><span class="pb-conf c5"></span><span class="pb-conf c6"></span>
         </div>
@@ -116,7 +81,7 @@
         <p class="best" id="best-score"></p>
         <button id="trophies-btn" class="btn trophies-btn">🏆 Mes trophées</button>
       </div>
-      <p class="app-version">Version 2.2</p>
+      <p class="app-version">Version 2.3</p>
     </section>
 
     <!-- ÉCRAN DE QUESTION -->
