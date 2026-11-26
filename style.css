@@ -1871,3 +1871,144 @@ body.turn-wait #screen-quiz { visibility: hidden; }
 .av-face.locked .kit { filter: grayscale(1) blur(7px) brightness(.85) opacity(.7); }
 .av-face.locked { overflow: hidden; }
 .face-av { border-radius: 50%; filter: drop-shadow(0 3px 5px rgba(0,0,0,.3)); }
+
+/* =========================================================
+   CARTES À COLLECTIONNER (TCG) ET CLASSEUR
+   ========================================================= */
+.binder-btn { width: 100%; margin-top: 10px; display: flex; align-items: center; gap: 12px; text-align: left; padding: 12px 14px; color: #fff4dc; position: relative;
+  background: linear-gradient(135deg, #6b3a1c, #3d1f0d); border: 2px solid #a8763e; box-shadow: 0 4px 0 #2a1408, inset 0 0 0 2px rgba(255,220,160,.12); }
+.binder-btn:hover { background: linear-gradient(135deg, #7a4321, #46240f); }
+.bb-ico { font-size: 1.8rem; }
+.bb-txt { flex: 1; display: flex; flex-direction: column; }
+.bb-txt b { font-size: 1rem; }
+.bb-txt small { opacity: .85; font-size: .8rem; }
+.bb-new { background: #ff2d95; color: #fff; font-weight: 900; font-size: .72rem; padding: 3px 8px; border-radius: 999px; animation: bonus-wiggle 1.2s ease-in-out infinite; }
+
+/* ---------- La carte ---------- */
+.tcg-card { position: relative; display: block; width: 100%; aspect-ratio: 5 / 7; padding: 0; border: 0; background: none; cursor: pointer; container-type: inline-size; font: inherit; color: #fff; }
+.tcg-front, .tcg-back { position: absolute; inset: 0; border-radius: 7cqw; overflow: hidden; }
+.tcg-front { padding: 4.5cqw; background: var(--frame); box-shadow: 0 2cqw 5cqw rgba(0,0,0,.35); }
+.tcg-bg { position: absolute; inset: 4.5cqw; border-radius: 4.5cqw; background: var(--art); }
+.tcg-holo, .tcg-shine { position: absolute; inset: 0; pointer-events: none; border-radius: inherit; }
+.tcg-top { position: absolute; left: 9cqw; top: 8cqw; display: flex; flex-direction: column; align-items: center; z-index: 2; line-height: 1; text-shadow: 0 .6cqw 1.5cqw rgba(0,0,0,.5); }
+.tcg-note { font-family: Oswald, Impact, sans-serif; font-weight: 700; font-size: 17cqw; }
+.tcg-pos { font-weight: 900; font-size: 7cqw; letter-spacing: .05em; margin-top: 1cqw; }
+.tcg-flag { font-size: 10cqw; margin-top: 2cqw; }
+.tcg-gem { position: absolute; right: 8cqw; top: 7cqw; z-index: 2; font-size: 10cqw; color: var(--gem); text-shadow: 0 0 3cqw var(--gem); }
+.tcg-art { position: absolute; left: 14cqw; right: 6cqw; top: 14cqw; height: 74cqw; display: grid; place-items: center; z-index: 1; }
+.tcg-art .card-kit { width: 100%; height: 100%; filter: drop-shadow(0 2cqw 3cqw rgba(0,0,0,.45)); }
+.tcg-art .card-face { width: 82%; height: auto; border-radius: 50%; filter: drop-shadow(0 2cqw 4cqw rgba(0,0,0,.5)); }
+.tcg-art .card-fete { width: 52%; border-radius: 0; }
+.tcg-name { position: absolute; left: 7cqw; right: 7cqw; bottom: 16cqw; z-index: 2; text-align: center; font-family: Oswald, Impact, sans-serif; font-weight: 700; font-size: 9.5cqw; line-height: 1.05;
+  text-transform: uppercase; padding: 2cqw 2cqw; border-radius: 2cqw; background: rgba(0,0,0,.45); border-top: .6cqw solid var(--gem); text-shadow: 0 .5cqw 1cqw rgba(0,0,0,.6); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tcg-foot { position: absolute; left: 9cqw; right: 9cqw; bottom: 7cqw; z-index: 2; display: flex; justify-content: space-between; font-size: 5.5cqw; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; opacity: .9; }
+.tcg-new { position: absolute; top: -2cqw; right: -2cqw; z-index: 5; background: #ff2d95; color: #fff; font-weight: 900; font-size: 8cqw; padding: 1cqw 3cqw; border-radius: 99px; box-shadow: 0 1cqw 3cqw rgba(0,0,0,.4); animation: bonus-wiggle 1.2s ease-in-out infinite; }
+
+/* Raretés : cadre, fond et effets */
+.r-commune { --frame: linear-gradient(135deg, #f2c08d, #9a5a26 45%, #e7a86c 70%, #6e3f17); --art: radial-gradient(circle at 50% 35%, #8a5a36, #3b2414); --gem: #f2c08d; }
+.r-rare { --frame: linear-gradient(135deg, #ffffff, #8f9aa3 40%, #e9eef2 65%, #5f6a72); --art: radial-gradient(circle at 50% 35%, #4d6a86, #17222e); --gem: #dfe8ef; }
+.r-epique { --frame: linear-gradient(135deg, #fff4b5, #d99c12 40%, #fff0a0 60%, #8a5600); --art: radial-gradient(circle at 50% 35%, #7b3fd1, #2a0f4f); --gem: #ffd23f; }
+.r-legendaire { --frame: linear-gradient(135deg, #ffd6f5, #b38bff 25%, #7ef0ff 50%, #fff3a6 75%, #ff9bd2); --art: radial-gradient(circle at 50% 35%, #1b3c7a, #070d24); --gem: #b9f2ff; }
+.r-mythique { --frame: linear-gradient(135deg, #ff2d95, #ffd23f 30%, #fff 50%, #7b3fd1 75%, #ff2d95); --art: radial-gradient(circle at 50% 35%, #5a0f3c, #12030d); --gem: #ff7ac8; }
+
+/* Rare : un reflet passe de temps en temps */
+.r-rare .tcg-shine { background: linear-gradient(115deg, transparent 35%, rgba(255,255,255,.55) 50%, transparent 65%); background-size: 250% 100%; animation: tcg-sweep 4.5s ease-in-out infinite; }
+/* Épique : reflet doré plus fréquent + lueur */
+.r-epique .tcg-shine { background: linear-gradient(115deg, transparent 35%, rgba(255,240,180,.7) 50%, transparent 65%); background-size: 250% 100%; animation: tcg-sweep 3s ease-in-out infinite; }
+.tcg-card.r-epique .tcg-front { box-shadow: 0 0 4cqw rgba(255,210,63,.55), 0 2cqw 5cqw rgba(0,0,0,.35); animation: tcg-glow 2.6s ease-in-out infinite; }
+@keyframes tcg-sweep { 0%, 55% { background-position: 150% 0; } 100% { background-position: -60% 0; } }
+@keyframes tcg-glow { 50% { box-shadow: 0 0 9cqw rgba(255,210,63,.85), 0 2cqw 5cqw rgba(0,0,0,.35); } }
+/* Légendaire : hologramme arc-en-ciel + paillettes */
+.r-legendaire .tcg-holo, .r-mythique .tcg-holo {
+  background: repeating-linear-gradient(115deg, rgba(255,0,128,.0) 0%, rgba(255,80,180,.35) 8%, rgba(255,230,90,.35) 16%, rgba(80,255,190,.35) 24%, rgba(80,170,255,.35) 32%, rgba(190,90,255,.35) 40%, rgba(255,0,128,0) 48%);
+  background-size: 300% 300%; mix-blend-mode: color-dodge; opacity: .75; animation: tcg-holo 6s linear infinite;
+  background-position: var(--mx, 50%) var(--my, 50%); }
+.r-legendaire .tcg-shine, .r-mythique .tcg-shine {
+  background-image: radial-gradient(circle, rgba(255,255,255,.95) 0 .8cqw, transparent 1.2cqw), radial-gradient(circle, rgba(255,255,255,.8) 0 .6cqw, transparent 1cqw);
+  background-size: 23cqw 29cqw, 31cqw 19cqw; background-position: 0 0, 11cqw 7cqw; opacity: .55; animation: tcg-twinkle 2.2s ease-in-out infinite; }
+@keyframes tcg-holo { to { background-position: 300% 300%; } }
+@keyframes tcg-twinkle { 50% { opacity: .15; } }
+.tcg-card.r-legendaire .tcg-front { box-shadow: 0 0 6cqw rgba(126,240,255,.6), 0 2cqw 5cqw rgba(0,0,0,.4); }
+/* Mythique : aura qui tourne derrière le joueur + halo qui pulse */
+.r-mythique .tcg-bg { overflow: hidden; }
+.r-mythique .tcg-bg::before { content: ""; position: absolute; inset: -40%; background: conic-gradient(from 0deg, transparent 0 20deg, rgba(255,210,63,.35) 30deg, transparent 45deg 80deg, rgba(255,45,149,.35) 95deg, transparent 110deg 150deg, rgba(123,63,209,.4) 165deg, transparent 180deg 215deg, rgba(255,210,63,.35) 230deg, transparent 245deg 290deg, rgba(255,45,149,.35) 305deg, transparent 320deg); animation: lg-spin 9s linear infinite; }
+.tcg-card.r-mythique .tcg-front { animation: tcg-myth 2.2s ease-in-out infinite; }
+@keyframes tcg-myth { 0%, 100% { box-shadow: 0 0 6cqw rgba(255,45,149,.7), 0 2cqw 5cqw rgba(0,0,0,.4); } 50% { box-shadow: 0 0 12cqw rgba(255,210,63,.9), 0 2cqw 5cqw rgba(0,0,0,.4); } }
+.r-mythique .tcg-name { background: linear-gradient(90deg, rgba(255,45,149,.75), rgba(123,63,209,.75)); }
+
+/* Dos de carte */
+.tcg-back { background: repeating-linear-gradient(45deg, #0f6b34 0 6cqw, #0c5a2b 6cqw 12cqw); border: 4.5cqw solid #e9d9a6; box-shadow: 0 2cqw 5cqw rgba(0,0,0,.35); display: grid; place-items: center; }
+.tb-ring { width: 62cqw; height: 62cqw; border-radius: 50%; background: radial-gradient(circle, #138a43, #08381c); border: 2.5cqw solid #ffd23f; display: flex; flex-direction: column; align-items: center; justify-content: center; box-shadow: 0 0 0 1.5cqw rgba(0,0,0,.25); }
+.tb-logo { font-family: Oswald, Impact, sans-serif; font-weight: 700; font-size: 10cqw; letter-spacing: .05em; color: #fff; }
+.tb-sub { font-family: Oswald, Impact, sans-serif; font-weight: 700; font-size: 16cqw; color: #ffd23f; line-height: 1; }
+.tcg-back.locked { filter: saturate(.55) brightness(.85); }
+.tcg-card.is-locked { cursor: pointer; }
+
+/* ---------- Le classeur ---------- */
+#screen-binder .binder-head { text-align: center; position: relative; padding-top: 54px; }
+.bh-count { font-family: Oswald, sans-serif; font-size: 1.6rem; font-weight: 700; color: var(--grass-1); }
+#binder-bar { height: 100%; width: 0; background: linear-gradient(90deg, #f2c08d, #dfe8ef, #ffd23f, #7ef0ff, #ff2d95); transition: width .4s; }
+.bh-rar { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; margin-top: 10px; }
+.bh-r { font-size: .75rem; font-weight: 800; padding: 4px 9px; border-radius: 999px; color: #fff; background: var(--art); border: 2px solid var(--gem); }
+.binder { position: relative; margin: 14px 0 10px; padding: 12px 12px 12px 30px; border-radius: 18px;
+  background: linear-gradient(135deg, #6b3a1c, #3d1f0d); border: 2px solid #a8763e; box-shadow: 0 14px 30px rgba(0,0,0,.4), inset 0 0 0 3px rgba(255,220,160,.1); }
+.binder-rings { position: absolute; left: 8px; top: 12%; bottom: 12%; display: flex; flex-direction: column; justify-content: space-between; z-index: 6; }
+.binder-rings span { width: 22px; height: 30px; border-radius: 12px; border: 4px solid #d7dde2; border-left-color: #8e979e; background: transparent; box-shadow: 0 2px 4px rgba(0,0,0,.5); }
+.binder-stage { position: relative; aspect-ratio: 7 / 10; perspective: 1800px; }
+.bpage { position: absolute; inset: 0; border-radius: 6px 12px 12px 6px; padding: 10px; background: linear-gradient(90deg, #e8e2d2, #faf7ef 6%, #f4efe2); box-shadow: inset 8px 0 12px -6px rgba(0,0,0,.25), 0 4px 10px rgba(0,0,0,.25);
+  transform-origin: left center; backface-visibility: hidden; -webkit-backface-visibility: hidden; display: flex; flex-direction: column; z-index: 2; }
+.bpage.under { z-index: 1; }
+.bpage.turning { z-index: 3; }
+.bpage.turn-fwd { animation: page-fwd .62s cubic-bezier(.45,.05,.35,1) forwards; }
+.bpage.turn-back { animation: page-back .62s cubic-bezier(.45,.05,.35,1) forwards; }
+@keyframes page-fwd { 0% { transform: rotateY(0); box-shadow: 0 4px 10px rgba(0,0,0,.25); } 50% { box-shadow: 30px 10px 40px rgba(0,0,0,.45); filter: brightness(.92); } 100% { transform: rotateY(-178deg); } }
+@keyframes page-back { 0% { transform: rotateY(-178deg); } 50% { box-shadow: 30px 10px 40px rgba(0,0,0,.45); filter: brightness(.92); } 100% { transform: rotateY(0); } }
+.bp-head { display: flex; justify-content: space-between; font-weight: 800; font-size: .74rem; color: #7a6a4a; text-transform: uppercase; letter-spacing: .06em; padding: 0 2px 6px; }
+.bp-grid { flex: 1; display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr); gap: 8px; }
+.slot { position: relative; border-radius: 8px; padding: 3px; background: linear-gradient(160deg, rgba(255,255,255,.55), rgba(220,220,230,.35)); box-shadow: inset 0 0 0 1px rgba(0,0,0,.08), inset 0 6px 8px -6px rgba(255,255,255,.9);
+  display: flex; align-items: center; justify-content: center; min-height: 0; }
+.slot::after { content: ""; position: absolute; inset: 0; border-radius: 8px; background: linear-gradient(115deg, rgba(255,255,255,.35), transparent 40%); pointer-events: none; }
+.slot .tcg-card { width: auto; height: 100%; max-width: 100%; }
+.slot.empty { opacity: .5; }
+/* Couverture en cuir */
+.bpage.cover { background: radial-gradient(circle at 30% 20%, #8a4b24, #4a250f 70%); color: #f7e7c4; align-items: center; justify-content: center; text-align: center; gap: 10px; border: 2px solid #b8864c; }
+.cv-stitch { position: absolute; inset: 10px; border: 2px dashed rgba(247,231,196,.45); border-radius: 8px; pointer-events: none; }
+.cv-emblem { width: 34%; aspect-ratio: 1; border-radius: 50%; background: radial-gradient(circle, #ffe9a8, #d49a00); border: 4px solid #f7e7c4; display: grid; place-items: center; overflow: hidden; box-shadow: 0 6px 16px rgba(0,0,0,.4); }
+.cv-emblem img { width: 52%; height: auto; }
+.cv-title { font-family: Oswald, Impact, sans-serif; font-size: 1.15rem; letter-spacing: .2em; line-height: 1.2; text-shadow: 0 2px 0 rgba(0,0,0,.4); }
+.cv-title b { font-size: 2.2rem; letter-spacing: .04em; color: #ffd23f; }
+.cv-sub { font-size: .85rem; opacity: .9; }
+.cv-count { font-family: Oswald, sans-serif; font-size: 1.4rem; background: rgba(0,0,0,.3); padding: 2px 16px; border-radius: 999px; }
+.cv-open { font-size: .8rem; opacity: .8; animation: bonus-wiggle 1.6s ease-in-out infinite; }
+.binder-nav { display: flex; align-items: center; justify-content: center; gap: 16px; color: #fff; font-weight: 800; }
+.bd-arrow { width: 52px; height: 44px; padding: 0; font-size: 1.1rem; background: #fff; color: var(--ink); }
+.bd-arrow:disabled { opacity: .35; }
+.bd-tip { text-align: center; color: rgba(255,255,255,.85); font-size: .8rem; margin: 8px 0 0; }
+
+/* ---------- Carte en grand ---------- */
+.tcg-zoom { position: fixed; inset: 0; z-index: 90; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; padding: 16px; opacity: 0; transition: opacity .25s; }
+.tcg-zoom.in { opacity: 1; }
+.tz-bg { position: absolute; inset: 0; background: radial-gradient(circle at 50% 40%, rgba(40,20,60,.92), rgba(0,0,0,.95)); }
+.tz-wrap { position: relative; perspective: 1200px; width: min(76vw, 330px, 52vh); aspect-ratio: 5 / 7; }
+.tz-card { position: absolute; inset: 0; transform-style: preserve-3d; transition: transform .5s cubic-bezier(.3,1.3,.5,1); container-type: inline-size;
+  transform: rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)); animation: tz-in .5s cubic-bezier(.3,1.4,.5,1); cursor: pointer; }
+.tz-card.flipped { transform: rotateX(var(--rx, 0deg)) rotateY(calc(180deg + var(--ry, 0deg))); }
+@keyframes tz-in { from { transform: scale(.4) rotateY(-30deg); opacity: 0; } }
+.tz-face { position: absolute; inset: 0; backface-visibility: hidden; -webkit-backface-visibility: hidden; border-radius: 7cqw; }
+.tz-rear { transform: rotateY(180deg); }
+.tz-face .tcg-front, .tz-face .tcg-back { border-radius: 7cqw; }
+.tcg-info { position: absolute; inset: 0; border-radius: 7cqw; padding: 10cqw 9cqw; background: var(--art); border: 4.5cqw solid transparent; background-clip: padding-box;
+  box-shadow: 0 0 0 4.5cqw rgba(255,255,255,.0), 0 2cqw 5cqw rgba(0,0,0,.4); display: flex; flex-direction: column; justify-content: center; gap: 5cqw; text-align: center; color: #fff; outline: 4.5cqw solid; outline-color: var(--gem); outline-offset: -4.5cqw; }
+.ti-rar { font-weight: 900; letter-spacing: .12em; text-transform: uppercase; font-size: 5.5cqw; color: var(--gem); }
+.ti-name { font-family: Oswald, Impact, sans-serif; font-size: 9cqw; line-height: 1.1; }
+.ti-fact { font-size: 5.6cqw; line-height: 1.4; opacity: .95; }
+.ti-how { font-size: 4.6cqw; line-height: 1.35; opacity: .8; border-top: 1px solid rgba(255,255,255,.25); padding-top: 4cqw; }
+.tz-hint { position: relative; color: rgba(255,255,255,.8); font-size: .82rem; margin: 0; text-align: center; }
+.tz-close { position: relative; background: #fff; color: var(--ink); }
+/* Nouvelles cartes en fin de partie */
+.nc-title { margin-top: 14px !important; }
+.nc-row { display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; }
+.nc-row .tcg-card { width: 84px; }
+@media (prefers-reduced-motion: reduce) { .tcg-card *, .tcg-card, .tz-card { animation: none !important; } }
+.tz-card { color: #fff; }
+.best:empty { display: none; }

@@ -182,7 +182,7 @@ function kitPrint(kit, t) {
   }
   const name = kit.sn ? esc(kit.sn).toUpperCase().slice(0, 12) : "";
   if (name) {
-    const fs = Math.min(11, 78 / Math.max(4, name.length) * 1.45);
+    const fs = Math.min(11, 66 / Math.max(4, name.length) * 1.45);
     out += `<text x="50" y="${kit.n ? 46 : 58}" text-anchor="middle" font-family="Oswald, Impact, sans-serif" font-weight="700" font-size="${fs.toFixed(1)}" letter-spacing=".4" fill="${col}" stroke="rgba(0,0,0,.3)" stroke-width=".4">${name}</text>`;
   }
   if (kit.n) out += `<text x="50" y="${name ? 74 : 68}" text-anchor="middle" font-family="Oswald, Impact, sans-serif" font-weight="700" font-size="${name ? 27 : 30}" fill="${col}" stroke="rgba(0,0,0,.35)" stroke-width=".8">${esc(kit.n).slice(0, 2)}</text>`;

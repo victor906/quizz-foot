@@ -569,6 +569,7 @@
     const got = TROPHIES.filter((t) => unlocked[t.id]).length;
     $("trophies-btn").innerHTML = `🏆 Mes trophées <span>${got} / ${TROPHIES.length}</span>`;
     renderWallet();
+    try { renderBinderButton(); } catch { /* classeur pas encore prêt */ }
     if ($("play-info")) updatePlayUI();
     updateSummaries();
     renderFresh();
@@ -1532,6 +1533,19 @@
       row.appendChild(el);
     });
     box.appendChild(row);
+    // Les cartes gagnées avec ces trophées
+    const cards = newCardsFor(list);
+    if (cards.length) {
+      const h = document.createElement("h3");
+      h.className = "nc-title";
+      h.textContent = cards.length > 1 ? `🃏 ${cards.length} nouvelles cartes dans ton classeur !` : "🃏 Nouvelle carte dans ton classeur !";
+      box.appendChild(h);
+      const cr = document.createElement("div");
+      cr.className = "nc-row";
+      cr.innerHTML = cards.map((c) => cardEl(c)).join("");
+      cr.querySelectorAll(".tcg-card").forEach((b) => { b.onclick = () => zoomCard(CARDS[Number(b.dataset.card) - 1]); });
+      box.appendChild(cr);
+    }
   }
 
   // Écran des trophées
@@ -2903,6 +2917,189 @@
     setTimeout(() => t.remove(), 2400);
   }
 
+  // ---------- Classeur de cartes à collectionner ----------
+  const PER_PAGE = 9;
+  const CARD_PAGES = Math.ceil(CARDS.length / PER_PAGE);
+  const tierOfTrophy = (id) => (TROPHIES.find((t) => t.id === id) || {}).tier || "bronze";
+  const trophyOf = (id) => TROPHIES.find((t) => t.id === id);
+  const cardOwned = (c) => !!unlocked[c.trophy];
+  let cardsSeen = new Set();
+  try { cardsSeen = new Set(JSON.parse(storage.get("fqf-cards-seen") || "[]")); } catch { cardsSeen = new Set(); }
+  const saveCardsSeen = () => storage.set("fqf-cards-seen", JSON.stringify([...cardsSeen]));
+  const headImg = () => { const im = document.querySelector("img.w-face, img.ph-face"); return im ? im.src : "icons/tete-fete.png"; };
+  const binder = { page: 0, busy: false };
+
+  function renderBinderButton() {
+    const n = CARDS.filter(cardOwned).length;
+    $("binder-sub").textContent = `${n} / ${CARDS.length} cartes`;
+    const fresh = CARDS.filter((c) => cardOwned(c) && !cardsSeen.has(c.id)).length;
+    $("binder-new").classList.toggle("hidden", !fresh);
+    $("binder-new").textContent = fresh > 1 ? `${fresh} NEW` : "NEW";
+  }
+  function cardEl(c, small = true) {
+    const owned = cardOwned(c);
+    const tier = tierOfTrophy(c.trophy);
+    const r = CARD_RARITY[tier];
+    return `<button type="button" class="tcg-card${small ? " small" : ""} r-${r.id}${owned ? "" : " is-locked"}" data-card="${c.id}">
+      ${owned ? cardFront(c, tier, headImg()) : cardBack(true)}
+      ${owned && !cardsSeen.has(c.id) ? '<span class="tcg-new">NEW</span>' : ""}
+    </button>`;
+  }
+  function pageHtml(p) {
+    if (p === 0) {
+      const n = CARDS.filter(cardOwned).length;
+      return `<div class="bpage cover">
+        <div class="cv-stitch"></div>
+        <div class="cv-emblem"><img src="${headImg()}" alt="" /></div>
+        <div class="cv-title">COLLECTION<br><b>LA FÊTE</b></div>
+        <div class="cv-sub">Cartes des légendes du foot</div>
+        <div class="cv-count">${n} / ${CARDS.length}</div>
+        <div class="cv-open">Touche ▶ ou glisse pour ouvrir</div>
+      </div>`;
+    }
+    const list = CARDS.slice((p - 1) * PER_PAGE, p * PER_PAGE);
+    const rar = CARD_RARITY[tierOfTrophy(list[0].trophy)].label;
+    const slots = list.map((c) => `<div class="slot">${cardEl(c)}</div>`).join("") + '<div class="slot empty"></div>'.repeat(PER_PAGE - list.length);
+    return `<div class="bpage"><div class="bp-head"><span>${rar}${CARD_RARITY[tierOfTrophy(list[list.length - 1].trophy)].label !== rar ? " · " + CARD_RARITY[tierOfTrophy(list[list.length - 1].trophy)].label : ""}</span><span>Page ${p} / ${CARD_PAGES}</span></div><div class="bp-grid">${slots}</div></div>`;
+  }
+  function binderLabel() {
+    $("bd-page").textContent = binder.page === 0 ? "Couverture" : `Page ${binder.page} / ${CARD_PAGES}`;
+    $("bd-prev").disabled = binder.page === 0;
+    $("bd-next").disabled = binder.page === CARD_PAGES;
+  }
+  function wireCards(root) {
+    root.querySelectorAll(".tcg-card").forEach((b) => { b.onclick = () => zoomCard(CARDS[Number(b.dataset.card) - 1]); });
+  }
+  function markPageSeen(p) {
+    if (p === 0) return;
+    let changed = false;
+    CARDS.slice((p - 1) * PER_PAGE, p * PER_PAGE).forEach((c) => { if (cardOwned(c) && !cardsSeen.has(c.id)) { cardsSeen.add(c.id); changed = true; } });
+    if (changed) { saveCardsSeen(); renderBinderButton(); }
+  }
+  function showPage(p) {
+    const stage = $("binder-stage");
+    stage.innerHTML = pageHtml(p);
+    wireCards(stage);
+    binder.page = p;
+    binderLabel();
+    markPageSeen(p);
+  }
+  // Tourner la page : la feuille pivote autour de la reliure
+  function turn(dir) {
+    const to = binder.page + dir;
+    if (binder.busy || to < 0 || to > CARD_PAGES) return;
+    binder.busy = true;
+    Sounds.play("click");
+    const stage = $("binder-stage");
+    const cur = stage.querySelector(".bpage");
+    const tmp = document.createElement("div");
+    tmp.innerHTML = pageHtml(to);
+    const next = tmp.firstElementChild;
+    if (dir > 0) {
+      next.classList.add("under");
+      stage.insertBefore(next, cur);
+      cur.classList.add("turning", "turn-fwd");
+    } else {
+      next.classList.add("turning", "turn-back");
+      stage.appendChild(next);
+    }
+    wireCards(next);
+    const done = () => {
+      cur.remove();
+      next.classList.remove("under", "turning", "turn-back");
+      binder.page = to;
+      binderLabel();
+      markPageSeen(to);
+      binder.busy = false;
+    };
+    if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) done();
+    else setTimeout(done, 620);
+  }
+  function openBinder() {
+    Sounds.unlock();
+    const n = CARDS.filter(cardOwned).length;
+    $("binder-count").textContent = `${n} / ${CARDS.length}`;
+    $("binder-bar").style.width = `${(n / CARDS.length) * 100}%`;
+    const rars = ["commune", "rare", "epique", "legendaire", "mythique"];
+    $("binder-rar").innerHTML = rars.map((id) => {
+      const list = CARDS.filter((c) => CARD_RARITY[tierOfTrophy(c.trophy)].id === id);
+      const lab = Object.values(CARD_RARITY).find((x) => x.id === id);
+      return `<span class="bh-r r-${id}">${lab.gem} ${list.filter(cardOwned).length}/${list.length}</span>`;
+    }).join("");
+    showPage(0);
+    show("binder");
+  }
+  $("bd-prev").onclick = () => turn(-1);
+  $("bd-next").onclick = () => turn(1);
+  $("binder-btn").onclick = openBinder;
+  $("binder-back").onclick = () => { renderBest(); show("home"); };
+  // Glisser pour tourner les pages
+  (() => {
+    const st = $("binder-stage");
+    let x0 = null, y0 = null;
+    st.addEventListener("touchstart", (e) => { x0 = e.touches[0].clientX; y0 = e.touches[0].clientY; }, { passive: true });
+    st.addEventListener("touchend", (e) => {
+      if (x0 === null) return;
+      const dx = e.changedTouches[0].clientX - x0, dy = e.changedTouches[0].clientY - y0;
+      x0 = null;
+      if (Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy) * 1.3) turn(dx < 0 ? 1 : -1);
+    });
+  })();
+
+  // Carte en grand : inclinaison 3D au doigt, reflets, et on la retourne d'un toucher
+  function zoomCard(c) {
+    const owned = cardOwned(c);
+    const tier = tierOfTrophy(c.trophy);
+    const r = CARD_RARITY[tier];
+    const t = trophyOf(c.trophy);
+    const secretLocked = !owned && tier === "secret";
+    const d = owned ? unlocked[c.trophy] : "";
+    const ov = document.createElement("div");
+    ov.className = "tcg-zoom";
+    ov.innerHTML = `<div class="tz-bg"></div>
+      <div class="tz-wrap"><div class="tz-card r-${r.id}${owned ? "" : " is-locked"}">
+        <div class="tz-face tz-front">${owned ? cardFront(c, tier, headImg()) : cardBack(true)}</div>
+        <div class="tz-face tz-rear"><div class="tcg-info r-${r.id}">
+          <div class="ti-rar">${r.gem} ${r.label}</div>
+          <div class="ti-name"></div>
+          <div class="ti-fact"></div>
+          <div class="ti-how"></div>
+        </div></div>
+      </div></div>
+      <p class="tz-hint">${owned ? "Touche la carte pour la retourner · incline-la avec le doigt" : "Carte pas encore débloquée"}</p>
+      <button class="btn tz-close" type="button">Fermer</button>`;
+    ov.querySelector(".ti-name").textContent = owned ? `${c.flag} ${c.name}` : "Carte mystère";
+    ov.querySelector(".ti-fact").textContent = owned ? c.fact : "Qui se cache derrière cette carte ?";
+    ov.querySelector(".ti-how").textContent = owned
+      ? `Débloquée avec le trophée « ${t.name} » le ${d.split("-").reverse().join("/")}`
+      : secretLocked ? "🔒 Débloque… absolument tout." : `🔒 Débloque le trophée « ${t.name} » : ${t.desc.charAt(0).toLowerCase() + t.desc.slice(1)}.`;
+    document.body.appendChild(ov);
+    requestAnimationFrame(() => ov.classList.add("in"));
+    const card = ov.querySelector(".tz-card");
+    if (!owned) card.classList.add("flipped");
+    Sounds.play(owned && (r.id === "legendaire" || r.id === "mythique") ? "legend" : "click");
+    const close = () => { ov.classList.remove("in"); setTimeout(() => ov.remove(), 250); };
+    ov.querySelector(".tz-bg").onclick = close;
+    ov.querySelector(".tz-close").onclick = close;
+    let moved = false;
+    const tilt = (x, y) => {
+      const b = card.getBoundingClientRect();
+      const px = Math.min(1, Math.max(0, (x - b.left) / b.width)), py = Math.min(1, Math.max(0, (y - b.top) / b.height));
+      card.style.setProperty("--rx", `${(0.5 - py) * 22}deg`);
+      card.style.setProperty("--ry", `${(px - 0.5) * 26}deg`);
+      card.style.setProperty("--mx", `${px * 100}%`);
+      card.style.setProperty("--my", `${py * 100}%`);
+    };
+    card.addEventListener("pointermove", (e) => { moved = true; tilt(e.clientX, e.clientY); });
+    card.addEventListener("pointerleave", () => { card.style.setProperty("--rx", "0deg"); card.style.setProperty("--ry", "0deg"); });
+    card.addEventListener("click", () => { if (owned) { card.classList.toggle("flipped"); Sounds.play("click"); } });
+  }
+
+  // Nouvelles cartes gagnées en même temps que des trophées
+  function newCardsFor(trophies) {
+    return trophies.map((t) => CARDS.find((c) => c.trophy === t.id)).filter(Boolean);
+  }
+
   // ---------- Boutique ----------
   const BONUS_ITEMS = [
     { id: "pack", icon: "🎁", name: "Pack trio", desc: "Un exemplaire de chaque joker.", price: 120, give: { fifty: 1, time: 1, skip: 1 } },
@@ -3091,7 +3288,7 @@
 
   // ---------- Mise à jour automatique ----------
   // À l'ouverture, on compare la version de l'app avec celle publiée en ligne.
-  const APP_VERSION = "6.7";
+  const APP_VERSION = "6.8";
   function checkForUpdate() {
     if (!location.protocol.startsWith("http")) return;
     fetch(`version.json?t=${Date.now()}`, { cache: "no-store" })
