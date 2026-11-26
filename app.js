@@ -271,12 +271,21 @@
   $("next-btn").onclick = nextQuestion;
   $("replay-btn").onclick = start;
   $("home-btn").onclick = () => { renderBest(); show("home"); };
+  // Double appui pour abandonner (les boîtes confirm() ne marchent pas partout)
+  let quitArmed = null;
   $("quit-btn").onclick = () => {
-    if (confirm("Abandonner la partie en cours ?")) {
-      clearInterval(state.tick);
-      renderBest();
-      show("home");
+    const b = $("quit-btn");
+    if (!quitArmed) {
+      b.textContent = "Sûr ? Appuie encore";
+      quitArmed = setTimeout(() => { quitArmed = null; b.textContent = "Abandonner"; }, 3000);
+      return;
     }
+    clearTimeout(quitArmed);
+    quitArmed = null;
+    b.textContent = "Abandonner";
+    clearInterval(state.tick);
+    renderBest();
+    show("home");
   };
 
   document.addEventListener("keydown", (e) => {
