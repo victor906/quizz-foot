@@ -2,8 +2,8 @@
 <html lang="fr">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Quizz Foot</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Foot Quizz de la Fête</title>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚽</text></svg>" />
   <link rel="stylesheet" href="style.css" />
 </head>
@@ -15,8 +15,8 @@
     <section id="screen-home" class="screen active">
       <header class="hero">
         <div class="ball">⚽</div>
-        <h1>Quizz <span>Foot</span></h1>
-        <p class="tagline">150 questions pour prouver que tu es un vrai connaisseur.</p>
+        <h1>Le Foot Quizz <span>de la Fête</span></h1>
+        <p class="tagline"><b id="total-count">500</b> questions, de la naissance du foot en 1863 jusqu'en 2026.</p>
       </header>
 
       <div class="card">
@@ -25,19 +25,32 @@
           <button class="chip" data-count="10">10</button>
           <button class="chip active" data-count="20">20</button>
           <button class="chip" data-count="50">50</button>
+          <button class="chip" data-count="100">100</button>
           <button class="chip" data-count="all">Tout</button>
         </div>
 
         <h2>Catégories</h2>
         <div class="chips" id="cat-chips"></div>
 
+        <h2>Options</h2>
         <label class="toggle">
           <input type="checkbox" id="timer-toggle" checked />
           <span class="switch"></span>
-          <span>Chrono : 20 secondes par question</span>
+          <span>Chrono : 20 s par question (30 s si plusieurs réponses)</span>
+        </label>
+        <label class="toggle">
+          <input type="checkbox" id="multi-toggle" checked />
+          <span class="switch"></span>
+          <span>Questions à plusieurs bonnes réponses</span>
+        </label>
+        <label class="toggle">
+          <input type="checkbox" id="sound-toggle" checked />
+          <span class="switch"></span>
+          <span>Sons</span>
         </label>
 
         <button id="start-btn" class="btn primary big">Coup d'envoi !</button>
+        <p class="fresh" id="fresh-info"></p>
         <p class="best" id="best-score"></p>
       </div>
     </section>
@@ -53,14 +66,22 @@
 
       <div class="card question-card">
         <div class="q-top">
-          <span id="q-cat" class="badge">Catégorie</span>
-          <span id="q-timer" class="timer">20</span>
+          <div class="badges">
+            <span id="q-cat" class="badge">Catégorie</span>
+            <span id="q-multi" class="badge multi hidden">Plusieurs réponses</span>
+          </div>
+          <div class="q-tools">
+            <button id="mute-btn" class="icon-btn" aria-label="Couper le son">🔊</button>
+            <span id="q-timer" class="timer">20</span>
+          </div>
         </div>
         <h2 id="q-text" class="q-text">Question</h2>
+        <p id="q-hint" class="hint hidden">Coche toutes les bonnes réponses, puis valide.</p>
         <div id="answers" class="answers"></div>
         <div id="feedback" class="feedback hidden"></div>
         <div class="q-actions">
           <button id="quit-btn" class="btn ghost">Abandonner</button>
+          <button id="validate-btn" class="btn primary hidden">Valider</button>
           <button id="next-btn" class="btn primary hidden">Suivante →</button>
         </div>
       </div>
@@ -88,6 +109,9 @@
   </main>
 
   <script src="questions.js"></script>
+  <script src="questions-plus.js"></script>
+  <script src="questions-multi.js"></script>
+  <script src="sounds.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

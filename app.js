@@ -1,12 +1,38 @@
 (() => {
-  const TIME_PER_QUESTION = 20;
-  const LETTERS = ["A", "B", "C", "D"];
+  const TIME_SINGLE = 20;
+  const TIME_MULTI = 30;
+  const LETTERS = ["A", "B", "C", "D", "E", "F"];
   const $ = (id) => document.getElementById(id);
+
+  // ---------- Construction de la banque de questions ----------
+  const QUESTIONS = [
+    ...QUESTIONS_RAW,
+    ...QUESTIONS_PLUS_RAW,
+  ].map(([cat, q, answers, explain]) => ({
+    key: q,
+    cat,
+    q,
+    multi: false,
+    correct: [answers[0]],
+    answers,
+    explain,
+  })).concat(
+    QUESTIONS_MULTI_RAW.map(([cat, q, good, bad, explain]) => ({
+      key: q,
+      cat,
+      q,
+      multi: true,
+      correct: good,
+      answers: [...good, ...bad],
+      explain,
+    }))
+  );
 
   const state = {
     count: "20",
     cats: new Set(),
     timer: true,
+    multi: true,
     list: [],
     index: 0,
     score: 0,
@@ -14,14 +40,22 @@
     bestStreak: 0,
     mistakes: [],
     tick: null,
-    timeLeft: TIME_PER_QUESTION,
+    timeLeft: TIME_SINGLE,
+    timeMax: TIME_SINGLE,
     answered: false,
+    selected: new Set(),
   };
 
   const storage = {
     get(key) { try { return localStorage.getItem(key); } catch { return null; } },
     set(key, v) { try { localStorage.setItem(key, v); } catch { /* ignore */ } },
   };
+
+  // ---------- Mémoire des questions déjà vues ----------
+  const SEEN_KEY = "fqf-seen";
+  let seen = new Set();
+  try { seen = new Set(JSON.parse(storage.get(SEEN_KEY) || "[]")); } catch { seen = new Set(); }
+  const saveSeen = () => storage.set(SEEN_KEY, JSON.stringify([...seen]));
 
   const shuffle = (arr) => {
     const a = arr.slice();
@@ -31,6 +65,7 @@
     }
     return a;
   };
+  const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
 
   function show(screen) {
     document.querySelectorAll(".screen").forEach((s) => s.classList.remove("active"));
@@ -41,6 +76,11 @@
   // ---------- Accueil ----------
   const categories = [...new Set(QUESTIONS.map((q) => q.cat))];
   categories.forEach((c) => state.cats.add(c));
+  $("total-count").textContent = QUESTIONS.length;
+
+  function currentPool() {
+    return QUESTIONS.filter((q) => state.cats.has(q.cat) && (state.multi || !q.multi));
+  }
 
   function renderCats() {
     const wrap = $("cat-chips");
@@ -67,6 +107,19 @@
       wrap.appendChild(b);
     });
     $("start-btn").disabled = state.cats.size === 0;
+    renderFresh();
+  }
+
+  function renderFresh() {
+    const pool = currentPool();
+    const fresh = pool.filter((q) => !seen.has(q.key)).length;
+    const info = $("fresh-info");
+    if (!pool.length) { info.textContent = ""; return; }
+    info.innerHTML = fresh === pool.length
+      ? `🆕 ${fresh} questions jamais vues dans cette sélection.`
+      : `🆕 Encore <b>${fresh}</b> questions jamais vues sur ${pool.length}. <button class="link" id="reset-seen">Tout remettre à zéro</button>`;
+    const r = $("reset-seen");
+    if (r) r.onclick = () => { seen.clear(); saveSeen(); renderFresh(); };
   }
 
   document.querySelectorAll("#count-chips .chip").forEach((b) => {
@@ -77,23 +130,59 @@
     };
   });
 
+  $("multi-toggle").onchange = (e) => { state.multi = e.target.checked; renderFresh(); };
+
+  // Son
+  const soundPref = storage.get("fqf-sound");
+  const soundOn = soundPref === null ? true : soundPref === "1";
+  $("sound-toggle").checked = soundOn;
+  Sounds.setEnabled(soundOn);
+  function setSound(on) {
+    Sounds.setEnabled(on);
+    storage.set("fqf-sound", on ? "1" : "0");
+    $("sound-toggle").checked = on;
+    $("mute-btn").textContent = on ? "🔊" : "🔇";
+    $("mute-btn").setAttribute("aria-label", on ? "Couper le son" : "Activer le son");
+  }
+  setSound(soundOn);
+  $("sound-toggle").onchange = (e) => { Sounds.unlock(); setSound(e.target.checked); if (e.target.checked) Sounds.play("click"); };
+  $("mute-btn").onclick = () => { Sounds.unlock(); setSound(!Sounds.isEnabled()); };
+
   function renderBest() {
-    const best = storage.get("quizzfoot-best");
+    const best = storage.get("fqf-best");
     $("best-score").textContent = best ? `🏅 Ton meilleur score : ${best}` : "";
+    renderFresh();
   }
 
-  // ---------- Quiz ----------
+  // ---------- Partie ----------
   function start() {
-    const pool = shuffle(QUESTIONS.filter((q) => state.cats.has(q.cat)));
+    Sounds.unlock();
+    state.timer = $("timer-toggle").checked;
+    state.multi = $("multi-toggle").checked;
+
+    const pool = currentPool();
+    if (!pool.length) return;
     const n = state.count === "all" ? pool.length : Math.min(Number(state.count), pool.length);
-    state.list = pool.slice(0, n).map((q) => ({ ...q, shuffled: shuffle(q.answers) }));
+
+    // Priorité aux questions jamais vues
+    const fresh = shuffle(pool.filter((q) => !seen.has(q.key)));
+    let chosen = fresh.slice(0, n);
+    if (chosen.length < n) {
+      // Toutes les questions de la sélection ont été vues : on recommence un cycle
+      const already = new Set(chosen.map((q) => q.key));
+      pool.forEach((q) => seen.delete(q.key));
+      const rest = shuffle(pool.filter((q) => !already.has(q.key)));
+      chosen = chosen.concat(rest.slice(0, n - chosen.length));
+    }
+
+    state.list = chosen.map((q) => ({ ...q, shuffled: shuffle(q.answers) }));
     state.index = 0;
     state.score = 0;
     state.streak = 0;
     state.bestStreak = 0;
     state.mistakes = [];
-    state.timer = $("timer-toggle").checked;
     show("quiz");
+    Sounds.play("start");
     renderQuestion();
   }
 
@@ -101,44 +190,65 @@
     const q = state.list[state.index];
     const total = state.list.length;
     state.answered = false;
+    state.selected = new Set();
+
+    seen.add(q.key);
+    saveSeen();
 
     $("q-num").textContent = `${state.index + 1}/${total}`;
     $("q-score").textContent = state.score;
     $("q-streak").textContent = `${state.streak} 🔥`;
     $("progress-bar").style.width = `${(state.index / total) * 100}%`;
     $("q-cat").textContent = q.cat;
+    $("q-multi").classList.toggle("hidden", !q.multi);
+    $("q-hint").classList.toggle("hidden", !q.multi);
     $("q-text").textContent = q.q;
     $("feedback").className = "feedback hidden";
     $("next-btn").classList.add("hidden");
+    $("validate-btn").classList.toggle("hidden", !q.multi);
+    $("validate-btn").disabled = true;
 
     const wrap = $("answers");
     wrap.innerHTML = "";
+    wrap.classList.toggle("is-multi", q.multi);
     q.shuffled.forEach((ans, i) => {
       const b = document.createElement("button");
       b.className = "answer";
-      b.innerHTML = `<span class="letter">${LETTERS[i]}</span><span></span>`;
+      b.innerHTML = `<span class="letter">${q.multi ? "" : LETTERS[i]}</span><span></span>`;
+      if (q.multi) b.firstChild.setAttribute("data-l", LETTERS[i]);
       b.lastChild.textContent = ans;
       b.dataset.answer = ans;
-      b.onclick = () => answer(ans);
+      b.onclick = () => (q.multi ? toggleChoice(ans, b) : answer([ans]));
       wrap.appendChild(b);
     });
 
-    startTimer();
+    startTimer(q.multi ? TIME_MULTI : TIME_SINGLE);
   }
 
-  function startTimer() {
+  function toggleChoice(ans, btn) {
+    if (state.answered) return;
+    Sounds.play("click");
+    if (state.selected.has(ans)) state.selected.delete(ans);
+    else state.selected.add(ans);
+    btn.classList.toggle("selected", state.selected.has(ans));
+    $("validate-btn").disabled = state.selected.size === 0;
+  }
+
+  function startTimer(max) {
     clearInterval(state.tick);
     const t = $("q-timer");
     if (!state.timer) { t.classList.add("off"); return; }
     t.classList.remove("off", "warn");
-    state.timeLeft = TIME_PER_QUESTION;
+    state.timeMax = max;
+    state.timeLeft = max;
     drawTimer();
     state.tick = setInterval(() => {
       state.timeLeft--;
       drawTimer();
       if (state.timeLeft <= 0) {
         clearInterval(state.tick);
-        answer(null);
+        const q = state.list[state.index];
+        answer(q.multi && state.selected.size ? [...state.selected] : null);
       }
     }, 1000);
   }
@@ -146,7 +256,7 @@
   function drawTimer() {
     const t = $("q-timer");
     t.innerHTML = `<span class="timer-num">${state.timeLeft}</span>`;
-    t.style.setProperty("--p", `${(state.timeLeft / TIME_PER_QUESTION) * 100}%`);
+    t.style.setProperty("--p", `${(state.timeLeft / state.timeMax) * 100}%`);
     t.classList.toggle("warn", state.timeLeft <= 5);
   }
 
@@ -156,12 +266,16 @@
     clearInterval(state.tick);
 
     const q = state.list[state.index];
-    const ok = choice === q.correct;
+    const picked = new Set(choice || []);
+    const good = new Set(q.correct);
+    const ok = choice !== null && picked.size === good.size && [...picked].every((a) => good.has(a));
 
     document.querySelectorAll(".answer").forEach((b) => {
       b.disabled = true;
-      if (b.dataset.answer === q.correct) b.classList.add("correct");
-      else if (b.dataset.answer === choice) b.classList.add("wrong");
+      b.classList.remove("selected");
+      const a = b.dataset.answer;
+      if (good.has(a)) b.classList.add(picked.has(a) || !q.multi ? "correct" : "missed");
+      else if (picked.has(a)) b.classList.add("wrong");
       else b.classList.add("dim");
     });
 
@@ -169,32 +283,42 @@
       state.score++;
       state.streak++;
       state.bestStreak = Math.max(state.bestStreak, state.streak);
+      Sounds.play("correct");
+      if (state.streak % 5 === 0) Sounds.play("streak");
     } else {
       state.streak = 0;
       state.mistakes.push({ q, choice });
+      Sounds.play(choice === null ? "timeout" : "wrong");
     }
 
     $("q-score").textContent = state.score;
     $("q-streak").textContent = `${state.streak} 🔥`;
 
     const fb = $("feedback");
-    const title = ok
-      ? pick(["⚽ Buuut !", "✅ Bien vu !", "🎯 En pleine lucarne !", "👏 Bravo !"])
-      : choice === null
-        ? "⏱️ Temps écoulé !"
-        : pick(["❌ Raté !", "🟥 Carton rouge !", "😬 À côté du poteau !", "🚩 Hors-jeu !"]);
+    let title;
+    if (ok) {
+      title = state.streak > 0 && state.streak % 5 === 0
+        ? `🔥 ${state.streak} bonnes réponses d'affilée !`
+        : pick(["⚽ Buuut !", "✅ Bien vu !", "🎯 En pleine lucarne !", "👏 Bravo !", "🧤 Arrêt réflexe, c'est validé !"]);
+    } else if (choice === null) {
+      title = "⏱️ Temps écoulé !";
+    } else {
+      title = pick(["❌ Raté !", "🟥 Carton rouge !", "😬 À côté du poteau !", "🚩 Hors-jeu !"]);
+    }
+    const answerText = q.multi
+      ? `Les bonnes réponses : ${q.correct.join(", ")}.`
+      : `La bonne réponse : ${q.correct[0]}.`;
     fb.innerHTML = `<strong></strong><span></span>`;
-    fb.firstChild.textContent = ok ? title : `${title} La bonne réponse : ${q.correct}.`;
+    fb.firstChild.textContent = ok ? title : `${title} ${answerText}`;
     fb.lastChild.textContent = q.explain;
     fb.className = `feedback ${ok ? "good" : "bad"}`;
 
+    $("validate-btn").classList.add("hidden");
     const next = $("next-btn");
     next.textContent = state.index === state.list.length - 1 ? "Voir le résultat →" : "Suivante →";
     next.classList.remove("hidden");
     next.focus({ preventScroll: true });
   }
-
-  const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
 
   function nextQuestion() {
     if (state.index < state.list.length - 1) {
@@ -213,7 +337,7 @@
     $("progress-bar").style.width = "100%";
 
     let emoji, title, msg;
-    if (pct === 100) { emoji = "🏆"; title = "Ballon d'Or !"; msg = "Un sans-faute. Tu es une encyclopédie du foot vivante."; }
+    if (pct === 100) { emoji = "🏆"; title = "Ballon d'Or !"; msg = "Un sans-faute. Tu es le roi de la fête."; }
     else if (pct >= 80) { emoji = "🥇"; title = "Champion !"; msg = "Niveau Ligue des champions. Respect."; }
     else if (pct >= 60) { emoji = "🥈"; title = "Très solide !"; msg = "Tu connais ton foot, encore un petit effort pour le titre."; }
     else if (pct >= 40) { emoji = "🥉"; title = "Pas mal !"; msg = "Milieu de tableau. Un peu de révision et ça passe."; }
@@ -228,11 +352,10 @@
       <div class="stat"><b>${state.bestStreak} 🔥</b><span>Meilleure série</span></div>
       <div class="stat"><b>${state.mistakes.length}</b><span>Erreurs</span></div>`;
 
-    // Meilleur score (en %), sur 10 questions minimum
-    const prev = storage.get("quizzfoot-best-pct");
+    const prev = storage.get("fqf-best-pct");
     if (total >= 10 && (prev === null || pct > Number(prev))) {
-      storage.set("quizzfoot-best-pct", String(pct));
-      storage.set("quizzfoot-best", `${state.score}/${total} (${pct}%)`);
+      storage.set("fqf-best-pct", String(pct));
+      storage.set("fqf-best", `${state.score}/${total} (${pct}%)`);
     }
 
     const review = $("review");
@@ -242,17 +365,19 @@
       const li = document.createElement("li");
       li.innerHTML = `<div class="rq"></div><div class="ry"></div><div class="rc"></div><div class="re"></div>`;
       li.children[0].textContent = q.q;
-      li.children[1].textContent = `Ta réponse : ${choice ?? "aucune (temps écoulé)"}`;
-      li.children[2].textContent = `Bonne réponse : ${q.correct}`;
+      li.children[1].textContent = `Ta réponse : ${choice ? choice.join(", ") : "aucune (temps écoulé)"}`;
+      li.children[2].textContent = `Bonne réponse : ${q.correct.join(", ")}`;
       li.children[3].textContent = q.explain;
       review.appendChild(li);
     });
 
     show("end");
+    Sounds.play("end", pct >= 60);
     if (pct >= 80) confetti();
   }
 
   function confetti() {
+    if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const colors = ["#ffd23f", "#ffffff", "#1fa85a", "#3b82f6", "#e0453a"];
     for (let i = 0; i < 80; i++) {
       const c = document.createElement("div");
@@ -269,8 +394,10 @@
   // ---------- Événements ----------
   $("start-btn").onclick = start;
   $("next-btn").onclick = nextQuestion;
+  $("validate-btn").onclick = () => { if (state.selected.size) answer([...state.selected]); };
   $("replay-btn").onclick = start;
   $("home-btn").onclick = () => { renderBest(); show("home"); };
+
   // Double appui pour abandonner (les boîtes confirm() ne marchent pas partout)
   let quitArmed = null;
   $("quit-btn").onclick = () => {
@@ -290,14 +417,17 @@
 
   document.addEventListener("keydown", (e) => {
     if (!$("screen-quiz").classList.contains("active")) return;
+    const q = state.list[state.index];
     const k = e.key.toUpperCase();
-    const idx = LETTERS.indexOf(k) !== -1 ? LETTERS.indexOf(k) : ["1", "2", "3", "4"].indexOf(k);
-    if (!state.answered && idx !== -1) {
-      const q = state.list[state.index];
-      answer(q.shuffled[idx]);
-    } else if (state.answered && (e.key === "Enter" || e.key === " ")) {
+    let idx = LETTERS.indexOf(k);
+    if (idx === -1) idx = ["1", "2", "3", "4", "5", "6"].indexOf(k);
+    if (!state.answered && idx !== -1 && idx < q.shuffled.length) {
+      if (q.multi) toggleChoice(q.shuffled[idx], document.querySelectorAll(".answer")[idx]);
+      else answer([q.shuffled[idx]]);
+    } else if (e.key === "Enter" || e.key === " ") {
       e.preventDefault();
-      nextQuestion();
+      if (state.answered) nextQuestion();
+      else if (q.multi && state.selected.size) answer([...state.selected]);
     }
   });
 

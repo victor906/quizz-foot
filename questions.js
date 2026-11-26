@@ -174,12 +174,3 @@ const QUESTIONS_RAW = [
   ["Culture foot", "Quel chant est l'hymne des supporters de Liverpool ?", ["You'll Never Walk Alone", "Glory Glory Man United", "Blue Moon", "I'm Forever Blowing Bubbles"], "Une chanson de la comédie musicale Carousel."],
   ["Culture foot", "Quel stade est surnommé « le Chaudron » ?", ["Geoffroy-Guichard", "Le Vélodrome", "Bollaert", "Le Stade de la Meinau"], "Le stade de l'AS Saint-Étienne."],
 ];
-
-const QUESTIONS = QUESTIONS_RAW.map(([cat, q, answers, explain], i) => ({
-  id: i,
-  cat,
-  q,
-  correct: answers[0],
-  answers,
-  explain,
-}));
