@@ -757,9 +757,36 @@
   let cupId = 0;
   // Trophées dessinés : une forme différente par niveau.
   // Renvoie le SVG et la position verticale (en %) où placer l'icône du trophée.
-  function trophyArt(tier) {
+  // Couleurs de gravure (creux sombre → relief clair) pour chaque métal
+  const ENGRAVE = {
+    or: [[0.36, 0.2, 0.0], [0.86, 0.62, 0.13]],
+    argent: [[0.2, 0.23, 0.26], [0.66, 0.71, 0.75]],
+    bronze: [[0.3, 0.13, 0.04], [0.78, 0.47, 0.26]],
+    legende: [[0.24, 0.04, 0.42], [0.74, 0.55, 0.97]],
+  };
+  const escapeXml = (t) => String(t).replace(/&/g, "&amp;").replace(/</g, "&lt;");
+
+  function trophyArt(tier, icon) {
     const n = cupId++;
     const g = (k) => `t${n}${k}`;
+    // Icône gravée : centrée sur le médaillon et découpée à l'intérieur du cercle
+    const emb = (cx, cy, r, size) => {
+      if (!icon) return "";
+      const [d, l] = ENGRAVE[tier] || ENGRAVE.or;
+      const row = (i) => `${((l[i] - d[i]) * 0.3).toFixed(3)} ${((l[i] - d[i]) * 0.59).toFixed(3)} ${((l[i] - d[i]) * 0.11).toFixed(3)} 0 ${d[i]}`;
+      return `<defs>
+        <clipPath id="${g("e")}"><circle cx="${cx}" cy="${cy}" r="${r}"/></clipPath>
+        <filter id="${g("f")}" x="-30%" y="-30%" width="160%" height="160%" color-interpolation-filters="sRGB">
+          <feColorMatrix in="SourceGraphic" type="matrix" values="${row(0)}  ${row(1)}  ${row(2)}  0 0 0 1 0" result="m"/>
+          <feOffset in="SourceAlpha" dx="0" dy="0.7" result="o1"/>
+          <feFlood flood-color="#fff" flood-opacity=".75"/><feComposite in2="o1" operator="in" result="hi"/>
+          <feOffset in="SourceAlpha" dx="0" dy="-0.6" result="o2"/>
+          <feFlood flood-color="#000" flood-opacity=".45"/><feComposite in2="o2" operator="in" result="sh"/>
+          <feMerge><feMergeNode in="hi"/><feMergeNode in="sh"/><feMergeNode in="m"/></feMerge>
+        </filter></defs>
+        <g clip-path="url(#${g("e")})"><text x="${cx}" y="${cy}" text-anchor="middle" dominant-baseline="central" font-size="${size}"
+          font-family="'Apple Color Emoji','Segoe UI Emoji','Noto Color Emoji',sans-serif" filter="url(#${g("f")})">${escapeXml(icon)}</text></g>`;
+    };
     const glint = (clip) => `<g clip-path="url(#${g("c")})"><rect class="t-glint" x="0" y="0" width="22" height="100" fill="url(#${g("w")})"/></g>`;
     const glintDef = `<linearGradient id="${g("w")}" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".5" stop-color="#fff" stop-opacity=".85"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>`;
 
@@ -782,6 +809,7 @@
         <circle cx="40" cy="66" r="20" fill="none" stroke="#ffe0c0" stroke-width="1" opacity=".6"/>
         ${leaves}
         <circle cx="40" cy="66" r="15" fill="url(#${g("i")})" stroke="#7a431a" stroke-width="1.2"/>
+        ${emb(40, 66, 14, 20)}
         <path d="M24 56 A18 18 0 0 1 36 47" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" opacity=".6"/>
         ${glint()}</svg>` };
     }
@@ -804,6 +832,7 @@
         <path d="M26 70 H54 L57 76 H23 Z" fill="url(#${g("s")})"/>
         <rect x="20" y="76" width="40" height="18" rx="2" fill="url(#${g("b")})"/>
         <rect x="29" y="81" width="22" height="7" rx="1.5" fill="url(#${g("s")})"/>
+        ${emb(40, 31, 9, 12.5)}
         <path d="M22 16 C23 32 27 42 33 48" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" opacity=".7"/>
         ${glint()}</svg>` };
     }
@@ -838,6 +867,7 @@
         <rect x="24" y="72" width="32" height="5" rx="1.5" fill="url(#${g("o")})"/>
         <rect x="19" y="77" width="42" height="18" rx="2" fill="url(#${g("d")})"/>
         <rect x="27" y="82" width="26" height="8" rx="1.5" fill="url(#${g("o")})"/>
+        ${emb(40, 33, 10, 13.5)}
         <path d="M20 20 C21 36 26 46 32 52" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" opacity=".55"/>
         ${glint()}</svg>` };
     }
@@ -860,6 +890,7 @@
       <rect x="35" y="72" width="10" height="8" fill="url(#${g("o")})"/>
       <rect x="22" y="80" width="36" height="5" rx="1.5" fill="url(#${g("o")})"/>
       <rect x="18" y="85" width="44" height="10" rx="2" fill="#1a1026"/>
+      ${emb(40, 34, 10, 13.5)}
       <polygon class="t-spark" points="12,8 13.5,12 17,13 13.5,14 12,18 10.5,14 7,13 10.5,12" fill="#fff"/>
       <polygon class="t-spark s2" points="68,48 69.2,51 72,52 69.2,53 68,56 66.8,53 64,52 66.8,51" fill="#fff"/>
       <polygon class="t-spark s3" points="66,6 67,8.5 69.5,9.5 67,10.5 66,13 65,10.5 62.5,9.5 65,8.5" fill="#f3e8ff"/>
@@ -911,9 +942,8 @@
         const b = document.createElement("button");
         b.type = "button";
         b.className = "room-item";
-        const art = trophyArt(tier);
-        b.innerHTML = `<span class="ri-art">${art.svg}<span class="ri-emoji" style="top:${art.top}%"></span></span><span class="ri-name"></span><span class="ri-shadow"></span>`;
-        b.querySelector(".ri-emoji").textContent = t.icon;
+        const art = trophyArt(tier, t.icon);
+        b.innerHTML = `<span class="ri-art">${art.svg}</span><span class="ri-name"></span><span class="ri-shadow"></span>`;
         b.querySelector(".ri-name").textContent = t.name;
         b.onclick = () => showRoomDetail(t);
         items.appendChild(b);
