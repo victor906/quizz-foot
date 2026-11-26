@@ -69,6 +69,8 @@
           <button class="mode" data-play="sudden" role="radio" aria-checked="false"><span class="mode-ico">💀</span><b>Mort subite</b><small>Une erreur et c'est fini</small></button>
           <button class="mode" data-play="rush" role="radio" aria-checked="false"><span class="mode-ico">⏳</span><b>Contre-la-montre</b><small>60 s, un max de réponses</small></button>
           <button class="mode" data-play="daily" role="radio" aria-checked="false"><span class="mode-ico">📅</span><b>Défi du jour</b><small id="daily-small">10 questions par jour</small></button>
+          <button class="mode" data-play="kits" role="radio" aria-checked="false"><span class="mode-ico">👕</span><b>Maillots</b><small>Reconnais les clubs</small></button>
+          <button class="mode" data-play="geo" role="radio" aria-checked="false"><span class="mode-ico">🗺️</span><b>Tour d'Europe</b><small>Place les clubs sur la carte</small></button>
           <button class="mode" data-play="party" role="radio" aria-checked="false"><span class="mode-ico">🎉</span><b>Soirée</b><small>De 2 à 6 joueurs</small></button>
           <button class="mode" data-play="review" role="radio" aria-checked="false"><span class="mode-ico">📚</span><b>Révision</b><small id="review-small">Tes erreurs</small></button>
         </div>
@@ -157,6 +159,7 @@
           <span id="q-timer" class="timer">20</span>
         </div>
         <div class="jokers" id="jokers"></div>
+        <div class="q-visual hidden" id="q-visual"></div>
         <h2 id="q-text" class="q-text">Question</h2>
         <p id="q-hint" class="hint hidden">Coche toutes les bonnes réponses, puis valide.</p>
         <div id="answers" class="answers"></div>
@@ -203,6 +206,32 @@
       <div id="tr-vitrine"></div>
       <div class="tr-grid" id="tr-grid"></div>
     </section>
+    <!-- TOUR D'EUROPE -->
+    <section id="screen-geo" class="screen">
+      <div class="scoreboard">
+        <div class="sb-item"><span class="sb-label">Club</span><span id="geo-num" class="sb-value">1/10</span></div>
+        <div class="sb-item"><span class="sb-label">Points</span><span id="geo-score" class="sb-value">0</span></div>
+        <div class="sb-item"><span class="sb-label">Dernier</span><span id="geo-last" class="sb-value">–</span></div>
+      </div>
+      <div class="card geo-card">
+        <div class="geo-prompt">
+          <span class="geo-kit" id="geo-kit"></span>
+          <div class="geo-ask"><small>Où joue…</small><b id="geo-club">Club</b></div>
+        </div>
+        <div class="geo-map-wrap" id="geo-wrap">
+          <svg id="geo-map" class="geo-map" xmlns="http://www.w3.org/2000/svg"></svg>
+          <div class="geo-zoom"><button type="button" id="geo-zin" aria-label="Zoomer">＋</button><button type="button" id="geo-zout" aria-label="Dézoomer">－</button></div>
+          <div class="geo-tip" id="geo-tip">Touche la carte pour placer ton épingle 📍</div>
+        </div>
+        <div id="geo-result" class="geo-result hidden"></div>
+        <div class="q-actions">
+          <button id="geo-quit" class="btn quit" type="button">✕ Abandonner</button>
+          <button id="geo-ok" class="btn primary" type="button" disabled>Valider</button>
+          <button id="geo-next" class="btn primary hidden" type="button">Suivant →</button>
+        </div>
+      </div>
+    </section>
+
     <!-- BOUTIQUE -->
     <section id="screen-shop" class="screen">
       <div class="card shop-head">
@@ -251,6 +280,8 @@
   <script src="questions-extra.js?v=5.1"></script>
   <script src="questions-multi.js?v=5.1"></script>
   <script src="questions-cr7.js?v=5.1"></script>
+  <script src="clubs.js?v=5.1"></script>
+  <script src="geo-map.js?v=5.1"></script>
   <script src="trophies.js?v=5.1"></script>
   <script src="sounds.js?v=5.1"></script>
   <script src="legend.js?v=5.1"></script>

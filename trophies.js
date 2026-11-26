@@ -72,6 +72,11 @@ TROPHIES.push(
   { id: "daily-7", icon: "🗓️", name: "Fidèle au poste", desc: "Faire le Défi du jour 7 jours d'affilée", tier: "or", goal: 7, value: (s) => s.dailyBestStreak },
   { id: "party-1", icon: "🎉", name: "Ambianceur", desc: "Terminer une partie en mode Soirée", tier: "bronze", goal: 1, value: (s) => s.partyGames },
   { id: "review-10", icon: "📚", name: "Bosseur", desc: "Corriger 10 erreurs en mode Révision", tier: "argent", goal: 10, value: (s) => s.reviewFixed },
+  { id: "kits-25", icon: "👕", name: "Styliste", desc: "25 maillots reconnus en mode Maillots", tier: "bronze", goal: 25, value: (s) => s.kitCorrect },
+  { id: "kits-perfect", icon: "🦅", name: "Œil de lynx", desc: "100 % sur une partie Maillots d'au moins 10 questions", tier: "or", goal: 1, value: (s) => s.kitPerfect },
+  { id: "geo-bull", icon: "📍", name: "Pile poil", desc: "Placer un club à moins de 25 km de son stade (Tour d'Europe)", tier: "bronze", goal: 1, value: (s) => s.geoBullseye },
+  { id: "geo-6000", icon: "🧭", name: "Globe-trotter", desc: "Faire 6 000 points sur un Tour d'Europe", tier: "argent", goal: 6000, value: (s) => s.geoBest },
+  { id: "geo-8500", icon: "🛰️", name: "GPS humain", desc: "Faire 8 500 points sur un Tour d'Europe", tier: "legende", goal: 8500, value: (s) => s.geoBest },
   { id: "shop-1", icon: "🛒", name: "Premier achat", desc: "Acheter un joker à la boutique", tier: "bronze", goal: 1, value: (s) => s.purchases },
   { id: "joker-10", icon: "🃏", name: "Joueur de cartes", desc: "Utiliser 10 jokers", tier: "argent", goal: 10, value: (s) => s.jokersUsed },
 );
