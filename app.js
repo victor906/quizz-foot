@@ -4,11 +4,28 @@
   const LETTERS = ["A", "B", "C", "D", "E", "F"];
   const $ = (id) => document.getElementById(id);
 
+  // ---------- Difficultés et époques ----------
+  const DIFFS = [
+    { id: "f", label: "Facile", stars: "★" },
+    { id: "m", label: "Moyen", stars: "★★" },
+    { id: "d", label: "Difficile", stars: "★★★" },
+  ];
+  const ERAS = [
+    { id: "O", label: "Les origines", range: "1863-1929" },
+    { id: "A", label: "1930-1969", range: "" },
+    { id: "B", label: "1970-1999", range: "" },
+    { id: "C", label: "2000-2019", range: "" },
+    { id: "D", label: "2020-2026", range: "" },
+    { id: "X", label: "Toutes époques", range: "règles, records, culture" },
+  ];
+  const diffOf = (id) => DIFFS.find((d) => d.id === id) || DIFFS[1];
+  const eraOf = (id) => ERAS.find((e) => e.id === id) || ERAS[5];
+
   // ---------- Construction de la banque de questions ----------
   const QUESTIONS = [
     ...QUESTIONS_RAW,
     ...QUESTIONS_PLUS_RAW,
-  ].map(([cat, q, answers, explain]) => ({
+  ].map(([cat, q, answers, explain, diff, era]) => ({
     key: q,
     cat,
     q,
@@ -16,8 +33,10 @@
     correct: [answers[0]],
     answers,
     explain,
+    diff,
+    era,
   })).concat(
-    QUESTIONS_MULTI_RAW.map(([cat, q, good, bad, explain]) => ({
+    QUESTIONS_MULTI_RAW.map(([cat, q, good, bad, explain, diff, era]) => ({
       key: q,
       cat,
       q,
@@ -25,12 +44,16 @@
       correct: good,
       answers: [...good, ...bad],
       explain,
+      diff,
+      era,
     }))
   );
 
   const state = {
     count: "20",
     cats: new Set(),
+    diffs: new Set(DIFFS.map((d) => d.id)),
+    eras: new Set(ERAS.map((e) => e.id)),
     timer: true,
     multi: true,
     list: [],
@@ -79,7 +102,46 @@
   $("total-count").textContent = QUESTIONS.length;
 
   function currentPool() {
-    return QUESTIONS.filter((q) => state.cats.has(q.cat) && (state.multi || !q.multi));
+    return QUESTIONS.filter((q) =>
+      state.cats.has(q.cat) &&
+      state.diffs.has(q.diff) &&
+      state.eras.has(q.era) &&
+      (state.multi || !q.multi));
+  }
+
+  // Rangée de puces à sélection multiple (avec un bouton « Toutes »)
+  function renderChipRow(wrapId, items, selected, countOf, allLabel) {
+    const wrap = $(wrapId);
+    wrap.innerHTML = "";
+    const all = document.createElement("button");
+    all.className = "chip" + (selected.size === items.length ? " active" : "");
+    all.textContent = allLabel;
+    all.onclick = () => {
+      if (selected.size === items.length) selected.clear();
+      else items.forEach((it) => selected.add(it.id));
+      renderFilters();
+    };
+    wrap.appendChild(all);
+    items.forEach((it) => {
+      const b = document.createElement("button");
+      b.className = "chip" + (selected.has(it.id) ? " active" : "");
+      b.innerHTML = `${it.html} <small>${countOf(it.id)}</small>`;
+      b.onclick = () => {
+        selected.has(it.id) ? selected.delete(it.id) : selected.add(it.id);
+        renderFilters();
+      };
+      wrap.appendChild(b);
+    });
+  }
+
+  function renderFilters() {
+    renderChipRow("diff-chips",
+      DIFFS.map((d) => ({ id: d.id, html: `<span class="stars">${d.stars}</span> ${d.label}` })),
+      state.diffs, (id) => QUESTIONS.filter((q) => q.diff === id).length, "Toutes");
+    renderChipRow("era-chips",
+      ERAS.map((e) => ({ id: e.id, html: e.range ? `${e.label} <em>${e.range}</em>` : e.label })),
+      state.eras, (id) => QUESTIONS.filter((q) => q.era === id).length, "Toutes");
+    renderCats();
   }
 
   function renderCats() {
@@ -106,7 +168,6 @@
       };
       wrap.appendChild(b);
     });
-    $("start-btn").disabled = state.cats.size === 0;
     renderFresh();
   }
 
@@ -114,7 +175,8 @@
     const pool = currentPool();
     const fresh = pool.filter((q) => !seen.has(q.key)).length;
     const info = $("fresh-info");
-    if (!pool.length) { info.textContent = ""; return; }
+    $("start-btn").disabled = pool.length === 0;
+    if (!pool.length) { info.textContent = "Aucune question ne correspond à ces filtres. Élargis ta sélection."; return; }
     info.innerHTML = fresh === pool.length
       ? `🆕 ${fresh} questions jamais vues dans cette sélection.`
       : `🆕 Encore <b>${fresh}</b> questions jamais vues sur ${pool.length}. <button class="link" id="reset-seen">Tout remettre à zéro</button>`;
@@ -131,22 +193,6 @@
   });
 
   $("multi-toggle").onchange = (e) => { state.multi = e.target.checked; renderFresh(); };
-
-  // Son
-  const soundPref = storage.get("fqf-sound");
-  const soundOn = soundPref === null ? true : soundPref === "1";
-  $("sound-toggle").checked = soundOn;
-  Sounds.setEnabled(soundOn);
-  function setSound(on) {
-    Sounds.setEnabled(on);
-    storage.set("fqf-sound", on ? "1" : "0");
-    $("sound-toggle").checked = on;
-    $("mute-btn").textContent = on ? "🔊" : "🔇";
-    $("mute-btn").setAttribute("aria-label", on ? "Couper le son" : "Activer le son");
-  }
-  setSound(soundOn);
-  $("sound-toggle").onchange = (e) => { Sounds.unlock(); setSound(e.target.checked); if (e.target.checked) Sounds.play("click"); };
-  $("mute-btn").onclick = () => { Sounds.unlock(); setSound(!Sounds.isEnabled()); };
 
   function renderBest() {
     const best = storage.get("fqf-best");
@@ -200,6 +246,11 @@
     $("q-streak").textContent = `${state.streak} 🔥`;
     $("progress-bar").style.width = `${(state.index / total) * 100}%`;
     $("q-cat").textContent = q.cat;
+    const d = diffOf(q.diff);
+    $("q-diff").textContent = `${d.stars} ${d.label}`;
+    $("q-diff").dataset.level = d.id;
+    const e = eraOf(q.era);
+    $("q-era").textContent = e.id === "O" ? "1863-1929" : e.label;
     $("q-multi").classList.toggle("hidden", !q.multi);
     $("q-hint").classList.toggle("hidden", !q.multi);
     $("q-text").textContent = q.q;
@@ -431,6 +482,6 @@
     }
   });
 
-  renderCats();
+  renderFilters();
   renderBest();
 })();

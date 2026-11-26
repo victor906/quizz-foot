@@ -262,3 +262,14 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .ball, .screen, .answer.wrong { animation: none; }
 }
+
+/* ---------- Difficulté et époques ---------- */
+.chip .stars { color: #e0a800; letter-spacing: -1px; }
+.chip.active .stars { color: var(--accent); }
+.chip em { font-style: normal; font-weight: 500; opacity: .75; font-size: .82em; }
+.badge.diff { background: #fff3c4; color: #6b5200; }
+.badge.diff[data-level="f"] { background: #e4f7ec; color: #0f5a31; }
+.badge.diff[data-level="d"] { background: #fde8e6; color: #8a1f17; }
+.badge.era { background: #e8eefc; color: #23408e; }
+.badge.multi { background: #f1e8fc; color: #5b2a8e; }
+.fresh { color: var(--grass-1); }

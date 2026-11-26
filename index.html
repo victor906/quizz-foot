@@ -29,6 +29,12 @@
           <button class="chip" data-count="all">Tout</button>
         </div>
 
+        <h2>Difficulté</h2>
+        <div class="chips" id="diff-chips"></div>
+
+        <h2>Époques</h2>
+        <div class="chips" id="era-chips"></div>
+
         <h2>Catégories</h2>
         <div class="chips" id="cat-chips"></div>
 
@@ -42,11 +48,6 @@
           <input type="checkbox" id="multi-toggle" checked />
           <span class="switch"></span>
           <span>Questions à plusieurs bonnes réponses</span>
-        </label>
-        <label class="toggle">
-          <input type="checkbox" id="sound-toggle" checked />
-          <span class="switch"></span>
-          <span>Sons</span>
         </label>
 
         <button id="start-btn" class="btn primary big">Coup d'envoi !</button>
@@ -68,12 +69,11 @@
         <div class="q-top">
           <div class="badges">
             <span id="q-cat" class="badge">Catégorie</span>
+            <span id="q-diff" class="badge diff">Moyen</span>
+            <span id="q-era" class="badge era">2000-2019</span>
             <span id="q-multi" class="badge multi hidden">Plusieurs réponses</span>
           </div>
-          <div class="q-tools">
-            <button id="mute-btn" class="icon-btn" aria-label="Couper le son">🔊</button>
-            <span id="q-timer" class="timer">20</span>
-          </div>
+          <span id="q-timer" class="timer">20</span>
         </div>
         <h2 id="q-text" class="q-text">Question</h2>
         <p id="q-hint" class="hint hidden">Coche toutes les bonnes réponses, puis valide.</p>
