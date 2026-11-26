@@ -360,8 +360,9 @@
 
     state.list = chosen.map((q) => ({ ...q, shuffled: shuffle(q.answers) }));
 
-    // Question bonus : apparaît souvent (environ une partie sur deux), à une place au hasard
-    if (Math.random() < BONUS_CHANCE) {
+    // Question bonus : apparaît souvent (environ une partie sur deux), à une place au hasard.
+    // Jamais en mode Superfan CR7.
+    if (state.theme !== "cr7" && Math.random() < BONUS_CHANCE) {
       const pos = Math.floor(Math.random() * (state.list.length + 1));
       state.list.splice(pos, 0, { ...BONUS_QUESTION, shuffled: shuffle(BONUS_QUESTION.answers) });
     }
