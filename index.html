@@ -72,6 +72,7 @@
         <button id="start-btn" class="btn primary big">Coup d'envoi !</button>
         <p class="fresh" id="fresh-info"></p>
         <p class="best" id="best-score"></p>
+        <button id="trophies-btn" class="btn trophies-btn">🏆 Mes trophées</button>
       </div>
     </section>
 
@@ -113,9 +114,11 @@
         <h2 id="end-title">Coup de sifflet final !</h2>
         <p id="end-score" class="end-score">0 / 20</p>
         <p id="end-msg" class="end-msg"></p>
+        <div id="new-trophies" class="new-trophies hidden"></div>
         <div class="end-stats" id="end-stats"></div>
         <div class="end-actions">
           <button id="replay-btn" class="btn primary">Rejouer</button>
+          <button id="end-trophies-btn" class="btn trophies-btn small">🏆 Trophées</button>
           <button id="home-btn" class="btn ghost">Accueil</button>
         </div>
       </div>
@@ -125,12 +128,24 @@
         <ol id="review"></ol>
       </div>
     </section>
+    <!-- ÉCRAN DES TROPHÉES -->
+    <section id="screen-trophies" class="screen">
+      <div class="card tr-head">
+        <button id="tr-back" class="btn ghost tr-back">← Accueil</button>
+        <div class="tr-title">🏆 Mes trophées</div>
+        <div class="tr-count" id="tr-count">0 / 0</div>
+        <div class="progress tr-progress"><div id="tr-bar"></div></div>
+        <div class="end-stats" id="tr-stats"></div>
+      </div>
+      <div class="tr-grid" id="tr-grid"></div>
+    </section>
   </main>
 
   <script src="questions.js"></script>
   <script src="questions-plus.js"></script>
   <script src="questions-multi.js"></script>
   <script src="questions-cr7.js"></script>
+  <script src="trophies.js"></script>
   <script src="sounds.js"></script>
   <script src="app.js"></script>
   <script>

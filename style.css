@@ -338,3 +338,71 @@ body.theme-cr7 .tagline { font-weight: 500; }
 }
 .btn.quit:hover { background: #fbd5d1; }
 .btn.quit.armed { background: var(--bad); color: #fff; box-shadow: 0 3px 0 #a92d24; }
+
+/* ---------- Trophées ---------- */
+:root {
+  --bronze: #b0703a; --bronze-bg: #f7ebe0;
+  --argent: #7d8a94; --argent-bg: #eef1f4;
+  --or: #c99a06; --or-bg: #fff6d6;
+  --legende: #7b3fd1; --legende-bg: #f1e8fc;
+}
+.trophies-btn {
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  width: 100%; margin-top: 14px; padding: 13px 16px;
+  background: #111; color: #fff; box-shadow: 0 4px 0 #000;
+}
+.trophies-btn span { background: var(--accent); color: var(--accent-ink); border-radius: 999px; padding: 2px 10px; font-size: .85rem; }
+.trophies-btn:hover { background: #222; }
+.trophies-btn.small { width: auto; margin-top: 0; padding: 12px 18px; }
+
+.new-trophies { background: var(--or-bg); border: 2px solid var(--or); border-radius: 16px; padding: 14px; margin: 0 0 18px; animation: pop .4s ease; }
+.new-trophies h3 { margin: 0 0 10px; font-size: 1.05rem; color: #6b5200; }
+.nt-row { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+.nt { display: flex; flex-direction: column; align-items: center; gap: 2px; background: #fff; border-radius: 12px; padding: 10px 12px; min-width: 96px; border: 2px solid var(--line); }
+.nt-ico { font-size: 1.8rem; }
+.nt-name { font-weight: 700; font-size: .9rem; }
+.nt-tier { font-size: .72rem; text-transform: uppercase; letter-spacing: .06em; font-weight: 700; }
+
+.tr-head { text-align: center; position: relative; }
+.tr-back { position: absolute; left: 10px; top: 10px; padding: 8px 12px; }
+.tr-title { font-size: 1.5rem; font-weight: 900; margin: 30px 0 4px; }
+.tr-count { font-family: "Courier New", monospace; font-size: 2rem; font-weight: 900; color: var(--grass-1); }
+.tr-progress { border-radius: 6px; margin: 10px 0 16px; background: #e6ece8; height: 10px; }
+#tr-bar { height: 100%; width: 0; background: linear-gradient(90deg, var(--grass-2), var(--accent)); transition: width .4s; }
+.tr-head .end-stats { margin-bottom: 0; }
+
+.tr-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 10px; }
+.trophy {
+  display: flex; gap: 12px; align-items: center; min-width: 0;
+  background: #fff; border-radius: 14px; padding: 12px 14px; box-shadow: 0 8px 20px rgba(0,0,0,.18);
+  border-left: 6px solid #d5ddd8;
+}
+.t-ico { width: 50px; height: 50px; flex-shrink: 0; display: grid; place-items: center; font-size: 1.7rem; border-radius: 50%; background: #eef2ef; filter: grayscale(1); opacity: .7; }
+.trophy.done .t-ico { filter: none; opacity: 1; }
+.t-body { flex: 1; min-width: 0; }
+.t-top { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.t-name { font-size: .98rem; }
+.t-tier { font-size: .68rem; text-transform: uppercase; letter-spacing: .07em; font-weight: 800; white-space: nowrap; }
+.t-desc { color: var(--muted); font-size: .84rem; line-height: 1.35; margin: 2px 0 7px; }
+.t-prog { height: 6px; border-radius: 4px; background: #e6ece8; overflow: hidden; }
+.t-bar { height: 100%; background: var(--grass-2); }
+.t-val { font-size: .76rem; color: var(--muted); margin-top: 4px; font-variant-numeric: tabular-nums; }
+.trophy:not(.done) .t-name { color: #55645b; }
+
+.tier-bronze .t-tier, .nt.tier-bronze .nt-tier { color: var(--bronze); }
+.tier-argent .t-tier, .nt.tier-argent .nt-tier { color: var(--argent); }
+.tier-or .t-tier, .nt.tier-or .nt-tier { color: var(--or); }
+.tier-legende .t-tier, .nt.tier-legende .nt-tier { color: var(--legende); }
+.trophy.done.tier-bronze { border-left-color: var(--bronze); }
+.trophy.done.tier-bronze .t-ico { background: var(--bronze-bg); }
+.trophy.done.tier-argent { border-left-color: var(--argent); }
+.trophy.done.tier-argent .t-ico { background: var(--argent-bg); }
+.trophy.done.tier-or { border-left-color: var(--or); }
+.trophy.done.tier-or .t-ico { background: var(--or-bg); }
+.trophy.done.tier-legende { border-left-color: var(--legende); }
+.trophy.done.tier-legende .t-ico { background: var(--legende-bg); }
+.trophy.done .t-bar { background: var(--accent); }
+.nt.tier-bronze { border-color: var(--bronze); }
+.nt.tier-argent { border-color: var(--argent); }
+.nt.tier-or { border-color: var(--or); }
+.nt.tier-legende { border-color: var(--legende); }

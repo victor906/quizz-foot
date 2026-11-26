@@ -65,6 +65,7 @@
     b.eraSel = new Set(b.eras.map((e) => e.id));
   });
   let QUESTIONS = BANKS.general.questions;
+  const ALL_QUESTION_COUNT = () => BANKS.general.questions.length + BANKS.cr7.questions.length;
   let categories = BANKS.general.categories;
 
   const state = {
@@ -97,6 +98,41 @@
   let seen = new Set();
   try { seen = new Set(JSON.parse(storage.get(SEEN_KEY) || "[]")); } catch { seen = new Set(); }
   const saveSeen = () => storage.set(SEEN_KEY, JSON.stringify([...seen]));
+
+  // ---------- Trophées ----------
+  const STATS_KEY = "fqf-stats";
+  const TROPHY_KEY = "fqf-trophies";
+  const EVER_KEY = "fqf-ever";
+  const STAT_DEFAULTS = {
+    correct: 0, games: 0, bestStreak: 0, hard: 0, multi: 0, origins: 0, fast: 0,
+    zenGames: 0, cr7Games: 0, cr7Correct: 0, cr7Perfect: 0,
+    perfect10: 0, perfect20: 0, marathon: 0, fullGames: 0,
+  };
+  let stats = { ...STAT_DEFAULTS };
+  try { stats = { ...STAT_DEFAULTS, ...JSON.parse(storage.get(STATS_KEY) || "{}") }; } catch { /* valeurs par défaut */ }
+  let unlocked = {};
+  try { unlocked = JSON.parse(storage.get(TROPHY_KEY) || "{}"); } catch { unlocked = {}; }
+  let everSeen = new Set();
+  try { everSeen = new Set(JSON.parse(storage.get(EVER_KEY) || "[]")); } catch { everSeen = new Set(); }
+  const saveStats = () => storage.set(STATS_KEY, JSON.stringify(stats));
+  const saveEver = () => storage.set(EVER_KEY, JSON.stringify([...everSeen]));
+
+  const fullStats = () => ({ ...stats, everSeen: everSeen.size });
+  const trophyGoal = (t) => (t.id === "seen-all" ? ALL_QUESTION_COUNT() : t.goal);
+
+  // Débloque les trophées atteints et renvoie les nouveaux
+  function checkTrophies() {
+    const s = fullStats();
+    const fresh = [];
+    TROPHIES.forEach((t) => {
+      if (!unlocked[t.id] && t.value(s) >= trophyGoal(t)) {
+        unlocked[t.id] = new Date().toISOString().slice(0, 10);
+        fresh.push(t);
+      }
+    });
+    if (fresh.length) storage.set(TROPHY_KEY, JSON.stringify(unlocked));
+    return fresh;
+  }
 
   const shuffle = (arr) => {
     const a = arr.slice();
@@ -269,6 +305,8 @@
   function renderBest() {
     const best = storage.get(bestKey());
     $("best-score").textContent = best ? `🏅 Ton meilleur score : ${best}` : "";
+    const got = TROPHIES.filter((t) => unlocked[t.id]).length;
+    $("trophies-btn").innerHTML = `🏆 Mes trophées <span>${got} / ${TROPHIES.length}</span>`;
     updateSummaries();
     renderFresh();
   }
@@ -298,6 +336,8 @@
     state.streak = 0;
     state.bestStreak = 0;
     state.mistakes = [];
+    state.newTrophies = [];
+    state.isAll = state.count === "all";
     show("quiz");
     Sounds.play("start");
     renderQuestion();
@@ -311,6 +351,9 @@
 
     seen.add(q.key);
     saveSeen();
+    everSeen.add(q.key);
+    saveEver();
+    state.qStart = Date.now();
 
     $("q-num").textContent = `${state.index + 1}/${total}`;
     $("q-score").textContent = state.score;
@@ -401,10 +444,21 @@
       else b.classList.add("dim");
     });
 
+    // Statistiques pour les trophées (enregistrées même si la partie est abandonnée)
+    if (ok) {
+      stats.correct++;
+      if (q.diff === "d") stats.hard++;
+      if (q.multi) stats.multi++;
+      if (q.era === "O" && state.theme === "general") stats.origins++;
+      if (state.theme === "cr7") stats.cr7Correct++;
+      if (state.timer && Date.now() - state.qStart < 3000) stats.fast++;
+    }
+
     if (ok) {
       state.score++;
       state.streak++;
       state.bestStreak = Math.max(state.bestStreak, state.streak);
+      stats.bestStreak = Math.max(stats.bestStreak, state.streak);
       Sounds.play("correct");
       if (state.streak % 5 === 0) Sounds.play("streak");
     } else {
@@ -415,6 +469,8 @@
 
     $("q-score").textContent = state.score;
     $("q-streak").textContent = `${state.streak} 🔥`;
+    saveStats();
+    state.newTrophies.push(...checkTrophies());
 
     const fb = $("feedback");
     let title;
@@ -480,6 +536,21 @@
       storage.set(bestKey(), `${state.score}/${total} (${pct}%)`);
     }
 
+    // Statistiques de fin de partie et trophées
+    stats.games++;
+    if (!state.timer) stats.zenGames++;
+    if (state.theme === "cr7") {
+      stats.cr7Games++;
+      if (total >= 20 && pct === 100) stats.cr7Perfect++;
+    }
+    if (total >= 10 && pct === 100) stats.perfect10++;
+    if (total >= 20 && pct === 100) stats.perfect20++;
+    if (total >= 50 && pct >= 80) stats.marathon++;
+    if (state.isAll) stats.fullGames++;
+    saveStats();
+    state.newTrophies.push(...checkTrophies());
+    renderNewTrophies(state.newTrophies);
+
     const review = $("review");
     review.innerHTML = "";
     $("review-wrap").classList.toggle("hidden", state.mistakes.length === 0);
@@ -494,8 +565,71 @@
     });
 
     show("end");
-    Sounds.play("end", pct >= 60);
+    Sounds.play("end", pct >= 60 || state.newTrophies.length > 0);
     if (pct >= 80) confetti();
+  }
+
+  // Encadré « Nouveaux trophées » en fin de partie
+  function renderNewTrophies(list) {
+    const box = $("new-trophies");
+    box.classList.toggle("hidden", list.length === 0);
+    if (!list.length) return;
+    box.innerHTML = `<h3>${list.length > 1 ? `${list.length} nouveaux trophées !` : "Nouveau trophée !"}</h3>`;
+    const row = document.createElement("div");
+    row.className = "nt-row";
+    list.forEach((t) => {
+      const el = document.createElement("div");
+      el.className = `nt tier-${t.tier}`;
+      el.innerHTML = `<span class="nt-ico"></span><span class="nt-name"></span><span class="nt-tier"></span>`;
+      el.children[0].textContent = t.icon;
+      el.children[1].textContent = t.name;
+      el.children[2].textContent = TROPHY_TIERS[t.tier];
+      row.appendChild(el);
+    });
+    box.appendChild(row);
+  }
+
+  // Écran des trophées
+  function renderTrophies() {
+    const s = fullStats();
+    const got = TROPHIES.filter((t) => unlocked[t.id]).length;
+    $("tr-count").textContent = `${got} / ${TROPHIES.length}`;
+    $("tr-bar").style.width = `${(got / TROPHIES.length) * 100}%`;
+    $("tr-stats").innerHTML = `
+      <div class="stat"><b>${stats.games}</b><span>Parties</span></div>
+      <div class="stat"><b>${stats.correct}</b><span>Bonnes réponses</span></div>
+      <div class="stat"><b>${stats.bestStreak} 🔥</b><span>Meilleure série</span></div>`;
+    const grid = $("tr-grid");
+    grid.innerHTML = "";
+    TROPHIES.forEach((t) => {
+      const goal = trophyGoal(t);
+      const val = Math.min(t.value(s), goal);
+      const done = !!unlocked[t.id];
+      const card = document.createElement("div");
+      card.className = `trophy tier-${t.tier}${done ? " done" : ""}`;
+      card.innerHTML = `
+        <div class="t-ico"></div>
+        <div class="t-body">
+          <div class="t-top"><b class="t-name"></b><span class="t-tier"></span></div>
+          <div class="t-desc"></div>
+          <div class="t-prog"><div class="t-bar"></div></div>
+          <div class="t-val"></div>
+        </div>`;
+      card.querySelector(".t-ico").textContent = done ? t.icon : "🔒";
+      card.querySelector(".t-name").textContent = t.name;
+      card.querySelector(".t-tier").textContent = TROPHY_TIERS[t.tier];
+      card.querySelector(".t-desc").textContent = t.desc;
+      card.querySelector(".t-bar").style.width = `${goal ? (val / goal) * 100 : 0}%`;
+      card.querySelector(".t-val").textContent = done
+        ? `Débloqué le ${unlocked[t.id].split("-").reverse().join("/")}`
+        : `${val} / ${goal}`;
+      grid.appendChild(card);
+    });
+  }
+
+  function openTrophies() {
+    renderTrophies();
+    show("trophies");
   }
 
   function confetti() {
@@ -519,6 +653,9 @@
   $("validate-btn").onclick = () => { if (state.selected.size) answer([...state.selected]); };
   $("replay-btn").onclick = start;
   $("home-btn").onclick = () => { renderBest(); show("home"); };
+  $("trophies-btn").onclick = openTrophies;
+  $("end-trophies-btn").onclick = openTrophies;
+  $("tr-back").onclick = () => { renderBest(); show("home"); };
 
   // Double appui pour abandonner (les boîtes confirm() ne marchent pas partout)
   let quitArmed = null;
