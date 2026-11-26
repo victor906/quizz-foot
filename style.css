@@ -1710,3 +1710,10 @@ body.turn-wait #screen-quiz { visibility: hidden; }
 .hilo-kits .kit { width: 84px; height: 84px; filter: drop-shadow(0 4px 6px rgba(0,0,0,.2)); }
 .hilo-kits span { font-family: Oswald, sans-serif; font-size: 1.4rem; color: var(--muted); }
 .answers.hilo-answers .answer { font-size: .98rem; text-align: center; }
+
+/* Jokers : le compteur devient une pastille, pour ne jamais déborder */
+.jokers { margin-top: 4px; }
+.joker { position: relative; flex: 1 1 0; min-width: 0; padding: 9px 4px; font-size: .85rem; gap: 4px; }
+.j-lab { overflow: hidden; text-overflow: ellipsis; }
+.j-n { position: absolute; top: -9px; right: -5px; padding: 1px 6px; font-size: .7rem; line-height: 1.4; box-shadow: 0 1px 3px rgba(0,0,0,.2); }
+@media (max-width: 380px) { .joker { font-size: .8rem; } }
