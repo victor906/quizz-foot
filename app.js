@@ -781,6 +781,14 @@
     }
   });
 
+  // Écran d'ouverture
+  $("w-count").textContent = BANKS.general.questions.length;
+  $("enter-btn").onclick = () => {
+    Sounds.unlock();
+    Sounds.play("start");
+    show("home");
+  };
+
   renderFilters();
   renderBest();
 })();

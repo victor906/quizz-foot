@@ -19,7 +19,28 @@
 
   <main class="app">
     <!-- ÉCRAN D'ACCUEIL -->
-    <section id="screen-home" class="screen active">
+    <!-- ÉCRAN D'OUVERTURE -->
+    <section id="screen-welcome" class="screen active">
+      <div class="welcome">
+        <div class="w-head" aria-hidden="true">
+          <span class="w-rays"></span>
+          <span class="ph-shadow w-shadow"></span>
+          <div class="ph-bob w-bob"><img class="w-face" src="icons/tete-fete.png" alt="" width="320" height="624" /></div>
+          <span class="pb-conf c1"></span><span class="pb-conf c2"></span><span class="pb-conf c3"></span>
+          <span class="pb-conf c4"></span><span class="pb-conf c5"></span><span class="pb-conf c6"></span>
+        </div>
+        <h1 class="w-title">La Fête <span>Quiz</span></h1>
+        <p class="w-desc">Un quiz foot spécialement créé pour toi&nbsp;! Teste tes connaissances, de la naissance du foot jusqu'à aujourd'hui, et prouve que tu es le vrai roi de la fête.</p>
+        <ul class="w-features">
+          <li><span>⚽</span><b id="w-count">644</b> questions</li>
+          <li><span>🐐</span>Mode Superfan CR7</li>
+          <li><span>🏆</span>Trophées légendaires</li>
+        </ul>
+        <button id="enter-btn" class="btn primary big w-btn">Jouer&nbsp;!</button>
+      </div>
+    </section>
+
+    <section id="screen-home" class="screen">
       <header class="hero">
         <div class="party-head" aria-hidden="true">
           <span class="ph-shadow"></span>
@@ -81,7 +102,7 @@
         <p class="best" id="best-score"></p>
         <button id="trophies-btn" class="btn trophies-btn">🏆 Mes trophées</button>
       </div>
-      <p class="app-version">Version 2.7</p>
+      <p class="app-version">Version 2.8</p>
     </section>
 
     <!-- ÉCRAN DE QUESTION -->
