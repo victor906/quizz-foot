@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Quizz Foot</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚽</text></svg>" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="pitch" aria-hidden="true"></div>
+
+  <main class="app">
+    <!-- ÉCRAN D'ACCUEIL -->
+    <section id="screen-home" class="screen active">
+      <header class="hero">
+        <div class="ball">⚽</div>
+        <h1>Quizz <span>Foot</span></h1>
+        <p class="tagline">150 questions pour prouver que tu es un vrai connaisseur.</p>
+      </header>
+
+      <div class="card">
+        <h2>Nombre de questions</h2>
+        <div class="chips" id="count-chips">
+          <button class="chip" data-count="10">10</button>
+          <button class="chip active" data-count="20">20</button>
+          <button class="chip" data-count="50">50</button>
+          <button class="chip" data-count="all">Tout</button>
+        </div>
+
+        <h2>Catégories</h2>
+        <div class="chips" id="cat-chips"></div>
+
+        <label class="toggle">
+          <input type="checkbox" id="timer-toggle" checked />
+          <span class="switch"></span>
+          <span>Chrono : 20 secondes par question</span>
+        </label>
+
+        <button id="start-btn" class="btn primary big">Coup d'envoi !</button>
+        <p class="best" id="best-score"></p>
+      </div>
+    </section>
+
+    <!-- ÉCRAN DE QUESTION -->
+    <section id="screen-quiz" class="screen">
+      <div class="scoreboard">
+        <div class="sb-item"><span class="sb-label">Question</span><span id="q-num" class="sb-value">1/20</span></div>
+        <div class="sb-item"><span class="sb-label">Score</span><span id="q-score" class="sb-value">0</span></div>
+        <div class="sb-item"><span class="sb-label">Série</span><span id="q-streak" class="sb-value">0 🔥</span></div>
+      </div>
+      <div class="progress"><div id="progress-bar"></div></div>
+
+      <div class="card question-card">
+        <div class="q-top">
+          <span id="q-cat" class="badge">Catégorie</span>
+          <span id="q-timer" class="timer">20</span>
+        </div>
+        <h2 id="q-text" class="q-text">Question</h2>
+        <div id="answers" class="answers"></div>
+        <div id="feedback" class="feedback hidden"></div>
+        <div class="q-actions">
+          <button id="quit-btn" class="btn ghost">Abandonner</button>
+          <button id="next-btn" class="btn primary hidden">Suivante →</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ÉCRAN DE FIN -->
+    <section id="screen-end" class="screen">
+      <div class="card end-card">
+        <div id="end-emoji" class="end-emoji">🏆</div>
+        <h2 id="end-title">Coup de sifflet final !</h2>
+        <p id="end-score" class="end-score">0 / 20</p>
+        <p id="end-msg" class="end-msg"></p>
+        <div class="end-stats" id="end-stats"></div>
+        <div class="end-actions">
+          <button id="replay-btn" class="btn primary">Rejouer</button>
+          <button id="home-btn" class="btn ghost">Accueil</button>
+        </div>
+      </div>
+
+      <div class="card review" id="review-wrap">
+        <h2>Tes erreurs</h2>
+        <ol id="review"></ol>
+      </div>
+    </section>
+  </main>
+
+  <script src="questions.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
