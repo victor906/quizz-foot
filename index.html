@@ -59,29 +59,56 @@
 
       <div class="card">
         <div class="wallet-row">
+          <button id="avatar-btn" class="avatar-btn" type="button" aria-label="Mon maillot"><span id="avatar-kit"></span><span class="av-name" id="avatar-name">Mon maillot</span></button>
           <span class="coins" id="home-coins">🪙 0</span>
+        </div>
+        <div class="wallet-row2">
           <button id="shop-btn" class="btn shop-btn" type="button">🛒 Boutique</button>
+          <button id="night-btn" class="btn night-btn" type="button">🌙 Nuit</button>
         </div>
 
-        <h2>Type de partie</h2>
-        <div class="play-grid" id="play-chips" role="radiogroup" aria-label="Type de partie">
-          <button class="mode active" data-play="classic" role="radio" aria-checked="true"><span class="mode-ico">🎯</span><b>Classique</b><small>Le quiz habituel</small></button>
-          <button class="mode" data-play="sudden" role="radio" aria-checked="false"><span class="mode-ico">💀</span><b>Mort subite</b><small>Une erreur et c'est fini</small></button>
-          <button class="mode" data-play="rush" role="radio" aria-checked="false"><span class="mode-ico">⏳</span><b>Contre-la-montre</b><small>60 s, un max de réponses</small></button>
-          <button class="mode" data-play="daily" role="radio" aria-checked="false"><span class="mode-ico">📅</span><b>Défi du jour</b><small id="daily-small">10 questions par jour</small></button>
-          <button class="mode" data-play="kits" role="radio" aria-checked="false"><span class="mode-ico">👕</span><b>Maillots</b><small>Reconnais les clubs</small></button>
-          <button class="mode" data-play="geo" role="radio" aria-checked="false"><span class="mode-ico">🗺️</span><b>Tour d'Europe</b><small>Place les clubs sur la carte</small></button>
-          <button class="mode" data-play="party" role="radio" aria-checked="false"><span class="mode-ico">🎉</span><b>Soirée</b><small>De 2 à 6 joueurs</small></button>
-          <button class="mode" data-play="review" role="radio" aria-checked="false"><span class="mode-ico">📚</span><b>Révision</b><small id="review-small">Tes erreurs</small></button>
+        <div id="play-chips" role="radiogroup" aria-label="Type de partie">
+          <h2>Quiz</h2>
+          <div class="play-grid">
+            <button class="mode" data-play="classic" role="radio" aria-checked="false"><span class="mode-ico">🎯</span><b>Classique</b><small>Le quiz habituel</small></button>
+            <button class="mode" data-play="sudden" role="radio" aria-checked="false"><span class="mode-ico">💀</span><b>Mort subite</b><small>Une erreur et c'est fini</small></button>
+            <button class="mode" data-play="rush" role="radio" aria-checked="false"><span class="mode-ico">⏳</span><b>Contre-la-montre</b><small>60 s chrono</small></button>
+            <button class="mode" data-play="daily" role="radio" aria-checked="false"><span class="mode-ico">📅</span><b>Défi du jour</b><small id="daily-small">10 questions</small></button>
+            <button class="mode" data-play="boss" role="radio" aria-checked="false"><span class="mode-ico">🥳</span><b>Battre La Fête</b><small id="boss-small">Niveau 1</small></button>
+            <button class="mode" data-play="review" role="radio" aria-checked="false"><span class="mode-ico">📚</span><b>Révision</b><small id="review-small">Tes erreurs</small></button>
+          </div>
+          <h2>Jeux foot</h2>
+          <div class="play-grid">
+            <button class="mode" data-play="kits" role="radio" aria-checked="false"><span class="mode-ico">👕</span><b>Maillots</b><small>Reconnais les clubs</small></button>
+            <button class="mode" data-play="geo" role="radio" aria-checked="false"><span class="mode-ico">🗺️</span><b>Cartes</b><small>Europe, France, monde</small></button>
+            <button class="mode" data-play="derby" role="radio" aria-checked="false"><span class="mode-ico">⚔️</span><b>Derbys</b><small>Trouve le rival</small></button>
+            <button class="mode" data-play="whoami" role="radio" aria-checked="false"><span class="mode-ico">🕵️</span><b>Qui suis-je ?</b><small>Indice par indice</small></button>
+            <button class="mode" data-play="career" role="radio" aria-checked="false"><span class="mode-ico">🧳</span><b>Parcours</b><small>Devine le joueur</small></button>
+            <button class="mode" data-play="order" role="radio" aria-checked="false"><span class="mode-ico">📜</span><b>Le bon ordre</b><small>Remets dans l'ordre</small></button>
+            <button class="mode" data-play="hilo" role="radio" aria-checked="false"><span class="mode-ico">↕️</span><b>Plus ou moins</b><small>Plus ancien ?</small></button>
+          </div>
+          <h2>À plusieurs</h2>
+          <div class="play-grid">
+            <button class="mode" data-play="party" role="radio" aria-checked="false"><span class="mode-ico">🎉</span><b>Soirée</b><small>2 à 6 joueurs + ligue</small></button>
+            <button class="mode" data-play="duel" role="radio" aria-checked="false"><span class="mode-ico">🤺</span><b>Duel</b><small>Face à face</small></button>
+          </div>
+        </div>
+        <div class="geo-vars hidden" id="geo-vars">
+          <button class="chip active" data-geo="europe">🇪🇺 Tour d'Europe</button>
+          <button class="chip" data-geo="france">🇫🇷 Tour de France</button>
+          <button class="chip" data-geo="pays">🧭 Pays mystère</button>
+          <button class="chip" data-geo="monde">🌍 Coupe du monde</button>
         </div>
         <p class="play-info" id="play-info"></p>
         <div class="party-setup hidden" id="party-setup">
           <div class="party-players" id="party-players"></div>
           <button class="btn ghost party-add" id="party-add" type="button">＋ Ajouter un joueur</button>
+          <label class="league-toggle"><input type="checkbox" id="league-on" /> <span>🏆 Compter pour la <b>Ligue entre potes</b></span></label>
+          <div class="league-box hidden" id="league-box"></div>
         </div>
 
         <div id="sec-theme">
-        <h2>Quiz</h2>
+        <h2>Thème</h2>
         <div class="mode-row" id="theme-chips" role="radiogroup" aria-label="Quiz">
           <button class="mode active" data-theme="general" role="radio" aria-checked="true">
             <span class="mode-ico">🌍</span><b>Quiz général</b><small id="count-general">1038 questions</small>
@@ -232,6 +259,48 @@
       </div>
     </section>
 
+    <!-- MON MAILLOT -->
+    <section id="screen-avatar" class="screen">
+      <div class="card av-card">
+        <button id="av-back" class="btn ghost tr-back" type="button">← Accueil</button>
+        <div class="tr-title">👕 Mon maillot</div>
+        <div class="av-preview" id="av-preview"></div>
+        <div class="av-fields">
+          <label>Pseudo <input id="av-pseudo" maxlength="14" type="text" placeholder="Ton pseudo" /></label>
+          <label>Numéro <input id="av-num" maxlength="2" inputmode="numeric" type="text" placeholder="10" /></label>
+        </div>
+        <h2>Motif</h2>
+        <div class="av-patterns" id="av-patterns"></div>
+        <h2>Couleur principale</h2>
+        <div class="av-colors" id="av-c1"></div>
+        <h2>Deuxième couleur</h2>
+        <div class="av-colors" id="av-c2"></div>
+        <h2>Manches</h2>
+        <div class="av-colors" id="av-c3"></div>
+        <p class="shop-note">Les motifs 🔒 se débloquent à la boutique.</p>
+      </div>
+    </section>
+
+    <!-- DUEL -->
+    <section id="screen-duel" class="screen">
+      <div class="duel">
+        <div class="duel-side top" id="duel-p2">
+          <div class="duel-head"><b class="duel-name">Joueur 2</b><span class="duel-score">0</span></div>
+          <div class="duel-q"></div>
+          <div class="duel-answers"></div>
+        </div>
+        <div class="duel-mid">
+          <span id="duel-num">1/10</span>
+          <button id="duel-quit" class="btn quit small" type="button">✕</button>
+        </div>
+        <div class="duel-side bottom" id="duel-p1">
+          <div class="duel-head"><b class="duel-name">Joueur 1</b><span class="duel-score">0</span></div>
+          <div class="duel-q"></div>
+          <div class="duel-answers"></div>
+        </div>
+      </div>
+    </section>
+
     <!-- BOUTIQUE -->
     <section id="screen-shop" class="screen">
       <div class="card shop-head">
@@ -240,6 +309,8 @@
         <div class="shop-balance"><span>Tes pièces</span><b id="shop-coins">🪙 0</b></div>
       </div>
       <div class="shop-items" id="shop-items"></div>
+      <div class="card shop-sub"><h2>👕 Maillots collector</h2><p class="shop-note">Des motifs exclusifs pour ton maillot (bouton « Mon maillot » sur l'accueil).</p></div>
+      <div class="shop-items" id="shop-kits"></div>
       <div class="card shop-help">
         <h2>Comment gagner des pièces&nbsp;?</h2>
         <ul>
@@ -282,6 +353,7 @@
   <script src="questions-cr7.js?v=5.1"></script>
   <script src="clubs.js?v=5.1"></script>
   <script src="geo-map.js?v=5.1"></script>
+  <script src="games-data.js?v=5.1"></script>
   <script src="trophies.js?v=5.1"></script>
   <script src="sounds.js?v=5.1"></script>
   <script src="legend.js?v=5.1"></script>

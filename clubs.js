@@ -32,6 +32,19 @@ const CLUBS_RAW = [
   ["Le Havre AC", "Le Havre", "🇫🇷", 49.499, 0.170, { b: KC.sky, p: "halves", c: KC.navy, t: KC.navy }],
   ["Angers SCO", "Angers", "🇫🇷", 47.460, -0.531, { b: KC.white, p: "stripes", c: KC.black, t: KC.black }],
   ["FC Sochaux", "Montbéliard", "🇫🇷", 47.512, 6.811, { b: KC.yellow, s: KC.navy, t: KC.navy }],
+  ["Stade Malherbe Caen", "Caen", "🇫🇷", 49.180, -0.396, { b: KC.blue, p: "halves", c: KC.red, t: KC.white }],
+  ["EA Guingamp", "Guingamp", "🇫🇷", 48.566, -3.164, { b: KC.red, p: "stripes", c: KC.black, t: KC.black }],
+  ["SC Bastia", "Bastia", "🇫🇷", 42.652, 9.443, { b: KC.blue, t: KC.white }],
+  ["AC Ajaccio", "Ajaccio", "🇫🇷", 41.931, 8.774, { b: KC.white, t: KC.red, s: KC.red }],
+  ["Grenoble Foot 38", "Grenoble", "🇫🇷", 45.187, 5.740, { b: KC.blue, t: KC.white, s: KC.white }],
+  ["Valenciennes FC", "Valenciennes", "🇫🇷", 50.349, 3.531, { b: KC.red, t: KC.white, s: KC.white }],
+  ["Clermont Foot", "Clermont-Ferrand", "🇫🇷", 45.816, 3.121, { b: KC.red, p: "chest", c: KC.blue, t: KC.blue }],
+  ["Amiens SC", "Amiens", "🇫🇷", 49.894, 2.263, { b: KC.white, t: KC.black, s: KC.black }],
+  ["ESTAC Troyes", "Troyes", "🇫🇷", 48.307, 4.099, { b: KC.blue, t: KC.white, s: KC.blue }],
+  ["Dijon FCO", "Dijon", "🇫🇷", 47.325, 5.068, { b: KC.red, t: KC.white, s: KC.red }],
+  ["Nîmes Olympique", "Nîmes", "🇫🇷", 43.816, 4.359, { b: KC.red, t: KC.white, s: KC.white }],
+  ["Paris FC", "Paris", "🇫🇷", 48.818, 2.346, { b: KC.navy, t: KC.sky, s: KC.navy }],
+  ["Stade Lavallois", "Laval", "🇫🇷", 48.077, -0.771, { b: KC.orange, t: KC.black, s: KC.black }],
   // Espagne
   ["Real Madrid", "Madrid", "🇪🇸", 40.453, -3.688, { b: KC.white, t: KC.gold }],
   ["FC Barcelone", "Barcelone", "🇪🇸", 41.381, 2.123, { b: "#a50044", p: "stripes", c: "#004d98", t: KC.gold }],
@@ -133,15 +146,21 @@ function kitSvg(kit, cls = "kit") {
   else if (p === "sash") pat = `<polygon points="34,10 20,16 62,100 78,100" fill="${c}"/>`;
   else if (p === "diag") pat = `<polygon points="0,0 100,0 100,22 0,78" fill="${c}"/>`;
   else if (p === "chevron") pat = `<polyline points="24,22 50,54 76,22" fill="none" stroke="${c}" stroke-width="9"/>`;
+  else if (p === "stars") for (let i = 0; i < 16; i++) pat += `<text x="${(i * 37) % 86 + 8}" y="${(i * 53) % 74 + 26}" font-size="9" fill="${c}" text-anchor="middle">★</text>`;
+  else if (p === "confetti") { const cs = ["#ffd23f", "#e0453a", "#1fa85a", "#2f7de1", "#ff7ac8", "#fff"]; for (let i = 0; i < 26; i++) pat += `<rect x="${(i * 41) % 88 + 4}" y="${(i * 29) % 78 + 18}" width="5" height="3" rx="1" fill="${cs[i % cs.length]}" transform="rotate(${(i * 47) % 180} ${(i * 41) % 88 + 6} ${(i * 29) % 78 + 19})"/>`; }
+  else if (p === "rainbow") ["#e0453a", "#f47a1f", "#ffd200", "#1fa85a", "#2f7de1", "#5b2b86"].forEach((col, i) => { pat += `<rect x="0" y="${18 + i * 13}" width="100" height="13" fill="${col}"/>`; });
+  else if (p === "gold") pat = `<rect width="100" height="100" fill="url(#${id}au)"/>`;
   else if (p === "chest") pat = `<rect x="0" y="40" width="100" height="9" fill="${c}"/>` + (kit.c2 ? `<rect x="0" y="49" width="100" height="6" fill="${kit.c2}"/>` : "");
   const sleeves = kit.s
     ? `<path d="M33 14 L19 19 L4 36 L15 49 L25 41 L26 22 Z M67 14 L81 19 L96 36 L85 49 L75 41 L74 22 Z" fill="${kit.s}"/>`
     : "";
   return `<svg class="${cls}" viewBox="0 0 100 100" aria-hidden="true">
     <defs><clipPath id="${id}c"><path d="${SHIRT}"/></clipPath>
+    <linearGradient id="${id}au" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff3b0"/><stop offset=".35" stop-color="#f2c230"/><stop offset=".6" stop-color="#b8860b"/><stop offset="1" stop-color="#ffe27a"/></linearGradient>
     <linearGradient id="${id}g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".28"/><stop offset=".55" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".22"/></linearGradient></defs>
     <g clip-path="url(#${id}c)"><rect width="100" height="100" fill="${b}"/>${pat}${sleeves}
       <path d="M4 36 L15 49" stroke="${t}" stroke-width="5"/><path d="M96 36 L85 49" stroke="${t}" stroke-width="5"/>
+      ${kit.n ? `<text x="50" y="68" text-anchor="middle" font-family="Oswald, Impact, sans-serif" font-weight="700" font-size="30" fill="${kit.nc || t}" stroke="rgba(0,0,0,.35)" stroke-width=".8">${String(kit.n).slice(0, 2)}</text>` : ""}
       <rect width="100" height="100" fill="url(#${id}g)"/></g>
     <path d="M33 14 Q40 24 50 24 Q60 24 67 14" fill="none" stroke="${t}" stroke-width="4.5" stroke-linecap="round"/>
     <path d="${SHIRT}" fill="none" stroke="rgba(0,0,0,.45)" stroke-width="1.6" stroke-linejoin="round"/>
