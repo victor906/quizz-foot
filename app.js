@@ -2801,9 +2801,10 @@
       b.type = "button";
       b.className = "av-face" + (on ? " on" : "") + (ok ? "" : " locked");
       b.innerHTML = f.draw("kit") + "<span></span>";
-      b.lastChild.textContent = ok ? f.name : `🔒 ${f.name}`;
+      b.lastChild.textContent = ok ? f.name : "🔒 ???";
+      if (!ok) b.setAttribute("aria-label", "Avatar mystère");
       b.onclick = () => {
-        if (!ok) { toast(`🔒 ${f.hint} pour débloquer cet avatar`); return; }
+        if (!ok) { toast(`🔒 Avatar mystère… ${f.hint} pour le découvrir !`); return; }
         avatar.face = f.id;
         avatarChanged();
       };
@@ -3090,7 +3091,7 @@
 
   // ---------- Mise à jour automatique ----------
   // À l'ouverture, on compare la version de l'app avec celle publiée en ligne.
-  const APP_VERSION = "6.6";
+  const APP_VERSION = "6.7";
   function checkForUpdate() {
     if (!location.protocol.startsWith("http")) return;
     fetch(`version.json?t=${Date.now()}`, { cache: "no-store" })
