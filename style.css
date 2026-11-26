@@ -704,20 +704,20 @@ body.theme-cr7 .tagline { font-weight: 500; }
 }
 
 /* ---------- Tête de fête animée (remplace le ballon) ---------- */
-.party-head { position: relative; width: 104px; height: 222px; margin: 18px auto -4px; }
+.party-head { position: relative; width: 80px; height: 180px; margin: 14px auto -4px; }
 .ph-bob {
   position: absolute; left: 0; right: 0; bottom: 12px; z-index: 2;
   transform-origin: 50% 100%; animation: ph-bounce 1.3s cubic-bezier(.45, 0, .55, 1) infinite;
 }
-.ph-face { display: block; width: 104px; height: auto; filter: drop-shadow(0 6px 8px rgba(0, 0, 0, .3)); }
+.ph-face { display: block; width: 80px; height: auto; filter: drop-shadow(0 6px 8px rgba(0, 0, 0, .3)); }
 @keyframes ph-bounce {
   0%, 100% { transform: translateY(0) scale(1.07, .93) rotate(0); }
   12% { transform: translateY(-6px) scale(.96, 1.05) rotate(-3deg); }
-  50% { transform: translateY(-26px) scale(1, 1) rotate(4deg); }
+  50% { transform: translateY(-22px) scale(1, 1) rotate(4deg); }
   88% { transform: translateY(-6px) scale(.97, 1.04) rotate(-2deg); }
 }
 .ph-shadow {
-  position: absolute; left: 50%; bottom: 2px; width: 70px; height: 11px; translate: -50% 0; border-radius: 50%;
+  position: absolute; left: 50%; bottom: 2px; width: 54px; height: 9px; translate: -50% 0; border-radius: 50%;
   background: rgba(0, 0, 0, .28); animation: ph-shadow 1.3s cubic-bezier(.45, 0, .55, 1) infinite;
 }
 @keyframes ph-shadow { 0%, 100% { transform: scale(1.1); opacity: .9; } 50% { transform: scale(.65); opacity: .45; } }
