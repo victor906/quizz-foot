@@ -951,10 +951,12 @@
   }
 
   // Les vitrines de la salle
+  // Même ordre que la visite 3D : du plus modeste au plus prestigieux
   const ROOM_CASES = [
-    { title: "Légende & Or", tiers: ["legende", "or"] },
-    { title: "Argent", tiers: ["argent"] },
     { title: "Bronze", tiers: ["bronze"] },
+    { title: "Argent", tiers: ["argent"] },
+    { title: "Or", tiers: ["or"] },
+    { title: "Légende", tiers: ["legende"] },
   ];
 
   function renderRoom() {

@@ -1417,3 +1417,13 @@ body.theme-cr7 .tagline { font-weight: 500; }
 .room-hped .hped-col { height: 70px; }
 .room-pedestal .rp-hint { margin-top: 12px; }
 .room-pedestal { margin-top: 26px; }
+/* Grand écran : les 4 vitrines en 2 × 2 sous le mur central */
+@media (min-width: 1100px) {
+  .room-layout { grid-template-columns: 1fr; }
+  .room-wall { grid-column: auto; grid-row: auto; padding-top: 6px; }
+  .room-cases { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  .room-cases .case:nth-child(n) { grid-column: auto; grid-row: auto; }
+}
+/* Trophée CR7 non débloqué : flouté sous la cloche, aussi dans la salle */
+.room-pedestal.locked .bell-cup { filter: none; }
+.room-pedestal.locked .bell-cup svg { filter: blur(9px) brightness(.85) saturate(.6); }
