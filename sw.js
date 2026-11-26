@@ -1,6 +1,6 @@
 // Service worker : met le quiz en cache pour qu'il marche sans connexion.
 // Change la version à chaque mise à jour des fichiers pour forcer le rafraîchissement.
-const CACHE = "foot-quizz-v17";
+const CACHE = "foot-quizz-v18";
 const FILES = [
   "./",
   "index.html",
@@ -14,10 +14,10 @@ const FILES = [
   "legend.js",
   "app.js",
   "manifest.webmanifest",
-  "icons/apple-touch-icon.png",
+  "icons/apple-touch-icon-v3.png",
   "icons/tete-fete.png",
-  "icons/icon-192.png",
-  "icons/icon-512.png",
+  "icons/icon-192-v3.png",
+  "icons/icon-512-v3.png",
 ];
 
 self.addEventListener("install", (e) => {
