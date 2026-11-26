@@ -55,7 +55,6 @@
     diffs: new Set(DIFFS.map((d) => d.id)),
     eras: new Set(ERAS.map((e) => e.id)),
     timer: true,
-    multi: true,
     list: [],
     index: 0,
     score: 0,
@@ -105,8 +104,7 @@
     return QUESTIONS.filter((q) =>
       state.cats.has(q.cat) &&
       state.diffs.has(q.diff) &&
-      state.eras.has(q.era) &&
-      (state.multi || !q.multi));
+      state.eras.has(q.era));
   }
 
   // Rangée de puces à sélection multiple (avec un bouton « Toutes »)
@@ -221,7 +219,6 @@
   });
   setMode(storage.get("fqf-mode") === "detente" ? "detente" : "chrono");
 
-  $("multi-toggle").onchange = (e) => { state.multi = e.target.checked; renderFresh(); };
 
   function renderBest() {
     const best = storage.get("fqf-best");
@@ -233,7 +230,6 @@
   // ---------- Partie ----------
   function start() {
     Sounds.unlock();
-    state.multi = $("multi-toggle").checked;
 
     const pool = currentPool();
     if (!pool.length) return;
