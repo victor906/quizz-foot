@@ -913,3 +913,22 @@ body.theme-cr7 .tagline { font-weight: 500; }
 .vitrine .v-cups .t-art { width: 30px; height: auto; }
 .vitrine .v-cups .t-art:nth-child(2) { width: 40px; }
 @media (prefers-reduced-motion: reduce) { .t-glint, .t-spark { animation: none; } }
+
+/* ---------- Icônes gravées dans le métal ---------- */
+.ri-emoji { mix-blend-mode: multiply; font-size: .98rem; }
+.shelf.tier-or .ri-emoji {
+  filter: grayscale(1) sepia(1) saturate(3) hue-rotate(-12deg) brightness(.5) contrast(1.9)
+          drop-shadow(0 .6px 0 rgba(255, 246, 200, .95)) drop-shadow(0 -.6px 0 rgba(90, 55, 0, .55));
+}
+.shelf.tier-argent .ri-emoji {
+  filter: grayscale(1) brightness(.62) contrast(1.7)
+          drop-shadow(0 .6px 0 rgba(255, 255, 255, .95)) drop-shadow(0 -.6px 0 rgba(40, 46, 52, .5));
+}
+.shelf.tier-bronze .ri-emoji {
+  filter: grayscale(1) sepia(1) saturate(2.2) hue-rotate(-18deg) brightness(.62) contrast(1.6)
+          drop-shadow(0 .6px 0 rgba(255, 224, 192, .9)) drop-shadow(0 -.6px 0 rgba(60, 30, 5, .55));
+}
+.shelf.tier-legende .ri-emoji {
+  filter: grayscale(1) sepia(1) hue-rotate(225deg) saturate(3) brightness(.6) contrast(1.5)
+          drop-shadow(0 .6px 0 rgba(250, 245, 255, .95)) drop-shadow(0 -.6px 0 rgba(59, 7, 100, .55));
+}

@@ -796,7 +796,9 @@
         <path d="M17 8 H63 C63 38 53 52 40 54 C27 52 17 38 17 8 Z" fill="url(#${g("s")})" stroke="#5f6a72" stroke-width="1"/>
         <ellipse cx="40" cy="8" rx="23" ry="4" fill="#f4f7f9" stroke="#8a949b" stroke-width="1"/>
         <path d="M20 46 C28 52 52 52 60 46" fill="none" stroke="#7d8891" stroke-width="1.5" opacity=".7"/>
-        <circle cx="40" cy="31" r="11.5" fill="#f7f9fb" stroke="#8a949b" stroke-width="2"/>
+        <radialGradient id="${g("p")}" cx=".4" cy=".35" r=".7"><stop offset="0" stop-color="#ffffff"/><stop offset=".7" stop-color="#cfd6db"/><stop offset="1" stop-color="#8a949b"/></radialGradient>
+        <circle cx="40" cy="31" r="11.5" fill="url(#${g("p")})" stroke="#6b757c" stroke-width="1.8"/>
+        <circle cx="40" cy="31" r="9.5" fill="none" stroke="#fff" stroke-width=".8" opacity=".8"/>
         <path d="M36 54 H44 L46 70 H34 Z" fill="url(#${g("s")})"/>
         <ellipse cx="40" cy="62" rx="7" ry="3" fill="url(#${g("s")})" stroke="#7d8891" stroke-width=".8"/>
         <path d="M26 70 H54 L57 76 H23 Z" fill="url(#${g("s")})"/>
@@ -826,7 +828,9 @@
         <path d="M15 12 H65 C65 42 54 56 40 58 C26 56 15 42 15 12 Z" fill="url(#${g("o")})" stroke="#6e4300" stroke-width="1"/>
         <ellipse cx="40" cy="12" rx="25" ry="4.5" fill="#fff1a6" stroke="#8a5600" stroke-width="1"/>
         <polygon points="40,-2 42.6,4.4 49.5,4.6 44.1,8.8 46,15.5 40,11.6 34,15.5 35.9,8.8 30.5,4.6 37.4,4.4" fill="#fff5c2" stroke="#b8860b" stroke-width="1" transform="translate(0 -1)"/>
-        <circle cx="40" cy="33" r="12.5" fill="#fff8dc" stroke="#b8860b" stroke-width="2.5"/>
+        <radialGradient id="${g("p")}" cx=".4" cy=".35" r=".7"><stop offset="0" stop-color="#fff3bd"/><stop offset=".7" stop-color="#e8bb3c"/><stop offset="1" stop-color="#b07d0c"/></radialGradient>
+        <circle cx="40" cy="33" r="12.5" fill="url(#${g("p")})" stroke="#8a5600" stroke-width="2"/>
+        <circle cx="40" cy="33" r="10.5" fill="none" stroke="#fff5c2" stroke-width=".8" opacity=".8"/>
         <circle cx="21" cy="30" r="3" fill="url(#${g("r")})"/><circle cx="59" cy="30" r="3" fill="url(#${g("r")})"/>
         <path d="M35 58 H45 L47 66 H33 Z" fill="url(#${g("o")})"/>
         <ellipse cx="40" cy="66" rx="9" ry="3" fill="#ffe27a" stroke="#8a5600" stroke-width=".8"/>
@@ -850,7 +854,8 @@
       <polygon points="16,20 28,22 40,34 21,54" fill="#fff" opacity=".12"/>
       <polygon points="64,20 52,22 40,34 59,54" fill="#3b0764" opacity=".25"/>
       <polygon points="21,54 40,34 59,54 40,68" fill="#3b0764" opacity=".35"/>
-      <circle cx="40" cy="34" r="12" fill="#faf5ff" fill-opacity=".85" stroke="#e9d5ff" stroke-width="1.5"/>
+      <radialGradient id="${g("p")}" cx=".4" cy=".35" r=".7"><stop offset="0" stop-color="#faf5ff"/><stop offset=".7" stop-color="#d8b4fe"/><stop offset="1" stop-color="#a855f7"/></radialGradient>
+      <circle cx="40" cy="34" r="12" fill="url(#${g("p")})" stroke="#f3e8ff" stroke-width="1.5"/>
       <path d="M30 62 C34 70 46 70 50 62 L47 72 H33 Z" fill="url(#${g("o")})"/>
       <rect x="35" y="72" width="10" height="8" fill="url(#${g("o")})"/>
       <rect x="22" y="80" width="36" height="5" rx="1.5" fill="url(#${g("o")})"/>
