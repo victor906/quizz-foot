@@ -74,6 +74,7 @@
         <p class="best" id="best-score"></p>
         <button id="trophies-btn" class="btn trophies-btn">🏆 Mes trophées</button>
       </div>
+      <p class="app-version">Version 2.0 · vitrine CR7</p>
     </section>
 
     <!-- ÉCRAN DE QUESTION -->
@@ -137,7 +138,7 @@
         <div class="progress tr-progress"><div id="tr-bar"></div></div>
         <div class="end-stats" id="tr-stats"></div>
       </div>
-      <div id="tr-vitrine" class="hidden"></div>
+      <div id="tr-vitrine"></div>
       <div class="tr-grid" id="tr-grid"></div>
     </section>
   </main>
@@ -153,7 +154,7 @@
   <script>
     // Installation hors ligne (uniquement quand le site est servi en https)
     if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
-      navigator.serviceWorker.register("sw.js").catch(() => {});
+      navigator.serviceWorker.register("sw.js", { updateViaCache: "none" }).then((r) => r.update()).catch(() => {});
     }
   </script>
 </body>

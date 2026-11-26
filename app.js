@@ -615,20 +615,22 @@
       <div class="stat"><b>${stats.games}</b><span>Parties</span></div>
       <div class="stat"><b>${stats.correct}</b><span>Bonnes réponses</span></div>
       <div class="stat"><b>${stats.bestStreak} 🔥</b><span>Meilleure série</span></div>`;
-    // Vitrine en haut de l'écran une fois le Trophée CR7 Ultime débloqué
+    // Vitrine du Trophée CR7 Ultime : toujours visible, verrouillée tant qu'il n'est pas gagné
     const vit = $("tr-vitrine");
     vit.innerHTML = "";
-    vit.classList.toggle("hidden", !unlocked["cr7-ultime"]);
-    if (unlocked["cr7-ultime"]) {
-      const b = document.createElement("button");
-      b.className = "vitrine";
-      b.type = "button";
-      b.innerHTML = `<div class="v-cup">${LegendReveal.miniSvg()}</div>
-        <div class="v-txt"><div class="v-kicker">✦ VITRINE ✦</div><div class="v-title">Trophée CR7 Ultime</div>
-        <div class="v-cta">Touche pour le voir sortir de la malle, en boucle</div></div>`;
-      b.onclick = () => openLegend(true);
-      vit.appendChild(b);
-    }
+    const won = !!unlocked["cr7-ultime"];
+    const have = CR7_TROPHY_IDS.filter((id) => unlocked[id]).length;
+    const vb = document.createElement("button");
+    vb.className = `vitrine${won ? "" : " locked"}`;
+    vb.type = "button";
+    vb.innerHTML = `<div class="v-cup">${LegendReveal.miniSvg()}${won ? "" : '<span class="v-lock">🔒</span>'}</div>
+      <div class="v-txt"><div class="v-kicker">${won ? "✦ VITRINE ✦" : "🔒 VITRINE VERROUILLÉE"}</div>
+      <div class="v-title">Trophée CR7 Ultime</div>
+      <div class="v-cta">${won
+        ? "Touche pour le voir sortir de la malle, en boucle"
+        : `Débloque les 5 trophées Superfan CR7 (${have} / 5). Touche pour voir la malle.`}</div></div>`;
+    vb.onclick = () => openLegend(won);
+    vit.appendChild(vb);
     const grid = $("tr-grid");
     grid.innerHTML = "";
     TROPHIES.forEach((t) => {
