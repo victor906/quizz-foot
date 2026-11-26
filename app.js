@@ -185,7 +185,8 @@
     cr7Seen: BANKS.cr7.questions.filter((q) => everSeen.has(q.key)).length,
   });
   const trophyGoal = (t) =>
-    t.id === "seen-all" ? ALL_QUESTION_COUNT()
+    t.id === "secret-fete" ? TROPHIES.length - 1
+    : t.id === "seen-all" ? ALL_QUESTION_COUNT()
     : t.id === "cr7-seen" ? BANKS.cr7.questions.length
     : t.goal;
 
@@ -1510,7 +1511,7 @@
     Sounds.play("end", good || state.newTrophies.length > 0);
     if (p === "party" || pct >= 80 && p !== "sudden" && p !== "rush" || state.score >= 15 && (p === "sudden" || p === "rush")) confetti();
     // Révélation automatique si le Trophée CR7 Ultime vient d'être débloqué
-    if (state.newTrophies.some((t) => t.id === "cr7-ultime")) setTimeout(openLegend, 1800);
+    celebrateFresh(state.newTrophies);
   }
 
   // Encadré « Nouveaux trophées » en fin de partie
@@ -1597,6 +1598,7 @@
       { tier: "or", label: "Or" },
       { tier: "legende", label: "Légende" },
       { tier: "ultime", label: "Ultime" },
+      { tier: "secret", label: "Secret ✦" },
     ];
     const groupBody = {};
     GROUPS.forEach((gp) => {
@@ -1610,7 +1612,9 @@
         det.open ? openTierGroups.add(gp.tier) : openTierGroups.delete(gp.tier);
         storage.set("fqf-open-tiers", JSON.stringify([...openTierGroups]));
       });
-      const icon = gp.tier === "ultime" ? (unlocked["cr7-ultime"] ? LegendReveal.miniSvg() : "🔒") : cupSvg(gp.tier);
+      const icon = gp.tier === "ultime" ? (unlocked["cr7-ultime"] ? LegendReveal.miniSvg() : "🔒")
+        : gp.tier === "secret" ? (unlocked["secret-fete"] ? LegendReveal.miniSecret() : "❓")
+        : cupSvg(gp.tier);
       det.innerHTML = `<summary>
           <span class="tg-ico">${icon}</span>
           <span class="tg-main"><span class="tg-top"><b class="tg-name">${gp.label}</b><span class="tg-count">${got} / ${list.length}</span></span>
@@ -1636,6 +1640,8 @@
           <div class="t-val"></div>
         </div>`;
       if (done && t.tier === "ultime") card.querySelector(".t-ico").innerHTML = LegendReveal.miniSvg();
+      else if (done && t.tier === "secret") card.querySelector(".t-ico").innerHTML = LegendReveal.miniSecret();
+      else if (t.tier === "secret") card.querySelector(".t-ico").textContent = "❓";
       else card.querySelector(".t-ico").textContent = done ? t.icon : "🔒";
       card.querySelector(".t-name").textContent = t.name;
       card.querySelector(".t-tier").textContent = TROPHY_TIERS[t.tier];
@@ -1644,6 +1650,17 @@
       card.querySelector(".t-val").textContent = done
         ? `Débloqué le ${unlocked[t.id].split("-").reverse().join("/")}`
         : `${val} / ${goal}`;
+      if (t.tier === "secret") {
+        if (!done) {
+          card.querySelector(".t-name").textContent = "???";
+          card.querySelector(".t-desc").textContent = "Un trophée mystère… Que se passe-t-il quand on a absolument tout débloqué ?";
+        }
+        const hint = document.createElement("div");
+        hint.className = "t-hint";
+        hint.textContent = done ? "✨ Touche pour l'admirer" : `🔒 Récompense secrète : ${TROPHY_REWARD.secret.toLocaleString("fr-FR")} 🪙`;
+        card.querySelector(".t-body").appendChild(hint);
+        if (done) { card.setAttribute("role", "button"); card.tabIndex = 0; card.onclick = () => openSecret(true); }
+      }
       if (CR7_TROPHY_IDS.includes(t.id) || t.tier === "ultime") {
         const tag = document.createElement("span");
         tag.className = "defi-chip";
@@ -1663,6 +1680,19 @@
       }
       (groupBody[t.tier] || grid).appendChild(card);
     });
+  }
+
+  // Révélation automatique d'un trophée légendaire tout juste gagné
+  function celebrateFresh(list) {
+    if (list.some((t) => t.id === "secret-fete")) setTimeout(() => openSecret(), 1800);
+    else if (list.some((t) => t.id === "cr7-ultime")) setTimeout(openLegend, 1800);
+  }
+  // Trophée secret : la coupe aux grandes oreilles de La Fête
+  function openSecret(loop = false) {
+    Sounds.unlock();
+    const d = unlocked["secret-fete"];
+    if (!d) return;
+    LegendReveal.open({ unlocked: true, kind: "secret", reward: TROPHY_REWARD.secret, date: d.split("-").reverse().join("/"), loop });
   }
 
   // Ouvre la malle du Trophée CR7 Ultime
@@ -1883,6 +1913,20 @@
       </div>
       <div class="rp-hint">${won ? "✨ Touche pour le voir sortir de la malle" : `🔒 Débloque les 5 trophées Superfan (${CR7_TROPHY_IDS.filter((id) => unlocked[id]).length} / 5)`}</div>`;
     ped.onclick = () => openLegend(won);
+    // Piédestal secret : n'apparaît qu'une fois le Trophée La Fête Suprême gagné
+    let sp = $("room-secret");
+    if (!sp) { sp = document.createElement("button"); sp.type = "button"; sp.id = "room-secret"; ped.after(sp); }
+    const sWon = !!unlocked["secret-fete"];
+    sp.className = "room-pedestal won secret-ped" + (sWon ? "" : " hidden");
+    sp.innerHTML = sWon ? `<div class="hped room-hped">
+        <span class="hped-beam b1"></span><span class="hped-beam b2"></span><span class="hped-beam b3"></span><span class="hped-pool"></span>
+        <div class="bell"><div class="bell-cup">${LegendReveal.miniSecret()}</div><span class="bell-glass"></span><span class="bell-knob"></span><span class="bell-ring"></span></div>
+        <div class="hped-cap"></div>
+        <div class="hped-col"><span class="hped-plate">Trophée La Fête Suprême</span></div>
+        <div class="hped-step s1"></div><div class="hped-step s2"></div>
+      </div>
+      <div class="rp-hint">👑 Le trophée secret · touche pour l'admirer</div>` : "";
+    sp.onclick = () => openSecret(true);
 
     // Vitrines éclairées : une niche par trophée (sombre tant qu'il n'est pas gagné)
     const cases = $("room-cases");
@@ -2009,6 +2053,19 @@
          <div class="hped-step s1"></div><div class="hped-step s2"></div>
        </div>`,
       () => openLegend(won));
+    // Salle secrète, seulement si le trophée secret est gagné
+    if (unlocked["secret-fete"]) {
+      addStation("st-honor won st-secret",
+        `<div class="st-honor-sign">Salle secrète</div>
+         <div class="hped">
+           <span class="hped-beam b1"></span><span class="hped-beam b2"></span><span class="hped-beam b3"></span><span class="hped-pool"></span>
+           <div class="bell"><div class="bell-cup">${LegendReveal.miniSecret()}</div><span class="bell-glass"></span><span class="bell-knob"></span><span class="bell-ring"></span></div>
+           <div class="hped-cap"></div>
+           <div class="hped-col"><span class="hped-plate">Trophée La Fête Suprême</span></div>
+           <div class="hped-step s1"></div><div class="hped-step s2"></div>
+         </div>`,
+        () => openSecret(true));
+    }
     track.insertAdjacentHTML("beforeend", '<div class="walk-spacer"></div>');
 
     // Effet de profondeur : chaque station pivote selon sa distance au centre
@@ -2391,6 +2448,7 @@
     $("review-wrap").classList.add("hidden");
     renderWallet();
     show("end");
+    celebrateFresh(state.newTrophies);
     Sounds.play("end", sc >= 5000 || state.newTrophies.length > 0);
     if (sc >= 6000) confetti();
   }
@@ -2594,6 +2652,7 @@
     renderNewTrophies(state.newTrophies);
     $("review-wrap").classList.add("hidden");
     show("end");
+    celebrateFresh(state.newTrophies);
     Sounds.play("end", true);
     confetti();
   }
@@ -2833,6 +2892,7 @@
   function afterBuy(text, sound = "correct") {
     Sounds.play(sound);
     const fresh = checkTrophies();
+    celebrateFresh(fresh);
     renderShop();
     toast(fresh.length ? `${text} 🏆 « ${fresh[0].name} » (+${TROPHY_REWARD[fresh[0].tier]} 🪙)` : text);
   }
@@ -3001,7 +3061,7 @@
 
   // ---------- Mise à jour automatique ----------
   // À l'ouverture, on compare la version de l'app avec celle publiée en ligne.
-  const APP_VERSION = "6.3";
+  const APP_VERSION = "6.4";
   function checkForUpdate() {
     if (!location.protocol.startsWith("http")) return;
     fetch(`version.json?t=${Date.now()}`, { cache: "no-store" })
@@ -3098,6 +3158,12 @@
   renderBest();
   renderWallet();
   renderAvatarHome();
+  // Trophées déjà mérités au lancement (ex. tout débloqué) : révélation en entrant dans le jeu
+  const initFresh = checkTrophies();
+  if (initFresh.length) {
+    const prev = $("enter-btn").onclick;
+    $("enter-btn").onclick = (e) => { prev(e); celebrateFresh(initFresh); renderNewTrophies(initFresh); };
+  }
   renderWelcome();
   setPlay(["classic", "sudden", "rush", "daily", "kits", "geo", "party", "review", "boss", "derby", "whoami", "career", "names", "hilo", "duel"].includes(storage.get("fqf-play")) ? storage.get("fqf-play") : "classic");
 })();

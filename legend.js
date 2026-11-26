@@ -106,6 +106,88 @@ const LegendReveal = (() => {
     <g clip-path="url(#cClip)"><rect class="lg-glint" x="0" y="0" width="52" height="300" fill="url(#cGlint)"/></g>
   </svg>`;
 
+  // ---------- Trophée secret : la coupe « aux grandes oreilles » de La Fête ----------
+  const sstars = Array.from({ length: 9 }, (_, i) => {
+    const a = (-160 + i * 17.5) * Math.PI / 180;
+    return `<polygon class="c-star" points="${star(120 + Math.cos(a) * 96, 118 + Math.sin(a) * 96, 6.5)}" fill="url(#sxSilV)" stroke="#fff" stroke-width=".8"/>`;
+  }).join("");
+  const SECRET_SVG = `
+  <svg viewBox="0 0 240 300" class="lg-cup secret-cup" aria-hidden="true">
+    <defs>
+      <linearGradient id="sxSil" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0" stop-color="#5b6470"/><stop offset=".18" stop-color="#eef3f8"/><stop offset=".38" stop-color="#9aa6b2"/>
+        <stop offset=".55" stop-color="#ffffff"/><stop offset=".75" stop-color="#8c98a5"/><stop offset="1" stop-color="#4a525c"/>
+      </linearGradient>
+      <linearGradient id="sxSilV" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#ffffff"/><stop offset=".5" stop-color="#b8c2cc"/><stop offset="1" stop-color="#6b7581"/>
+      </linearGradient>
+      <linearGradient id="sxGold" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0" stop-color="#7a4800"/><stop offset=".3" stop-color="#ffe27a"/><stop offset=".6" stop-color="#d99c12"/><stop offset="1" stop-color="#7a4800"/>
+      </linearGradient>
+      <linearGradient id="sxRibA" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff5fb0"/><stop offset="1" stop-color="#b3126b"/></linearGradient>
+      <linearGradient id="sxRibB" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffe27a"/><stop offset="1" stop-color="#c58606"/></linearGradient>
+      <linearGradient id="sxNight" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#2a1640"/><stop offset=".5" stop-color="#120a20"/><stop offset="1" stop-color="#2a1640"/>
+      </linearGradient>
+      <linearGradient id="sxGlint" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".5" stop-color="#fff" stop-opacity=".95"/><stop offset="1" stop-color="#fff" stop-opacity="0"/>
+      </linearGradient>
+      <clipPath id="sxHead"><circle cx="120" cy="96" r="19"/></clipPath>
+      <clipPath id="sxClip">
+        <path d="M84 40 H156 C158 92 146 130 132 152 L128 170 H112 L108 152 C94 130 82 92 84 40 Z"/>
+        <path d="M112 170 H128 L132 204 H108 Z"/>
+      </clipPath>
+    </defs>
+
+    <!-- Arc d'étoiles -->
+    ${sstars}
+
+    <!-- Les grandes oreilles -->
+    <path d="M88 54 C52 22 14 50 22 98 C28 132 70 152 110 150" fill="none" stroke="url(#sxSil)" stroke-width="11" stroke-linecap="round"/>
+    <path d="M88 54 C52 22 14 50 22 98 C28 132 70 152 110 150" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" opacity=".55"/>
+    <path d="M152 54 C188 22 226 50 218 98 C212 132 170 152 130 150" fill="none" stroke="url(#sxSil)" stroke-width="11" stroke-linecap="round"/>
+    <path d="M152 54 C188 22 226 50 218 98 C212 132 170 152 130 150" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" opacity=".55"/>
+
+    <!-- Rubans rose et or, noués aux oreilles -->
+    <path d="M26 112 L18 168 L28 160 L34 172 L36 116 Z" fill="url(#sxRibA)"/>
+    <path d="M34 118 L32 176 L42 166 L48 176 L44 120 Z" fill="url(#sxRibB)"/>
+    <path d="M214 112 L222 168 L212 160 L206 172 L204 116 Z" fill="url(#sxRibA)"/>
+    <path d="M206 118 L208 176 L198 166 L192 176 L196 120 Z" fill="url(#sxRibB)"/>
+    <circle cx="31" cy="114" r="5" fill="url(#sxGold)"/><circle cx="209" cy="114" r="5" fill="url(#sxGold)"/>
+
+    <!-- La coupe en argent -->
+    <path d="M84 40 H156 C158 92 146 130 132 152 L128 170 H112 L108 152 C94 130 82 92 84 40 Z" fill="url(#sxSil)" stroke="#4a525c" stroke-width="1.2"/>
+    <ellipse cx="120" cy="40" rx="36" ry="7" fill="url(#sxSilV)" stroke="#4a525c" stroke-width="1"/>
+    <ellipse cx="120" cy="41" rx="30" ry="4" fill="#5b6470" opacity=".55"/>
+    <path d="M92 50 C92 92 100 124 112 146" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" opacity=".6"/>
+    <!-- Médaillon : la tête de La Fête -->
+    <circle cx="120" cy="96" r="23" fill="url(#sxGold)"/>
+    <circle cx="120" cy="96" r="19.5" fill="#ff5fb0"/>
+    <image href="__HEAD__" x="108.5" y="77.5" width="23" height="44.9" preserveAspectRatio="xMidYMin meet" clip-path="url(#sxHead)"/>
+    <circle cx="120" cy="96" r="19.5" fill="none" stroke="#fff3b8" stroke-width="1.2"/>
+
+    <!-- Pied -->
+    <path d="M112 170 H128 L132 204 H108 Z" fill="url(#sxSil)"/>
+    <ellipse cx="120" cy="186" rx="13" ry="4" fill="url(#sxSilV)"/>
+    <ellipse cx="120" cy="205" rx="30" ry="6" fill="url(#sxSilV)" stroke="#4a525c" stroke-width=".8"/>
+
+    <!-- Socle rond -->
+    <path d="M78 210 H162 L176 272 H64 Z" fill="url(#sxNight)" stroke="url(#sxSil)" stroke-width="2"/>
+    <ellipse cx="120" cy="210" rx="42" ry="7" fill="url(#sxSil)"/>
+    <ellipse cx="120" cy="274" rx="58" ry="9" fill="url(#sxSil)"/>
+    <rect x="80" y="236" width="80" height="18" rx="3" fill="url(#sxGold)" stroke="#6e4300" stroke-width="1"/>
+    <text x="120" y="249" text-anchor="middle" font-family="Arial Black, Arial, sans-serif" font-weight="900" font-size="7.6" letter-spacing=".6" fill="#3a2400">ROI DE LA FÊTE</text>
+    <text x="120" y="228" text-anchor="middle" font-family="Arial, sans-serif" font-weight="700" font-size="7.5" letter-spacing="3" fill="#ff9fd0">SUPRÊME</text>
+    <circle cx="86" cy="262" r="4" fill="#ff5fb0" stroke="#ffe27a" stroke-width="1"/>
+    <circle cx="154" cy="262" r="4" fill="#ff5fb0" stroke="#ffe27a" stroke-width="1"/>
+
+    <!-- Reflet animé -->
+    <g clip-path="url(#sxClip)"><rect class="lg-glint" x="0" y="0" width="52" height="300" fill="url(#sxGlint)"/></g>
+  </svg>`;
+  // L'image de la tête est celle déjà chargée par la page (fonctionne aussi hors ligne)
+  const headSrc = () => { const im = document.querySelector("img.w-face, img.ph-face"); return im ? im.src : "icons/tete-fete.png"; };
+  const secretSvg = () => SECRET_SVG.replace("__HEAD__", headSrc());
+
   let overlay = null;
   let sparkTimer = null;
   let looping = false;
@@ -187,14 +269,16 @@ const LegendReveal = (() => {
   }
 
   // unlocked : trophée gagné ; remaining : nombre de trophées Superfan manquants ; loop : répéter l'animation
-  function open({ unlocked, date, remaining, loop = false }) {
+  // kind : "cr7" (Trophée CR7 Ultime) ou "secret" (Trophée La Fête Suprême)
+  function open({ unlocked, date, remaining, loop = false, kind = "cr7", reward = 0 }) {
     if (overlay) close();
+    const secret = kind === "secret";
     looping = !!loop && !!unlocked;
     overlay = document.createElement("div");
-    overlay.className = `legend-overlay${unlocked ? "" : " is-locked"}`;
+    overlay.className = `legend-overlay${unlocked ? "" : " is-locked"}${secret ? " is-secret" : ""}`;
     overlay.setAttribute("role", "dialog");
     overlay.setAttribute("aria-modal", "true");
-    overlay.setAttribute("aria-label", "Trophée CR7 Ultime");
+    overlay.setAttribute("aria-label", secret ? "Trophée La Fête Suprême" : "Trophée CR7 Ultime");
     overlay.innerHTML = `
       <div class="lg-bg"></div>
       <div class="lg-rays"></div>
@@ -203,11 +287,11 @@ const LegendReveal = (() => {
       <div class="lg-sparkles"></div>
       <div class="lg-stage">
         <div class="lg-halo"></div>
-        <div class="lg-rise"><div class="lg-trophy">${TROPHY_SVG}</div></div>
+        <div class="lg-rise"><div class="lg-trophy">${secret ? secretSvg() : TROPHY_SVG}</div></div>
         <div class="trunk drop">
           <div class="trunk-glow"></div>
           <div class="trunk-lid">
-            <div class="lid-front"><span class="strap s1"></span><span class="strap s2"></span><span class="lid-plate">CR7</span></div>
+            <div class="lid-front"><span class="strap s1"></span><span class="strap s2"></span><span class="lid-plate">${secret ? "★" : "CR7"}</span></div>
           </div>
           <div class="trunk-body">
             <span class="strap s1"></span><span class="strap s2"></span>
@@ -219,8 +303,8 @@ const LegendReveal = (() => {
         </div>
       </div>
       <div class="lg-text">
-        <div class="lg-rarity">✦ RARETÉ ULTIME ✦</div>
-        <h2 class="lg-title">Trophée CR7 Ultime</h2>
+        <div class="lg-rarity">${secret ? "✦ TROPHÉE SECRET ✦" : "✦ RARETÉ ULTIME ✦"}</div>
+        <h2 class="lg-title">${secret ? "Trophée La Fête Suprême" : "Trophée CR7 Ultime"}</h2>
         <p class="lg-sub"></p>
       </div>
       <div class="lg-actions">
@@ -237,7 +321,9 @@ const LegendReveal = (() => {
 
     const sub = overlay.querySelector(".lg-sub");
     if (unlocked) {
-      sub.textContent = `Le plus rare de tous. Débloqué le ${date}. Siuuu !`;
+      sub.textContent = secret
+        ? `Tu as débloqué absolument tout. Tu es le roi de la fête !${reward ? ` +${reward.toLocaleString("fr-FR")} 🪙` : ""} (le ${date})`
+        : `Le plus rare de tous. Débloqué le ${date}. Siuuu !`;
     } else {
       sub.textContent = remaining > 1
         ? `La malle est verrouillée. Encore ${remaining} trophées Superfan à débloquer.`
@@ -271,5 +357,14 @@ const LegendReveal = (() => {
       .replace(/url\(#(c[A-Za-z]+)\)/g, `url(#$1${k})`);
   };
 
-  return { open, close, miniSvg };
+  let secretCount = 0;
+  const miniSecret = () => {
+    const k = `q${++secretCount}`;
+    return secretSvg()
+      .replace('class="lg-cup secret-cup"', 'class="lg-cup secret-cup mini"')
+      .replace(/id="(sx[A-Za-z]+)"/g, `id="$1${k}"`)
+      .replace(/url\(#(sx[A-Za-z]+)\)/g, `url(#$1${k})`);
+  };
+
+  return { open, close, miniSvg, miniSecret };
 })();

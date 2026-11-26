@@ -95,3 +95,9 @@ TROPHIES.push(
 
 // Pièces gagnées à chaque trophée débloqué
 const TROPHY_REWARD = { bronze: 25, argent: 60, or: 125, legende: 250, ultime: 600 };
+
+// Trophée secret : tous les autres trophées débloqués. Récompense : 10 000 pièces.
+TROPHIES.push({ id: "secret-fete", icon: "👑", name: "Trophée La Fête Suprême", desc: "Débloquer absolument tous les autres trophées du jeu", tier: "secret", goal: 0, secret: true,
+  value: (s, u) => TROPHIES.filter((t) => t.id !== "secret-fete" && u[t.id]).length });
+TROPHY_TIERS.secret = "Secret";
+TROPHY_REWARD.secret = 10000;
