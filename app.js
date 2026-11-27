@@ -3381,31 +3381,33 @@
     { id: "classique", name: "Booster", icon: "🎴", n: 3, price: 300, color: "#1b8f4e", desc: "3 cartes hors série au hasard : objets de match et stades mélangés." },
     { id: "mega", name: "Méga booster", icon: "💎", n: 6, price: 750, color: "#b8860b", desc: "6 cartes hors série, au moins 1 Premium ou Prestige garantie, et une chance d’édition spéciale (exclusives au Méga booster)." },
   ];
-  const DUP_REFUND = 0.5;
+  // Doublon : remboursement fixe selon la rareté (toujours moins cher qu'une carte de booster)
+  const DUP_REFUND = { classique: 20, premium: 40, prestige: 80 };
   const TIER_WEIGHT = { classique: 55, premium: 33, prestige: 12 };
   const randPick = (arr) => arr[Math.floor(Math.random() * arr.length)];
   const MIX = () => [...ITEM_CARDS, ...STADIUM_CARDS];
-  // Tirage : rareté d'abord, puis 3 chances sur 4 de tomber sur une carte que tu n'as pas encore
-  function drawFrom(pool, minTier) {
-    const tiers = Object.keys(TIER_WEIGHT).filter((t) => pool.some((x) => x.tier === t) && (!minTier || t !== "classique"));
+  // Tirage : 4 chances sur 5 de piocher parmi les cartes que tu n'as pas encore, puis la rareté décide
+  function drawFrom(pool0, minTier) {
+    const fresh = pool0.filter((x) => !ownedExtras.has(x.uid));
+    const pool = fresh.length && Math.random() < 0.8 ? fresh : pool0;
+    let tiers = Object.keys(TIER_WEIGHT).filter((t) => pool.some((x) => x.tier === t) && (!minTier || t !== "classique"));
+    if (!tiers.length) tiers = Object.keys(TIER_WEIGHT).filter((t) => pool.some((x) => x.tier === t));
     let r = Math.random() * tiers.reduce((n, t) => n + TIER_WEIGHT[t], 0);
     const tier = tiers.find((t) => (r -= TIER_WEIGHT[t]) < 0) || tiers[0];
-    const inTier = pool.filter((x) => x.tier === tier);
-    const fresh = inTier.filter((x) => !ownedExtras.has(x.uid));
-    return randPick(fresh.length && Math.random() < 0.75 ? fresh : inTier);
+    return randPick(pool.filter((x) => x.tier === tier));
   }
   function boosterDraw(b) {
     const out = [];
     for (let i = 0; i < b.n; i++) {
       const last = i === b.n - 1;
-      if (b.id === "mega" && Math.random() < 0.12) out.push(drawFrom(WEEKLY_CARDS));
+      if (b.id === "mega" && Math.random() < 0.2) out.push(drawFrom(WEEKLY_CARDS));
       else out.push(drawFrom(MIX(), b.id === "mega" && last && !out.some((x) => x.tier !== "classique")));
     }
     return out;
   }
   const boosterPack = (b, cls = "") => `<div class="booster-pack ${cls}" style="--bp:${b.color}"><span class="bp-top"></span><span class="bp-ico">${b.icon}</span><span class="bp-name">${b.name.replace("Booster ", "").replace("booster", "")}</span><span class="bp-n">${b.n} cartes</span></div>`;
   function renderBoosterShop(wrap) {
-    shopSection(wrap, "🎁 Cartes à collectionner", `Les boosters sont le seul moyen d'obtenir les cartes hors série (objets, stades, éditions spéciales). Une carte que tu as déjà est remboursée à ${Math.round(DUP_REFUND * 100)}\u00a0% de son prix.`, "🎁 Cartes");
+    shopSection(wrap, "🎁 Cartes à collectionner", `Les boosters sont le seul moyen d'obtenir les cartes hors série (objets, stades, éditions spéciales). Un doublon est remboursé : +${DUP_REFUND.classique} 🪙 (Classique), +${DUP_REFUND.premium} 🪙 (Premium), +${DUP_REFUND.prestige} 🪙 (Prestige).`, "🎁 Cartes");
     BOOSTERS.forEach((b) => {
       shopCard(wrap, { ico: boosterPack(b, "mini"), name: `${b.icon} ${b.name}`, desc: b.desc, price: b.price, cls: "booster-item",
         own: `Collection hors série : ${EXTRA_CARDS.filter(extraOwned).length}/${EXTRA_CARDS.length}`,
@@ -3416,7 +3418,7 @@
   function giveBooster(b) {
     let refund = 0;
     const res = boosterDraw(b).map((x) => {
-      if (ownedExtras.has(x.uid)) { const r = Math.round((x.price * DUP_REFUND) / 5) * 5; refund += r; return { x, refund: r }; }
+      if (ownedExtras.has(x.uid)) { const r = DUP_REFUND[x.tier] || 20; refund += r; return { x, refund: r }; }
       ownedExtras.add(x.uid);
       return { x, refund: 0 };
     });
@@ -3574,7 +3576,7 @@
 
   // ---------- Mise à jour automatique ----------
   // À l'ouverture, on compare la version de l'app avec celle publiée en ligne.
-  const APP_VERSION = "1.7";
+  const APP_VERSION = "1.8";
   function checkForUpdate() {
     if (!location.protocol.startsWith("http")) return;
     fetch(`version.json?t=${Date.now()}`, { cache: "no-store" })
