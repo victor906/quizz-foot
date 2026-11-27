@@ -2258,3 +2258,8 @@ body.turn-wait #screen-quiz { visibility: hidden; }
 .bo-actions { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
 .bo-all { background: #fff; color: var(--ink); }
 @media (prefers-reduced-motion: reduce) { .booster-pack, .bo-card { animation: none !important; } }
+/* v1.7 — boutique rangée par thème */
+.shop-subhead { margin: 18px 4px 8px; color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,.35); }
+.shop-subhead h3 { margin: 0; font-size: 1.05rem; }
+.shop-subhead p { margin: 3px 0 0; font-size: .85rem; opacity: .9; }
+.shop-sub + .shop-subhead { margin-top: 4px; }

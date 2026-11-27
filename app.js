@@ -2946,7 +2946,7 @@
   function pageExtras(p) {
     if (p <= CARD_PAGES) return null;
     if (p <= CARD_PAGES + ITEM_PAGES) { const i = p - CARD_PAGES - 1; return { wide: false, list: ITEM_CARDS.slice(i * PER_PAGE, (i + 1) * PER_PAGE), title: "Hors série · 🎴 Objets", all: ITEM_CARDS }; }
-    if (p <= CARD_PAGES + ITEM_PAGES + WEEK_PAGES) { const i = p - CARD_PAGES - ITEM_PAGES - 1; return { wide: false, list: WEEKLY_CARDS.slice(i * PER_PAGE, (i + 1) * PER_PAGE), title: "Hors série · ⭐ Semaine", all: WEEKLY_CARDS }; }
+    if (p <= CARD_PAGES + ITEM_PAGES + WEEK_PAGES) { const i = p - CARD_PAGES - ITEM_PAGES - 1; return { wide: false, list: WEEKLY_CARDS.slice(i * PER_PAGE, (i + 1) * PER_PAGE), title: "Hors série · ⭐ Éditions spéciales", all: WEEKLY_CARDS }; }
     const i = p - CARD_PAGES - ITEM_PAGES - WEEK_PAGES - 1;
     return { wide: true, list: STADIUM_CARDS.slice(i * WIDE_PER_PAGE, (i + 1) * WIDE_PER_PAGE), title: "Hors série · 🏟️ Stades", all: STADIUM_CARDS };
   }
@@ -2996,7 +2996,7 @@
         <div class="cv-title">COLLECTION<br><b>LA FÊTE</b></div>
         <div class="cv-sub">Cartes des légendes du foot</div>
         <div class="cv-count">${n} / ${CARDS.length}</div>
-        <div class="cv-extra">Cartes hors série : ${EXTRA_CARDS.filter(extraOwned).length} / ${EXTRA_CARDS.length}<br>🎴 ${ITEM_CARDS.filter(extraOwned).length} / ${ITEM_CARDS.length} objets · ⭐ ${WEEKLY_CARDS.filter(extraOwned).length} / ${WEEKLY_CARDS.length} semaine · 🏟️ ${STADIUM_CARDS.filter(extraOwned).length} / ${STADIUM_CARDS.length} stades</div>
+        <div class="cv-extra">Cartes hors série : ${EXTRA_CARDS.filter(extraOwned).length} / ${EXTRA_CARDS.length}<br>🎴 ${ITEM_CARDS.filter(extraOwned).length} / ${ITEM_CARDS.length} objets · ⭐ ${WEEKLY_CARDS.filter(extraOwned).length} / ${WEEKLY_CARDS.length} spéciales · 🏟️ ${STADIUM_CARDS.filter(extraOwned).length} / ${STADIUM_CARDS.length} stades</div>
         <div class="cv-open">Touche ▶ ou glisse pour ouvrir</div>
       </div>`;
     }
@@ -3129,10 +3129,10 @@
     const t = ITEM_TIERS[x.tier];
     zoomView({
       cls: `t-${x.tier} xz`, owned, wide: x.kind === "stade", front: owned ? extraFront(x) : extraBack(x),
-      rar: `${t.gem} ${x.kind === "stade" ? "Stade" : x.weekly ? "Édition de la semaine" : "Objet de match"} · ${t.label}`,
+      rar: `${t.gem} ${x.kind === "stade" ? "Stade" : x.weekly ? "Édition spéciale" : "Objet de match"} · ${t.label}`,
       name: x.kind === "stade" ? `${x.flag} ${x.name}` : x.name,
       fact: x.kind === "stade" ? `${x.city} · ${x.cap} places · ouvert en ${x.year}. ${x.fact}` : x.fact,
-      how: owned ? "🎁 Trouvée dans un booster" : x.weekly ? "🔒 Édition de la semaine : à trouver dans le Booster de la semaine ou le Méga booster" : "🔒 À trouver dans les boosters de la boutique",
+      how: owned ? "🎁 Trouvée dans un booster" : x.weekly ? "🔒 Édition spéciale : à trouver dans le Méga booster" : "🔒 À trouver dans les boosters de la boutique",
       hint: fresh ? "✨ Nouvelle carte dans ton classeur ! Touche-la pour la retourner" : null,
       sound: fresh ? "" : "click",
     });
@@ -3213,12 +3213,21 @@
     renderShop();
     toast(fresh.length ? `${text} 🏆 « ${fresh[0].name} » (+${TROPHY_REWARD[fresh[0].tier]} 🪙)` : text);
   }
-  function shopSection(wrap, title, note) {
+  function shopSection(wrap, title, note, short) {
     const h = document.createElement("div");
     h.className = "card shop-sub";
-    h.dataset.tab = title;
+    h.dataset.tab = short || title;
     h.innerHTML = `<h2></h2>${note ? '<p class="shop-note"></p>' : ""}`;
     h.querySelector("h2").textContent = title;
+    if (note) h.querySelector("p").textContent = note;
+    wrap.appendChild(h);
+  }
+  // Sous-titre à l'intérieur d'un thème (pas d'onglet)
+  function shopSubhead(wrap, title, note) {
+    const h = document.createElement("div");
+    h.className = "shop-subhead";
+    h.innerHTML = `<h3></h3>${note ? "<p></p>" : ""}`;
+    h.querySelector("h3").textContent = title;
     if (note) h.querySelector("p").textContent = note;
     wrap.appendChild(h);
   }
@@ -3241,24 +3250,11 @@
     renderWallet();
     const wrap = $("shop-items");
     wrap.innerHTML = "";
+    // Rangement par thème : la semaine, les cartes, les maillots, les célébrations, puis jokers et bonus
     renderWeeklyShop(wrap);
     renderBoosterShop(wrap);
-    shopSection(wrap, "🃏 Jokers", "À utiliser pendant les parties, un de chaque par question.");
-    JOKERS.forEach((it) => shopCard(wrap, { ico: it.icon, name: it.name, desc: it.desc, price: it.price, own: `Tu en as <b>${jokers[it.id] || 0}</b>`,
-      onClick: () => { if (!pay(it.price)) return; jokers[it.id] = (jokers[it.id] || 0) + 1; saveJokers(); afterBuy(`✅ ${it.name} ajouté !`); } }));
-    shopSection(wrap, "🚀 Bonus");
-    BONUS_ITEMS.forEach((it) => {
-      const own = it.id === "life" ? `Tu en as <b>${jokers.life || 0}</b>` : it.id === "boost" && boostLeft() ? `Actif : encore <b>${boostLeft()}</b> partie${boostLeft() > 1 ? "s" : ""}` : "";
-      shopCard(wrap, { ico: it.icon, name: it.name, desc: it.desc, price: it.price, own, cls: it.id === "mega" ? "pack" : "",
-        onClick: () => {
-          if (!pay(it.price)) return;
-          if (it.id === "boost") storage.set("fqf-boost", String(boostLeft() + 3));
-          else Object.entries(it.give).forEach(([k, v]) => { jokers[k] = (jokers[k] || 0) + v; });
-          saveJokers();
-          afterBuy(`✅ ${it.name} !`);
-        } });
-    });
-    shopSection(wrap, "⭐ Maillots légendaires", "Les couleurs, le nom et le numéro d'un joueur ou d'un moment mythique. À enfiler dans « Mon maillot ».");
+    shopSection(wrap, "👕 Maillots", "Pour personnaliser ton avatar. À enfiler dans « Mon maillot ».", "👕 Maillots");
+    shopSubhead(wrap, "⭐ Maillots légendaires", "Les couleurs, le nom et le numéro d'un joueur ou d'un moment mythique.");
     LEGENDS.forEach((l) => {
       const own = ownedKits.has(l.id);
       shopCard(wrap, { ico: kitSvg(l.kit, "kit"), name: l.name, desc: l.desc, price: l.price, owned: own, cls: "kit-item legend-item",
@@ -3270,7 +3266,7 @@
           afterBuy(`✅ ${l.name} débloqué !`, "legend");
         } });
     });
-    shopSection(wrap, "👕 Motifs collector", "De nouveaux motifs pour créer ton propre maillot.");
+    shopSubhead(wrap, "🎨 Motifs collector", "De nouveaux motifs pour créer ton propre maillot.");
     COLLECTOR.forEach((it) => {
       const own = ownedKits.has(it.id);
       shopCard(wrap, { ico: kitSvg({ b: "#14213d", p: it.id, c: "#ffd200" }, "kit"), name: `${it.icon} ${it.name}`, desc: it.desc, price: it.price, owned: own,
@@ -3282,7 +3278,7 @@
           afterBuy(`✅ ${it.name} débloqué !`, "legend");
         } });
     });
-    shopSection(wrap, "🎉 Célébrations", "Remplace les confettis de fin de partie par une pluie à ton style.");
+    shopSection(wrap, "🎉 Célébrations", "Remplace les confettis de fin de partie par une pluie à ton style.", "🎉 Célébrations");
     setTimeout(buildShopTabs, 0);
     const eq = storage.get("fqf-celeb") || "";
     [...CELEBS, ...CLUB_CELEBS.filter((c) => ownedCelebs.has(c.id))].forEach((c) => {
@@ -3295,6 +3291,22 @@
           ownedCelebs.add(c.id); saveCelebs(); storage.set("fqf-celeb", c.id);
           afterBuy(`✅ ${c.name} équipée !`, "legend");
           confetti();
+        } });
+    });
+    shopSection(wrap, "🎮 Jokers et bonus", "Des coups de pouce pour tes parties.", "🎮 Jokers");
+    shopSubhead(wrap, "🃏 Jokers", "À utiliser pendant les parties, un de chaque par question.");
+    JOKERS.forEach((it) => shopCard(wrap, { ico: it.icon, name: it.name, desc: it.desc, price: it.price, own: `Tu en as <b>${jokers[it.id] || 0}</b>`,
+      onClick: () => { if (!pay(it.price)) return; jokers[it.id] = (jokers[it.id] || 0) + 1; saveJokers(); afterBuy(`✅ ${it.name} ajouté !`); } }));
+    shopSubhead(wrap, "🚀 Bonus");
+    BONUS_ITEMS.forEach((it) => {
+      const own = it.id === "life" ? `Tu en as <b>${jokers.life || 0}</b>` : it.id === "boost" && boostLeft() ? `Actif : encore <b>${boostLeft()}</b> partie${boostLeft() > 1 ? "s" : ""}` : "";
+      shopCard(wrap, { ico: it.icon, name: it.name, desc: it.desc, price: it.price, own, cls: it.id === "mega" ? "pack" : "",
+        onClick: () => {
+          if (!pay(it.price)) return;
+          if (it.id === "boost") storage.set("fqf-boost", String(boostLeft() + 3));
+          else Object.entries(it.give).forEach(([k, v]) => { jokers[k] = (jokers[k] || 0) + v; });
+          saveJokers();
+          afterBuy(`✅ ${it.name} !`);
         } });
     });
   }
@@ -3317,15 +3329,14 @@
     const n = WEEKLY_CARDS.length / 2;
     const cards = [WEEKLY_CARDS[(w % n) * 2], WEEKLY_CARDS[(w % n) * 2 + 1]];
     const packs = [CLUB_PACKS[(w * 2) % CLUB_PACKS.length], CLUB_PACKS[(w * 2 + 1) % CLUB_PACKS.length]];
-    const promoBooster = BOOSTERS[w % BOOSTERS.length];
     const promoKit = LEGENDS[Math.floor(rnd() * LEGENDS.length)];
-    return { cards, packs, promoBooster, promoKit };
+    return { cards, packs, promoKit };
   }
   const promoPrice = (p) => Math.round((p * PROMO) / 10) * 10;
   const WEEK_JOKERS = { price: 260, give: { fifty: 3, time: 3, skip: 3, life: 1 } };
   function renderWeeklyShop(wrap) {
     const o = weeklyOffer();
-    shopSection(wrap, "🗓️ Boutique de la semaine", `Nouveaux articles chaque lundi · encore ${weekLeft()}`);
+    shopSection(wrap, "🗓️ Boutique de la semaine", `Nouveaux articles chaque lundi · encore ${weekLeft()}`, "🗓️ Semaine");
     wrap.lastChild.classList.add("week-sub");
     // Packs supporter de club
     o.packs.forEach((p) => {
@@ -3345,16 +3356,6 @@
           confetti();
         } });
     });
-    // Booster de la semaine : une des éditions exclusives garantie
-    { const wb = weekBooster(o);
-      shopCard(wrap, { ico: boosterPack(wb, "mini"), name: `${wb.icon} ${wb.name}`, desc: wb.desc, price: wb.price, cls: "booster-item week-item",
-        own: `Cette semaine : ${o.cards.map((x) => (extraOwned(x) ? "✅ " : "") + x.name).join(" · ")}`,
-        onClick: () => buyBooster(wb, wb.price) }); }
-    // Promo sur un booster
-    { const pb = o.promoBooster, pr = promoPrice(pb.price);
-      shopCard(wrap, { ico: boosterPack(pb, "mini"), name: `🔥 Promo : ${pb.name}`, desc: `${pb.desc} À -30 % cette semaine.`, price: pr,
-        cls: "booster-item week-item promo", own: `<s>🪙 ${pb.price}</s> <b class="promo-tag">-30 %</b>`,
-        onClick: () => buyBooster(pb, pr) }); }
     // Promo sur un maillot légendaire
     { const l = o.promoKit, own = ownedKits.has(l.id), pr = promoPrice(l.price);
       shopCard(wrap, { ico: kitSvg(l.kit, "kit"), name: `🔥 Promo : ${l.name}`, desc: `Maillot légendaire à -30 % cette semaine. ${l.desc}`, price: pr, owned: own,
@@ -3378,7 +3379,7 @@
   // ---------- Boosters : paquets surprise de cartes hors série ----------
   const BOOSTERS = [
     { id: "classique", name: "Booster", icon: "🎴", n: 3, price: 300, color: "#1b8f4e", desc: "3 cartes hors série au hasard : objets de match et stades mélangés." },
-    { id: "mega", name: "Méga booster", icon: "💎", n: 6, price: 750, color: "#b8860b", desc: "6 cartes hors série, au moins 1 Premium ou Prestige garantie, et une chance d'édition de la semaine." },
+    { id: "mega", name: "Méga booster", icon: "💎", n: 6, price: 750, color: "#b8860b", desc: "6 cartes hors série, au moins 1 Premium ou Prestige garantie, et une chance d’édition spéciale (exclusives au Méga booster)." },
   ];
   const DUP_REFUND = 0.5;
   const TIER_WEIGHT = { classique: 55, premium: 33, prestige: 12 };
@@ -3393,10 +3394,7 @@
     const fresh = inTier.filter((x) => !ownedExtras.has(x.uid));
     return randPick(fresh.length && Math.random() < 0.75 ? fresh : inTier);
   }
-  const weekBooster = (o) => ({ id: "semaine", name: "Booster de la semaine", icon: "⭐", n: 3, price: 400, color: "#7b3fd1", week: o.cards,
-    desc: "3 cartes : 1 édition de la semaine garantie (exclusive) + 2 cartes hors série." });
   function boosterDraw(b) {
-    if (b.id === "semaine") { const fresh = b.week.filter((x) => !ownedExtras.has(x.uid)); return [randPick(fresh.length ? fresh : b.week), drawFrom(MIX()), drawFrom(MIX())]; }
     const out = [];
     for (let i = 0; i < b.n; i++) {
       const last = i === b.n - 1;
@@ -3407,7 +3405,7 @@
   }
   const boosterPack = (b, cls = "") => `<div class="booster-pack ${cls}" style="--bp:${b.color}"><span class="bp-top"></span><span class="bp-ico">${b.icon}</span><span class="bp-name">${b.name.replace("Booster ", "").replace("booster", "")}</span><span class="bp-n">${b.n} cartes</span></div>`;
   function renderBoosterShop(wrap) {
-    shopSection(wrap, "🎁 Boosters de cartes", `Le seul moyen d'obtenir les cartes hors série ! Une carte que tu as déjà est remboursée à ${Math.round(DUP_REFUND * 100)}\u00a0% de son prix.`);
+    shopSection(wrap, "🎁 Cartes à collectionner", `Les boosters sont le seul moyen d'obtenir les cartes hors série (objets, stades, éditions spéciales). Une carte que tu as déjà est remboursée à ${Math.round(DUP_REFUND * 100)}\u00a0% de son prix.`, "🎁 Cartes");
     BOOSTERS.forEach((b) => {
       shopCard(wrap, { ico: boosterPack(b, "mini"), name: `${b.icon} ${b.name}`, desc: b.desc, price: b.price, cls: "booster-item",
         own: `Collection hors série : ${EXTRA_CARDS.filter(extraOwned).length}/${EXTRA_CARDS.length}`,
@@ -3501,7 +3499,7 @@
     document.querySelectorAll("#shop-items .shop-sub").forEach((sec) => {
       const b = document.createElement("button");
       b.type = "button";
-      b.textContent = sec.dataset.tab.replace("Maillots légendaires", "Légendes").replace("Motifs collector", "Motifs").replace("Cartes objets de match", "Objets").replace("Cartes stades", "Stades").replace("Boutique de la semaine", "Semaine").replace("Boosters de cartes", "Boosters");
+      b.textContent = sec.dataset.tab;
       b.onclick = () => window.scrollTo({ top: sec.getBoundingClientRect().top + window.scrollY - 60, behavior: "smooth" });
       tabs.appendChild(b);
     });
@@ -3576,7 +3574,7 @@
 
   // ---------- Mise à jour automatique ----------
   // À l'ouverture, on compare la version de l'app avec celle publiée en ligne.
-  const APP_VERSION = "1.6";
+  const APP_VERSION = "1.7";
   function checkForUpdate() {
     if (!location.protocol.startsWith("http")) return;
     fetch(`version.json?t=${Date.now()}`, { cache: "no-store" })

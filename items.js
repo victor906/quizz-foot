@@ -115,7 +115,7 @@ const STADIUMS_RAW = [
 ];
 const STADIUM_CARDS = STADIUMS_RAW.map(([id, name, city, flag, cap, year, price, look, fact], i) => ({ id, uid: `s:${id}`, name, city, flag, cap, year, price, look, fact, num: i + 1, kind: "stade", tier: itemTier(price) }));
 const EXTRA_CARDS = [...ITEM_CARDS, ...STADIUM_CARDS];
-// ---- Éditions de la semaine : cartes exclusives qui tournent dans la boutique hebdo
+// ---- Éditions spéciales : cartes rares, uniquement dans le Méga booster
 Object.assign(ITEM_ART, {
   corner: () => `<path d="M14 90 C14 70 24 60 44 60" fill="none" stroke="#fff" stroke-width="3"/><path d="M10 92 h80 M12 94 v-80" stroke="#fff" stroke-width="2" opacity=".5"/>
     <rect x="22" y="14" width="4" height="78" rx="2" fill="#f2f2f2"/><g class="ia-wave"><path d="M26 16 h34 l-8 12 l8 12 h-34 Z" fill="#d71920"/></g><circle cx="24" cy="12" r="3" fill="#ffd23f"/>`,
@@ -292,7 +292,7 @@ function extraFront(x) {
   }
   return `<div class="xc-front xi t-${x.tier}">
     <div class="xi-bg"></div><div class="xc-shine"></div>
-    <div class="xi-top"><span>${x.weekly ? "⭐ ÉDITION SEMAINE" : "OBJET DE MATCH"}</span><span class="xi-gem">${t.gem}</span></div>
+    <div class="xi-top"><span>${x.weekly ? "⭐ ÉDITION SPÉCIALE" : "OBJET DE MATCH"}</span><span class="xi-gem">${t.gem}</span></div>
     <div class="xi-art">${itemArtSvg(x)}</div>
     <div class="xi-name">${x.name}</div>
     <div class="xi-foot"><span>${t.label}</span><span>${x.weekly ? "H" : "M"}${String(x.num).padStart(2, "0")}</span></div>
@@ -301,5 +301,5 @@ function extraFront(x) {
 // Emplacement vide : silhouette + prix
 function extraBack(x) {
   const art = x.kind === "stade" ? '<span class="xb-emoji">🏟️</span>' : itemArtSvg(x);
-  return `<div class="xc-back ${x.kind === "stade" ? "xs" : "xi"}"><div class="xb-art">${art}</div><div class="xb-name">${x.name}</div><div class="xb-price">${x.weekly ? "⭐ Booster de la semaine" : "🎁 Dans les boosters"}</div></div>`;
+  return `<div class="xc-back ${x.kind === "stade" ? "xs" : "xi"}"><div class="xb-art">${art}</div><div class="xb-name">${x.name}</div><div class="xb-price">${x.weekly ? "💎 Méga booster" : "🎁 Dans les boosters"}</div></div>`;
 }
