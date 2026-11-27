@@ -300,5 +300,5 @@ function extraFront(x) {
 // Emplacement vide : silhouette + prix
 function extraBack(x) {
   const art = x.kind === "stade" ? '<span class="xb-emoji">🏟️</span>' : itemArtSvg(x);
-  return `<div class="xc-back ${x.kind === "stade" ? "xs" : "xi"}"><div class="xb-art">${art}</div><div class="xb-name">${x.name}</div><div class="xb-price">${x.weekly ? "⭐ Boutique de la semaine" : `🪙 ${x.price} · Boutique`}</div></div>`;
+  return `<div class="xc-back ${x.kind === "stade" ? "xs" : "xi"}"><div class="xb-art">${art}</div><div class="xb-name">${x.name}</div><div class="xb-price">${x.weekly ? "⭐ Booster de la semaine" : "🎁 Dans les boosters"}</div></div>`;
 }
