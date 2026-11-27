@@ -2191,3 +2191,15 @@ body.turn-wait #screen-quiz { visibility: hidden; }
 /* v1.1 — partage du Défi du jour */
 .share-btn { background: #25d366; color: #fff; font-weight: 900; box-shadow: 0 4px 0 #128c4a; }
 #play-info .share-btn { display: block; margin: 10px auto 0; }
+/* v1.2 — transfert de partie */
+.sync-btn { display: block; margin: 14px auto 0; font-size: .9rem; }
+.sync-intro { margin: 10px 0 0; line-height: 1.45; }
+.sync-card h3 { margin: 0 0 10px; }
+.sync-card .btn { display: block; width: 100%; margin-top: 8px; }
+.sync-sum, .sync-preview { background: #f4efe2; border-radius: 12px; padding: 10px 12px; font-size: .92rem; line-height: 1.45; }
+.sync-preview { margin-top: 10px; background: #fff6d4; border: 2px solid #f0c33c; }
+.sync-small { font-size: .8rem; opacity: .7; margin: 8px 0 0; text-align: center; }
+.sync-input { width: 100%; box-sizing: border-box; border-radius: 12px; border: 2px solid #d9d2bf; padding: 10px; font: .85rem/1.35 ui-monospace, Menlo, monospace; resize: vertical; word-break: break-all; }
+#sync-import.armed { background: #e0121c; color: #fff; box-shadow: 0 4px 0 #8a0a10; }
+.sync-note { color: #fff; font-size: .85rem; line-height: 1.45; text-align: center; padding: 0 8px; text-shadow: 0 1px 2px rgba(0,0,0,.4); }
+.shop-toast { pointer-events: none; }

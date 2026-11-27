@@ -3500,7 +3500,7 @@
 
   // ---------- Mise à jour automatique ----------
   // À l'ouverture, on compare la version de l'app avec celle publiée en ligne.
-  const APP_VERSION = "1.1";
+  const APP_VERSION = "1.2";
   function checkForUpdate() {
     if (!location.protocol.startsWith("http")) return;
     fetch(`version.json?t=${Date.now()}`, { cache: "no-store" })
@@ -3525,6 +3525,111 @@
   }
   checkForUpdate();
   document.addEventListener("visibilitychange", () => { if (!document.hidden) checkForUpdate(); });
+
+  // ---------- Transfert de partie entre appareils (code à copier-coller, sans serveur) ----------
+  const SYNC_PREFIX = "FETE";
+  const HASHED_KEYS = ["fqf-seen", "fqf-ever", "fqf-missed"];
+  const qHash = (str) => { let h = 2166136261; for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); } return (h >>> 0).toString(36); };
+  const b64url = (bytes) => { let bin = ""; for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000)); return btoa(bin).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, ""); };
+  const unb64url = (str) => { const bin = atob(str.replace(/-/g, "+").replace(/_/g, "/")); const out = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i); return out; };
+  const canZip = typeof CompressionStream !== "undefined" && typeof DecompressionStream !== "undefined";
+  const zip = async (bytes, mode) => new Uint8Array(await new Response(new Blob([bytes]).stream().pipeThrough(mode === "in" ? new CompressionStream("deflate-raw") : new DecompressionStream("deflate-raw"))).arrayBuffer());
+  function readSave() {
+    const d = {};
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k && k.startsWith("fqf-")) d[k] = localStorage.getItem(k);
+    }
+    // Les questions déjà vues sont enregistrées en version courte (empreinte) pour alléger le code
+    HASHED_KEYS.forEach((k) => {
+      if (!d[k]) return;
+      try { d[k] = JSON.parse(d[k]).map((key) => (ALL_BY_KEY.has(key) ? `#${qHash(key)}` : key)); } catch { delete d[k]; }
+    });
+    return d;
+  }
+  async function exportCode() {
+    const json = JSON.stringify({ v: 1, app: APP_VERSION, at: todayStr(), d: readSave() });
+    const raw = new TextEncoder().encode(json);
+    return canZip ? `${SYNC_PREFIX}1-${b64url(await zip(raw, "in"))}` : `${SYNC_PREFIX}0-${b64url(raw)}`;
+  }
+  async function decodeCode(code) {
+    const m = String(code || "").replace(/\s+/g, "").match(/^FETE([01])-([A-Za-z0-9_-]+)$/);
+    if (!m) throw new Error("format");
+    let bytes = unb64url(m[2]);
+    if (m[1] === "1") { if (!canZip) throw new Error("zip"); bytes = await zip(bytes, "out"); }
+    const obj = JSON.parse(new TextDecoder().decode(bytes));
+    if (!obj || obj.v !== 1 || typeof obj.d !== "object") throw new Error("format");
+    return obj;
+  }
+  // Résumé lisible d'une sauvegarde (pour vérifier avant de remplacer)
+  function saveSummary(d) {
+    const js = (k, def) => { try { return JSON.parse(d[k]) ?? def; } catch { return def; } };
+    const tro = Object.keys(js("fqf-trophies", {})).length;
+    const cards = CARDS.filter((c) => js("fqf-trophies", {})[c.trophy]).length;
+    const hs = (js("fqf-extras", []) || []).length;
+    const av = js("fqf-avatar", {});
+    return `<b>${av.name ? av.name.replace(/[<>&]/g, "") : "Joueur"}</b> · 🪙 ${Number(d["fqf-coins"] || 0).toLocaleString("fr-FR")} · 🏆 ${tro}/${TROPHIES.length} · 🃏 ${cards}/${CARDS.length}${hs ? ` + ${hs} hors série` : ""}`;
+  }
+  function openSync() {
+    Sounds.unlock();
+    $("sync-sum").innerHTML = `Ta partie ici : ${saveSummary(readSave())}`;
+    $("sync-input").value = "";
+    $("sync-preview").classList.add("hidden");
+    resetImportBtn();
+    show("sync");
+  }
+  async function copySync(share) {
+    let code;
+    try { code = await exportCode(); } catch { toast("Impossible de créer le code sur cet appareil"); return; }
+    Sounds.play("click");
+    if (share && navigator.share) {
+      try { await navigator.share({ text: code }); return; } catch (e) { if (e && e.name === "AbortError") return; }
+    }
+    try { await navigator.clipboard.writeText(code); toast("📋 Code copié ! Colle-le dans le jeu sur ton autre appareil."); }
+    catch {
+      // Dernier recours : afficher le code pour le copier à la main
+      $("sync-input").value = code; $("sync-input").select();
+      toast("Sélectionne le code ci-dessous et copie-le");
+    }
+  }
+  let pendingImport = null;
+  function resetImportBtn() { pendingImport = null; $("sync-import").textContent = "📥 Récupérer ma partie"; $("sync-import").classList.remove("armed"); }
+  async function importSync() {
+    if (pendingImport) {
+      // Deuxième appui : on remplace la partie de cet appareil
+      const d = { ...pendingImport.d };
+      const byHash = new Map([...ALL_BY_KEY.keys()].map((k) => [qHash(k), k]));
+      HASHED_KEYS.forEach((k) => {
+        if (!Array.isArray(d[k])) return;
+        d[k] = JSON.stringify(d[k].map((x) => (x.startsWith("#") ? byHash.get(x.slice(1)) : x)).filter(Boolean));
+      });
+      const old = [];
+      for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (k && k.startsWith("fqf-")) old.push(k); }
+      try {
+        old.forEach((k) => localStorage.removeItem(k));
+        Object.entries(d).forEach(([k, v]) => { if (k.startsWith("fqf-") && typeof v === "string") localStorage.setItem(k, v); });
+      } catch { toast("Impossible d'enregistrer la partie sur cet appareil"); return; }
+      Sounds.play("legend");
+      toast("✅ Partie récupérée ! Rechargement…");
+      setTimeout(() => location.reload(), 900);
+      return;
+    }
+    let obj;
+    try { obj = await decodeCode($("sync-input").value); }
+    catch (e) { toast(e && e.message === "zip" ? "Cet appareil est trop ancien pour lire ce code" : "Code invalide : vérifie que tu l'as collé en entier"); return; }
+    pendingImport = obj;
+    document.querySelectorAll(".shop-toast").forEach((x) => x.remove());
+    $("sync-preview").innerHTML = `Partie trouvée (code du ${obj.at.split("-").reverse().join("/")}) :<br>${saveSummary(obj.d)}`;
+    $("sync-preview").classList.remove("hidden");
+    $("sync-import").textContent = "⚠️ Touche encore pour remplacer la partie d'ici";
+    $("sync-import").classList.add("armed");
+  }
+  $("sync-btn").onclick = openSync;
+  $("sync-back").onclick = () => { renderBest(); show("home"); };
+  $("sync-copy").onclick = () => copySync(false);
+  $("sync-share").onclick = () => copySync(true);
+  $("sync-import").onclick = importSync;
+  $("sync-input").addEventListener("input", resetImportBtn);
 
   // ---------- Écran d'ouverture ----------
   function goMode(play) {
