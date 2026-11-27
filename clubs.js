@@ -221,9 +221,9 @@ function kitLook(k) {
 }
 
 // Avatar « Tête de CR7 » : caricature originale en dessin animé (pas une photo)
-function cr7FaceSvg(cls = "face") {
+function cr7FaceSvg(cls = "face", headOnly = false, box = "") {
   const id = `cf${++cr7FaceSvg.n}`;
-  return `<svg class="${cls}" viewBox="0 0 100 100" aria-hidden="true">
+  return `<svg class="${cls}" viewBox="${headOnly ? "20 4 60 70" : "0 0 100 100"}" ${box} aria-hidden="true">
   <defs>
     <radialGradient id="${id}s" cx=".45" cy=".4" r=".7"><stop offset="0" stop-color="#f0bd8f"/><stop offset=".7" stop-color="#d99a6c"/><stop offset="1" stop-color="#b9774c"/></radialGradient>
     <linearGradient id="${id}h" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4a2c17"/><stop offset="1" stop-color="#1c0f07"/></linearGradient>
@@ -231,14 +231,13 @@ function cr7FaceSvg(cls = "face") {
     <clipPath id="${id}c"><circle cx="50" cy="50" r="49"/></clipPath>
     <radialGradient id="${id}bg" cx=".5" cy=".4" r=".7"><stop offset="0" stop-color="#fff6cf"/><stop offset=".6" stop-color="#ffd23f"/><stop offset="1" stop-color="#d49a00"/></radialGradient>
   </defs>
-  <g clip-path="url(#${id}c)">
-  <circle cx="50" cy="50" r="49" fill="url(#${id}bg)"/>
-  <!-- Épaules : maillot rouge, col vert, le 7 -->
+  <g ${headOnly ? "" : `clip-path="url(#${id}c)"`}>
+  ${headOnly ? "" : `<circle cx="50" cy="50" r="49" fill="url(#${id}bg)"/>`}
+  ${headOnly ? "" : `<!-- Épaules : maillot rouge, col vert, le 7 -->
   <path d="M10 100 C12 82 26 76 40 74 H60 C74 76 88 82 90 100 Z" fill="url(#${id}j)"/>
   <path d="M40 74 L50 84 L60 74" fill="none" stroke="#0a7a3c" stroke-width="4" stroke-linejoin="round"/>
-  <text x="70" y="90" text-anchor="middle" font-family="Oswald, Impact, sans-serif" font-weight="700" font-size="12" fill="#ffd23f">7</text>
-  <!-- Cou -->
-  <path d="M41 62 H59 V77 C55 81 45 81 41 77 Z" fill="#c98558"/>
+  <text x="70" y="90" text-anchor="middle" font-family="Oswald, Impact, sans-serif" font-weight="700" font-size="12" fill="#ffd23f">7</text>`}
+  ${headOnly ? "" : `  <path d="M41 62 H59 V77 C55 81 45 81 41 77 Z" fill="#c98558"/>`}
   <!-- Oreilles + boucle d'oreille diamant -->
   <ellipse cx="27" cy="46" rx="5" ry="7.5" fill="url(#${id}s)"/>
   <ellipse cx="73" cy="46" rx="5" ry="7.5" fill="url(#${id}s)"/>
@@ -267,7 +266,7 @@ function cr7FaceSvg(cls = "face") {
   <!-- Fossette au menton -->
   <path d="M49 65 C49.6 66 50.4 66 51 65" fill="none" stroke="#a8673f" stroke-width="1" stroke-linecap="round"/>
   </g>
-  <circle cx="50" cy="50" r="48.5" fill="none" stroke="#b8860b" stroke-width="1.4"/>
+  ${headOnly ? "" : `<circle cx="50" cy="50" r="48.5" fill="none" stroke="#b8860b" stroke-width="1.4"/>`}
 </svg>`;
 }
 cr7FaceSvg.n = 0;

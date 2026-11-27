@@ -82,13 +82,21 @@ const CARDS = CARDS_RAW.map(([trophy, name, flag, pos, note, kit, fact], i) => (
 function cardFront(card, tier, headSrc) {
   const r = CARD_RARITY[tier] || CARD_RARITY.bronze;
   const art = playerSvg(card, headSrc);
+  // Effets ultra-rares : décor complet propre aux légendaires et aux mythiques
+  const sparks = (n) => Array.from({ length: n }, (_, i) => `<i style="--i:${i};--x:${(i * 37 + 11) % 90 + 5}%;--d:${2.4 + (i * 7 % 10) / 5}s"></i>`).join("");
+  const fx = r.id === "legendaire"
+    ? `<div class="tcg-fx"><div class="fx-rays"></div><div class="fx-foil"></div><span class="fx-mark">ICÔNE</span><div class="fx-stars">${sparks(10)}</div></div>`
+    : r.id === "mythique"
+    ? `<div class="tcg-fx"><div class="fx-nebula"></div><div class="fx-pillar"></div><div class="fx-ring"></div><div class="fx-ring fx-ring2"></div><span class="fx-crown">♛</span><div class="fx-embers">${sparks(14)}</div></div>`
+    : "";
+  const edition = r.id === "mythique" ? "1/1" : r.id === "legendaire" ? "Icône" : "";
   return `<div class="tcg-front r-${r.id}">
-    <div class="tcg-bg"></div><div class="tcg-holo"></div><div class="tcg-shine"></div>
+    <div class="tcg-bg"></div>${fx}<div class="tcg-holo"></div><div class="tcg-shine"></div>
     <div class="tcg-top"><span class="tcg-note">${card.note}</span><span class="tcg-pos">${card.pos}</span><span class="tcg-flag">${card.flag}</span></div>
     <span class="tcg-gem" title="${r.label}">${r.gem}</span>
     <div class="tcg-art">${art}</div>
     <div class="tcg-name">${card.name}</div>
-    <div class="tcg-foot"><span>${r.label}</span><span>#${String(card.id).padStart(2, "0")}</span></div>
+    <div class="tcg-foot"><span>${r.label}${edition ? ` · ${edition}` : ""}</span><span>#${String(card.id).padStart(2, "0")}</span></div>
   </div>`;
 }
 // Dos de carte (carte pas encore gagnée, ou verso)
@@ -133,7 +141,7 @@ const FACE_OF = {
   "Gianluigi Buffon": [2, "long", "br", "stubble"], "Andrea Pirlo": [2, "long", "br", "full"], "Luka Modrić": [1, "long", "lb"],
   "Lev Yachine": [1, "short", "k"], "Kaká": [3, "short", "br"], "George Best": [1, "long", "k", "full"],
   "Bobby Charlton": [1, "receding", "lb"], "Didier Drogba": [6, "short", "k", "goatee"], "Steven Gerrard": [1, "buzz", "lb"],
-  "Zlatan Ibrahimović": [3, "bun", "k", "full"], "Just Fontaine": [2, "slick", "k"], "Garrincha": [4, "short", "k"],
+  "Zlatan Ibrahimović": [3, "bun", "k"], "Just Fontaine": [2, "slick", "k"], "Garrincha": [4, "short", "k"],
   "Romário": [4, "buzz", "k"], "Roberto Baggio": [2, "bun", "k", "goatee"], "Luís Figo": [2, "slick", "br"],
   "George Weah": [6, "buzz", "k"], "Gerd Müller": [2, "short", "k"], "Paolo Maldini": [2, "long", "k"],
   "Eusébio": [5, "short", "k"], "Michel Platini": [2, "curly", "br"], "Andrés Iniesta": [1, "receding", "br"],
@@ -223,7 +231,9 @@ function playerSvg(card, headSrc) {
   const dx = P.h[0] - base[0], dy = P.h[1] - base[1], dl = Math.hypot(dx, dy) || 1;
   const hc = [base[0] + dx / dl * (dl + 4), base[1] + dy / dl * (dl + 4)];
   const happy = ["celebrate", "siuu", "dribble", "pose"].includes(poseOf(card));
-  const head = isFete
+  const head = isCr7
+    ? `<g transform="translate(${hc[0]} ${hc[1]}) rotate(${Math.atan2(dx, -dy) * 180 / Math.PI})">${cr7FaceSvg("cr7-head", true, 'x="-24" y="-31" width="48" height="56"')}</g>`
+    : isFete
     ? `<image href="${headSrc}" x="${hc[0] - 22}" y="${hc[1] - 34}" width="44" height="58" preserveAspectRatio="xMidYMid meet"/>`
     : faceSvg(card, hc[0], hc[1], Math.atan2(dx, -dy) * 180 / Math.PI, happy, uid);
   const groundY = Math.max(P.aL[1], P.aR[1], P.tL[1], P.tR[1]) + 6;

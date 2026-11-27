@@ -2025,3 +2025,70 @@ body.turn-wait #screen-quiz { visibility: hidden; }
 .tz-card.flipping { transition: transform .52s ease-in-out; }
 .tz-card .tz-rear, .tz-card.show-rear .tz-front { visibility: hidden; }
 .tz-card.show-rear .tz-rear { visibility: visible; }
+
+/* ================= v7.1 — Légendaires & Mythiques : visuels ultra-rares ================= */
+.tcg-fx { position: absolute; inset: 4.5cqw; border-radius: 4.5cqw; overflow: hidden; pointer-events: none; z-index: 0; }
+.tcg-fx > * { position: absolute; }
+.tcg-art { z-index: 1; }
+
+/* ---- LÉGENDAIRE « Icône prismatique » ---- */
+.r-legendaire { --frame: linear-gradient(120deg, #ff9bd2, #ffe58a, #9dffcf, #8fd3ff, #c6a2ff, #ff9bd2, #ffe58a); --art: radial-gradient(circle at 50% 38%, #2a4f9c, #0b1640 60%, #050a1f); --gem: #e6fbff; }
+.tcg-front.r-legendaire { background: var(--frame); background-size: 300% 300%; animation: lg-frame 5s linear infinite; }
+@keyframes lg-frame { to { background-position: 300% 0; } }
+.tcg-front.r-legendaire .tcg-bg { box-shadow: inset 0 0 0 .7cqw rgba(255,255,255,.75), inset 0 0 6cqw rgba(140,220,255,.45); }
+.r-legendaire .fx-rays { inset: -60%; background: repeating-conic-gradient(from 0deg at 50% 50%, rgba(255,255,255,.16) 0 5deg, transparent 5deg 15deg); animation: lg-spin 30s linear infinite; mask-image: radial-gradient(circle, #000 20%, transparent 62%); -webkit-mask-image: radial-gradient(circle, #000 20%, transparent 62%); }
+.r-legendaire .fx-foil { inset: 0; opacity: .5; mix-blend-mode: color-dodge;
+  background: repeating-linear-gradient(60deg, rgba(255,120,200,.35) 0 2cqw, rgba(120,255,220,.3) 2cqw 4cqw, rgba(130,170,255,.35) 4cqw 6cqw, transparent 6cqw 9cqw),
+              repeating-linear-gradient(-60deg, rgba(255,240,140,.3) 0 2cqw, transparent 2cqw 7cqw);
+  background-size: 200% 200%; animation: lg-foil 7s ease-in-out infinite alternate; }
+@keyframes lg-foil { to { background-position: 100% 100%; } }
+.r-legendaire .fx-mark { right: -3cqw; top: 50%; transform: translateY(-50%) rotate(90deg); transform-origin: center; font-family: Oswald, Impact, sans-serif; font-weight: 700; font-size: 22cqw; letter-spacing: .1em;
+  color: transparent; -webkit-text-stroke: .35cqw rgba(255,255,255,.22); white-space: nowrap; }
+.r-legendaire .fx-stars, .r-mythique .fx-embers { inset: 0; }
+.r-legendaire .fx-stars i { position: absolute; left: var(--x); top: calc(var(--i) * 9% + 4%); width: 3.2cqw; height: 3.2cqw; background: #fff;
+  clip-path: polygon(50% 0, 61% 39%, 100% 50%, 61% 61%, 50% 100%, 39% 61%, 0 50%, 39% 39%); animation: lg-star var(--d) ease-in-out infinite; animation-delay: calc(var(--i) * -.37s); filter: drop-shadow(0 0 1cqw #bff); }
+@keyframes lg-star { 0%, 100% { transform: scale(.2) rotate(0); opacity: 0; } 50% { transform: scale(1) rotate(90deg); opacity: 1; } }
+.tcg-front.r-legendaire .tcg-name { background: linear-gradient(90deg, rgba(10,20,60,.85), rgba(40,30,90,.85)); border: .5cqw solid rgba(255,255,255,.7); border-top-width: .5cqw;
+  color: transparent; background-clip: padding-box; }
+.tcg-front.r-legendaire .tcg-name { color: #fff; text-shadow: 0 0 2cqw rgba(160,230,255,.9), 0 .4cqw 0 rgba(0,0,0,.4); letter-spacing: .04em; }
+.tcg-front.r-legendaire .tcg-note { background: linear-gradient(180deg, #fff, #bdf3ff 45%, #ffd1f0); -webkit-background-clip: text; background-clip: text; color: transparent; filter: drop-shadow(0 .5cqw 1cqw rgba(0,0,0,.6)); }
+.tcg-front.r-legendaire .card-player { filter: drop-shadow(0 0 1.2cqw rgba(255,255,255,.9)) drop-shadow(0 0 4cqw rgba(140,220,255,.7)); }
+.tcg-card.r-legendaire .tcg-front, .tz-card.r-legendaire .tcg-front { box-shadow: 0 0 5cqw rgba(160,230,255,.75), 0 0 12cqw rgba(255,150,220,.35), 0 2cqw 5cqw rgba(0,0,0,.4); }
+
+/* ---- MYTHIQUE « Or noir cosmique » ---- */
+.r-mythique { --frame: linear-gradient(135deg, #3a2a00, #ffe28a 18%, #b07a00 32%, #fff4c2 50%, #a06a00 68%, #ffd84a 82%, #3a2a00); --art: radial-gradient(circle at 50% 40%, #2b0b3a, #0a0410 65%, #000); --gem: #ffd84a; }
+.tcg-front.r-mythique { background: var(--frame); background-size: 250% 250%; animation: my-frame 3.5s ease-in-out infinite alternate, tcg-myth 2.2s ease-in-out infinite; }
+@keyframes my-frame { to { background-position: 100% 100%; } }
+.tcg-front.r-mythique .tcg-bg { box-shadow: inset 0 0 0 .6cqw #1a1000, inset 0 0 0 1.2cqw #ffd84a, inset 0 0 8cqw rgba(255,190,60,.35); }
+.r-mythique .tcg-bg::before { display: none; }
+.r-mythique .fx-nebula { inset: -30%; background:
+    radial-gradient(circle at 30% 35%, rgba(255,45,149,.45), transparent 30%),
+    radial-gradient(circle at 70% 60%, rgba(123,63,209,.55), transparent 32%),
+    radial-gradient(circle at 50% 80%, rgba(255,190,60,.35), transparent 30%),
+    radial-gradient(circle, rgba(255,255,255,.9) 0 .25cqw, transparent .5cqw) 0 0 / 9cqw 11cqw;
+  animation: lg-spin 40s linear infinite; }
+.r-mythique .fx-pillar { left: 25%; right: 25%; top: -10%; bottom: 10%; background: linear-gradient(90deg, transparent, rgba(255,226,138,.45) 35%, rgba(255,255,255,.7) 50%, rgba(255,226,138,.45) 65%, transparent);
+  filter: blur(2cqw); animation: my-pillar 2.4s ease-in-out infinite; }
+@keyframes my-pillar { 50% { opacity: .45; transform: scaleX(.75); } }
+.r-mythique .fx-ring { left: 50%; top: 42%; width: 74cqw; height: 74cqw; margin: -37cqw 0 0 -37cqw; border-radius: 50%; border: .7cqw dashed rgba(255,216,74,.75);
+  box-shadow: 0 0 4cqw rgba(255,216,74,.5), inset 0 0 4cqw rgba(255,216,74,.35); animation: lg-spin 14s linear infinite; }
+.r-mythique .fx-ring2 { width: 56cqw; height: 56cqw; margin: -28cqw 0 0 -28cqw; border: .5cqw dotted rgba(255,122,200,.8); animation-direction: reverse; animation-duration: 9s; }
+.r-mythique .fx-crown { left: 0; right: 0; top: 2cqw; text-align: center; font-size: 12cqw; line-height: 1; color: #ffd84a; text-shadow: 0 0 3cqw rgba(255,216,74,.9); animation: my-crown 2.2s ease-in-out infinite; z-index: 3; }
+@keyframes my-crown { 50% { transform: translateY(-1cqw) scale(1.08); } }
+.r-mythique .fx-embers i { position: absolute; left: var(--x); bottom: -4cqw; width: 1.6cqw; height: 1.6cqw; border-radius: 50%; background: radial-gradient(circle, #fff, #ffd84a 45%, rgba(255,120,0,0) 70%);
+  animation: my-ember var(--d) linear infinite; animation-delay: calc(var(--i) * -.41s); }
+@keyframes my-ember { 0% { transform: translateY(0) scale(1); opacity: 0; } 15% { opacity: 1; } 100% { transform: translateY(-130cqw) translateX(4cqw) scale(.3); opacity: 0; } }
+.tcg-front.r-mythique .tcg-gem { display: none; }
+.tcg-front.r-mythique .tcg-note, .tcg-front.r-mythique .tcg-pos { background: linear-gradient(180deg, #fff6cf, #ffd84a 50%, #b07a00); -webkit-background-clip: text; background-clip: text; color: transparent; filter: drop-shadow(0 .5cqw 1cqw rgba(0,0,0,.8)); }
+.tcg-front.r-mythique .tcg-name { background: linear-gradient(90deg, #120800, #2a1a00 50%, #120800); border: .6cqw solid #ffd84a; color: #ffe9a6; letter-spacing: .06em;
+  text-shadow: 0 0 2.5cqw rgba(255,216,74,.9); }
+.tcg-front.r-mythique .tcg-foot { color: #ffd84a; }
+.tcg-front.r-mythique .card-player { filter: drop-shadow(0 0 1cqw #fff3c4) drop-shadow(0 0 5cqw rgba(255,190,60,.85)); }
+.tcg-card.r-mythique .tcg-front, .tz-card.r-mythique .tcg-front { box-shadow: 0 0 6cqw rgba(255,216,74,.8), 0 0 14cqw rgba(255,45,149,.45), 0 2cqw 5cqw rgba(0,0,0,.5); }
+@media (prefers-reduced-motion: reduce) { .tcg-fx *, .tcg-front.r-legendaire, .tcg-front.r-mythique { animation: none !important; } }
+.tcg-front.r-legendaire .tcg-holo { opacity: .35; }
+.tcg-front.r-mythique .tcg-holo { opacity: .22; }
+.r-legendaire .fx-foil { opacity: .3; }
+.tcg-front.r-legendaire .tcg-note { background: none; color: #fff; -webkit-background-clip: border-box; background-clip: border-box; filter: none;
+  text-shadow: -.4cqw 0 0 rgba(255,120,200,.9), .4cqw 0 0 rgba(120,220,255,.9), 0 0 3cqw rgba(190,240,255,.9), 0 .6cqw 1.2cqw rgba(0,0,0,.6); }
+.r-mythique .fx-crown { left: auto; right: 4cqw; top: 3cqw; font-size: 11cqw; }
