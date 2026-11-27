@@ -1,4 +1,4 @@
-// Cartes « objets de match » et « stades » : hors collection principale, à acheter en boutique.
+// Cartes « objets de match » et « stades » : cartes hors série, à acheter en boutique.
 // Trois gammes selon le prix : classique (≤ 200), premium (≤ 500), prestige (> 500).
 const ITEM_TIERS = {
   classique: { label: "Classique", gem: "◇" },

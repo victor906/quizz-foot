@@ -2932,9 +2932,9 @@
   // Cartes visibles sur une page donnée (collection principale, objets, puis stades)
   function pageExtras(p) {
     if (p <= CARD_PAGES) return null;
-    if (p <= CARD_PAGES + ITEM_PAGES) { const i = p - CARD_PAGES - 1; return { wide: false, list: ITEM_CARDS.slice(i * PER_PAGE, (i + 1) * PER_PAGE), title: "🎴 Objets de match" }; }
+    if (p <= CARD_PAGES + ITEM_PAGES) { const i = p - CARD_PAGES - 1; return { wide: false, list: ITEM_CARDS.slice(i * PER_PAGE, (i + 1) * PER_PAGE), title: "Hors série · 🎴 Objets", all: ITEM_CARDS }; }
     const i = p - CARD_PAGES - ITEM_PAGES - 1;
-    return { wide: true, list: STADIUM_CARDS.slice(i * WIDE_PER_PAGE, (i + 1) * WIDE_PER_PAGE), title: "🏟️ Stades légendaires" };
+    return { wide: true, list: STADIUM_CARDS.slice(i * WIDE_PER_PAGE, (i + 1) * WIDE_PER_PAGE), title: "Hors série · 🏟️ Stades", all: STADIUM_CARDS };
   }
   const tierOfTrophy = (id) => (TROPHIES.find((t) => t.id === id) || {}).tier || "bronze";
   const trophyOf = (id) => TROPHIES.find((t) => t.id === id);
@@ -2947,7 +2947,8 @@
 
   function renderBinderButton() {
     const n = CARDS.filter(cardOwned).length;
-    $("binder-sub").textContent = `${n} / ${CARDS.length} cartes`;
+    const hs = EXTRA_CARDS.filter(extraOwned).length;
+    $("binder-sub").textContent = `${n} / ${CARDS.length} cartes${hs ? ` · ${hs} hors série` : ""}`;
     const fresh = CARDS.filter((c) => cardOwned(c) && !cardsSeen.has(c.id)).length + EXTRA_CARDS.filter((x) => extraOwned(x) && !cardsSeen.has(x.uid)).length;
     $("binder-new").classList.toggle("hidden", !fresh);
     $("binder-new").textContent = fresh > 1 ? `${fresh} NEW` : "NEW";
@@ -2977,7 +2978,7 @@
         <div class="cv-title">COLLECTION<br><b>LA FÊTE</b></div>
         <div class="cv-sub">Cartes des légendes du foot</div>
         <div class="cv-count">${n} / ${CARDS.length}</div>
-        <div class="cv-extra">🎴 ${ITEM_CARDS.filter(extraOwned).length} / ${ITEM_CARDS.length} objets · 🏟️ ${STADIUM_CARDS.filter(extraOwned).length} / ${STADIUM_CARDS.length} stades</div>
+        <div class="cv-extra">Cartes hors série : ${EXTRA_CARDS.filter(extraOwned).length} / ${EXTRA_CARDS.length}<br>🎴 ${ITEM_CARDS.filter(extraOwned).length} / ${ITEM_CARDS.length} objets · 🏟️ ${STADIUM_CARDS.filter(extraOwned).length} / ${STADIUM_CARDS.length} stades</div>
         <div class="cv-open">Touche ▶ ou glisse pour ouvrir</div>
       </div>`;
     }
@@ -2985,7 +2986,7 @@
     if (ex) {
       const per = ex.wide ? WIDE_PER_PAGE : PER_PAGE;
       const slots = ex.list.map((x) => `<div class="slot">${extraEl(x, ex.wide)}</div>`).join("") + '<div class="slot empty"></div>'.repeat(per - ex.list.length);
-      return `<div class="bpage"><div class="bp-head"><span>${ex.title}</span><span>Page ${p} / ${TOTAL_PAGES}</span></div><div class="bp-grid${ex.wide ? " wide" : ""}">${slots}</div></div>`;
+      return `<div class="bpage"><div class="bp-head"><span>${ex.title} ${ex.all.filter(extraOwned).length}/${ex.all.length}</span><span>Page ${p} / ${TOTAL_PAGES}</span></div><div class="bp-grid${ex.wide ? " wide" : ""}">${slots}</div></div>`;
     }
     const list = CARDS.slice((p - 1) * PER_PAGE, p * PER_PAGE);
     const rar = CARD_RARITY[tierOfTrophy(list[0].trophy)].label;
@@ -3059,7 +3060,7 @@
       const list = CARDS.filter((c) => CARD_RARITY[tierOfTrophy(c.trophy)].id === id);
       const lab = Object.values(CARD_RARITY).find((x) => x.id === id);
       return `<span class="bh-r r-${id}">${lab.gem} ${list.filter(cardOwned).length}/${list.length}</span>`;
-    }).join("");
+    }).join("") + `<span class="bh-r bh-hs">Hors série 🎴 ${ITEM_CARDS.filter(extraOwned).length}/${ITEM_CARDS.length} · 🏟️ ${STADIUM_CARDS.filter(extraOwned).length}/${STADIUM_CARDS.length}</span>`;
     showPage(0);
     show("binder");
   }
@@ -3096,7 +3097,7 @@
       sound: owned && (r.id === "legendaire" || r.id === "mythique") ? "legend" : "click",
     });
   }
-  // Carte objet ou stade (hors collection)
+  // Carte objet ou stade (hors série)
   function zoomExtra(x, fresh = false) {
     const owned = extraOwned(x);
     const t = ITEM_TIERS[x.tier];
@@ -3293,8 +3294,8 @@
           } });
       });
     };
-    sec(ITEM_CARDS, "🎴 Cartes objets de match", "Hors collection principale : des cartes à collectionner dans ton classeur.");
-    sec(STADIUM_CARDS, "🏟️ Cartes stades", "Les stades légendaires, en cartes paysage pour ton classeur.");
+    sec(ITEM_CARDS, "🎴 Cartes objets de match", "Cartes hors série : à collectionner dans ton classeur, en plus des cartes de légendes.");
+    sec(STADIUM_CARDS, "🏟️ Cartes stades", "Cartes hors série : les stades légendaires, en paysage dans ton classeur.");
   }
   // Onglets pour aller directement à une section de la boutique
   function buildShopTabs() {
@@ -3378,7 +3379,7 @@
 
   // ---------- Mise à jour automatique ----------
   // À l'ouverture, on compare la version de l'app avec celle publiée en ligne.
-  const APP_VERSION = "7.2";
+  const APP_VERSION = "7.3";
   function checkForUpdate() {
     if (!location.protocol.startsWith("http")) return;
     fetch(`version.json?t=${Date.now()}`, { cache: "no-store" })

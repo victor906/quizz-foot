@@ -2168,3 +2168,4 @@ body.turn-wait #screen-quiz { visibility: hidden; }
 .tz-wrap.wide .ti-how { font-size: 3.2cqw; padding-top: 2cqw; }
 .xi-name { white-space: normal; font-size: 7.6cqw; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
 .xb-emoji { font-size: 22cqw; filter: grayscale(1); opacity: .35; }
+.bh-hs { background: linear-gradient(135deg, #0c4a24, #2f9e57); border-color: #d9ffe9; }
