@@ -3279,7 +3279,6 @@
         } });
     });
     shopSection(wrap, "🎉 Célébrations", "Remplace les confettis de fin de partie par une pluie à ton style.", "🎉 Célébrations");
-    setTimeout(buildShopTabs, 0);
     const eq = storage.get("fqf-celeb") || "";
     [...CELEBS, ...CLUB_CELEBS.filter((c) => ownedCelebs.has(c.id))].forEach((c) => {
       const own = ownedCelebs.has(c.id);
@@ -3308,6 +3307,70 @@
           saveJokers();
           afterBuy(`✅ ${it.name} !`);
         } });
+    });
+    groupShop(wrap);
+  }
+  // ---------- Boutique en menus déroulants (un thème ouvert à la fois) + « Voir plus » ----------
+  let shopOpen = null, shopMore = {};
+  const SHOP_PEEK = 4;
+  function groupShop(wrap) {
+    const kids = [...wrap.children];
+    wrap.innerHTML = "";
+    let body = null, key = null;
+    const groups = [];
+    kids.forEach((el) => {
+      if (el.classList.contains("shop-sub")) {
+        key = el.dataset.tab;
+        const d = document.createElement("details");
+        d.className = "shop-group" + (el.classList.contains("week-sub") ? " week" : "");
+        d.dataset.key = key;
+        const sum = document.createElement("summary");
+        el.classList.remove("card");
+        sum.appendChild(el);
+        const meta = document.createElement("span");
+        meta.className = "sg-meta";
+        sum.appendChild(meta);
+        d.appendChild(sum);
+        body = document.createElement("div");
+        body.className = "sg-body";
+        d.appendChild(body);
+        wrap.appendChild(d);
+        groups.push(d);
+      } else if (body) body.appendChild(el);
+      else wrap.appendChild(el);
+    });
+    if (shopOpen === null) shopOpen = groups[0] ? groups[0].dataset.key : "";
+    groups.forEach((d) => {
+      const k = d.dataset.key, b = d.querySelector(".sg-body");
+      const items = [...b.querySelectorAll(":scope > .shop-item")];
+      d.querySelector(".sg-meta").textContent = `${items.length} article${items.length > 1 ? "s" : ""}`;
+      if (items.length > SHOP_PEEK + 1 && !shopMore[k]) {
+        const cut = items[SHOP_PEEK];
+        let hide = false;
+        [...b.children].forEach((c) => { if (c === cut) hide = true; if (hide) c.classList.add("sg-hidden"); });
+        // un sous-titre juste avant la coupure ne reste pas seul
+        const prev = cut.previousElementSibling;
+        if (prev && prev.classList.contains("shop-subhead")) prev.classList.add("sg-hidden");
+        const more = document.createElement("button");
+        more.type = "button";
+        more.className = "btn sg-more";
+        more.textContent = `Voir plus (${items.length - SHOP_PEEK}) ▾`;
+        more.onclick = () => {
+          shopMore[k] = true;
+          b.querySelectorAll(".sg-hidden").forEach((c) => c.classList.remove("sg-hidden"));
+          more.remove();
+        };
+        b.appendChild(more);
+      }
+      d.open = shopOpen === k;
+      d.querySelector("summary").addEventListener("click", (e) => {
+        e.preventDefault();
+        const willOpen = !d.open;
+        groups.forEach((g) => { g.open = false; });
+        d.open = willOpen;
+        shopOpen = willOpen ? k : "";
+        if (willOpen) setTimeout(() => window.scrollTo({ top: d.getBoundingClientRect().top + window.scrollY - 10, behavior: "smooth" }), 30);
+      });
     });
   }
   // ---------- Boutique de la semaine : change chaque lundi à minuit ----------
@@ -3489,56 +3552,6 @@
       renderBinderButton();
     };
   }
-  // Onglets pour aller directement à une section de la boutique
-  function buildShopTabs() {
-    let tabs = document.querySelector(".shop-tabs");
-    if (!tabs) {
-      tabs = document.createElement("div");
-      tabs.className = "shop-tabs";
-      $("shop-items").before(tabs);
-    }
-    tabs.innerHTML = "";
-    document.querySelectorAll("#shop-items .shop-sub").forEach((sec) => {
-      const b = document.createElement("button");
-      b.type = "button";
-      b.textContent = sec.dataset.tab;
-      b.onclick = () => window.scrollTo({ top: sec.getBoundingClientRect().top + window.scrollY - 60, behavior: "smooth" });
-      tabs.appendChild(b);
-    });
-    collapseShop();
-  }
-  // Listes longues : on montre les 3 premiers articles et un bouton « Voir plus »
-  const SHOP_PEEK = 3;
-  const shopOpen = new Set();
-  function collapseShop() {
-    const groups = [];
-    [...$("shop-items").children].forEach((el) => {
-      if (el.classList.contains("shop-sub") || el.classList.contains("shop-subhead")) groups.push({ key: el.textContent.trim().slice(0, 40), items: [] });
-      else if (el.classList.contains("shop-item") && groups.length) groups[groups.length - 1].items.push(el);
-    });
-    groups.forEach(({ key, items }) => {
-      if (items.length <= SHOP_PEEK + 1) return;
-      const extra = items.slice(SHOP_PEEK);
-      const btn = document.createElement("button");
-      btn.type = "button";
-      btn.className = "btn shop-more";
-      const paint = () => {
-        const open = shopOpen.has(key);
-        extra.forEach((el) => el.classList.toggle("shop-hidden", !open));
-        btn.textContent = open ? "Voir moins ▴" : `Voir plus (${extra.length}) ▾`;
-      };
-      btn.onclick = () => {
-        const wasOpen = shopOpen.has(key);
-        if (wasOpen) shopOpen.delete(key); else shopOpen.add(key);
-        Sounds.play("click");
-        paint();
-        // en refermant, on revient au début de la liste
-        if (wasOpen) window.scrollTo({ top: items[0].getBoundingClientRect().top + window.scrollY - 140, behavior: "smooth" });
-      };
-      items[items.length - 1].after(btn);
-      paint();
-    });
-  }
   function openShop() { Sounds.unlock(); storage.set("fqf-week-seen", weekKey()); renderShopBadge(); renderShop(); show("shop"); }
   function renderShopBadge() {
     let b = document.querySelector("#shop-btn .shop-new");
@@ -3609,7 +3622,7 @@
 
   // ---------- Mise à jour automatique ----------
   // À l'ouverture, on compare la version de l'app avec celle publiée en ligne.
-  const APP_VERSION = "1.9";
+  const APP_VERSION = "1.10";
   function checkForUpdate() {
     if (!location.protocol.startsWith("http")) return;
     fetch(`version.json?t=${Date.now()}`, { cache: "no-store" })
