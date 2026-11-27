@@ -499,13 +499,13 @@
   function updatePlayUI() {
     const p = state.play;
     const doneToday = daily.scores[todayStr()];
-    $("daily-small").textContent = doneToday !== undefined ? `✅ Fait : ${doneToday}/${DAILY_COUNT}` : (daily.streak && daily.last === yesterdayStr() ? `🔥 Série : ${daily.streak} j` : "10 questions par jour");
+    $("daily-small").textContent = doneToday !== undefined ? `✅ Fait : ${doneToday}/${DAILY_COUNT}` : (daily.streak && daily.last === yesterdayStr() ? `🔥 Série : ${daily.streak} j` : "Zéro erreur permise");
     $("review-small").textContent = missed.size ? `${missed.size} erreur${missed.size > 1 ? "s" : ""} à revoir` : "Aucune erreur";
     let info = PLAY_INFO[p];
     if (p === "daily") {
       info = doneToday !== undefined
-        ? `📅 Défi d'aujourd'hui déjà relevé : <b>${doneToday}/${DAILY_COUNT}</b>. Tu peux rejouer pour le plaisir (sans récompense). Reviens demain !`
-        : `📅 Les mêmes 10 questions toute la journée (3 faciles, 4 moyennes, 3 difficiles). Récompense : <b>+75 🪙</b>.${daily.streak && daily.last === yesterdayStr() ? ` Série en cours : <b>${daily.streak} jour${daily.streak > 1 ? "s" : ""}</b> 🔥` : ""}`;
+        ? `✅ Défi d'aujourd'hui relevé : <b>${doneToday}/${DAILY_COUNT}</b>. Il n'est plus jouable : reviens demain pour un nouveau défi !`
+        : `📅 Les mêmes 10 questions pour tout le monde. <b>⚠️ Une seule erreur et le défi est terminé</b>, et tu n'as qu'<b>une tentative par jour</b> (pas de seconde chance). <b>+5 🪙</b> par bonne réponse, <b>+75 🪙</b> pour un sans-faute.${daily.streak && daily.last === yesterdayStr() ? ` Série en cours : <b>${daily.streak} jour${daily.streak > 1 ? "s" : ""}</b> 🔥` : ""}`;
     }
     if (p === "boss") {
       const wins = Number(storage.get("fqf-boss-wins") || 0);
@@ -542,7 +542,7 @@
     if (small && ["50", "100", "all"].includes(state.count)) {
       document.querySelector('#count-chips .chip[data-count="10"]').click();
     }
-    $("start-btn").textContent = p === "daily" ? (doneToday !== undefined ? "Rejouer le défi" : "Relever le défi !")
+    $("start-btn").textContent = p === "daily" ? (doneToday !== undefined ? "✅ Reviens demain" : "Relever le défi !")
       : p === "party" ? "Lancer la soirée !"
       : p === "review" ? "Réviser !"
       : p === "geo" ? "C'est parti !"
@@ -557,7 +557,7 @@
   }
   function updateStartState() {
     const p = state.play;
-    $("start-btn").disabled = p === "review" ? missed.size === 0 : ["daily", "kits", "geo", "derby", "whoami", "career", "names", "hilo"].includes(p) ? false : currentPool().length === 0;
+    $("start-btn").disabled = p === "daily" ? daily.scores[todayStr()] !== undefined : p === "review" ? missed.size === 0 : [ "kits", "geo", "derby", "whoami", "career", "names", "hilo"].includes(p) ? false : currentPool().length === 0;
   }
 
 
@@ -730,6 +730,18 @@
     if (p === "geo") { startGeo(); return; }
     if (p === "duel") { startDuel(); return; }
     if (p === "daily") {
+      // Une seule tentative par jour : le défi est enregistré dès le départ
+      const t = todayStr();
+      if (daily.scores[t] !== undefined) { toast("✅ Défi du jour déjà relevé : reviens demain !"); renderBest(); show("home"); return; }
+      daily.streak = daily.last === yesterdayStr() ? daily.streak + 1 : 1;
+      daily.best = Math.max(daily.best, daily.streak);
+      daily.last = t;
+      daily.scores[t] = 0;
+      const keys = Object.keys(daily.scores).sort();
+      while (keys.length > 60) delete daily.scores[keys.shift()];
+      saveDaily();
+      stats.dailyBestStreak = Math.max(stats.dailyBestStreak, daily.streak);
+      saveStats();
       state.list = dailyQuestions();
     } else if (["derby", "whoami", "career", "names"].includes(p)) {
       const gen = { derby: derbyQuestion, whoami: whoamiQuestion, career: careerQuestion, names: namesQuestion }[p];
@@ -1282,8 +1294,9 @@
 
     $("validate-btn").classList.add("hidden");
     const next = $("next-btn");
-    let dies = (state.play === "sudden" || state.play === "hilo") && !ok;
-    if (dies && jokers.life > 0) {
+    let dies = (state.play === "sudden" || state.play === "hilo" || state.play === "daily") && !ok;
+    if (state.play === "daily" && ok) { daily.scores[todayStr()] = state.score; saveDaily(); }
+    if (dies && jokers.life > 0 && state.play !== "daily") {
       jokers.life--;
       saveJokers();
       dies = false;
@@ -1361,21 +1374,15 @@
       recordText = recordFor(`fqf-best-rush-${state.theme}`, n);
       stats.rushBest = Math.max(stats.rushBest, n);
     } else if (p === "daily") {
-      const t = todayStr();
-      if (daily.scores[t] === undefined) {
-        daily.streak = daily.last === yesterdayStr() ? daily.streak + 1 : 1;
-        daily.best = Math.max(daily.best, daily.streak);
-        daily.last = t;
-        daily.scores[t] = state.score;
-        // On ne garde que les 60 derniers jours
-        const keys = Object.keys(daily.scores).sort();
-        while (keys.length > 60) delete daily.scores[keys.shift()];
-        saveDaily();
-        stats.dailyBestStreak = Math.max(stats.dailyBestStreak, daily.streak);
-        addCoins(75);
-        recordText = `📅 Défi du jour réussi : +75 🪙 · Série : ${daily.streak} jour${daily.streak > 1 ? "s" : ""} 🔥`;
-      } else recordText = `📅 Score officiel du jour : ${daily.scores[t]}/${DAILY_COUNT} (partie pour le plaisir)`;
-      title = `Défi du jour : ${title}`;
+      const t = todayStr(), n = state.score, perfect = n === DAILY_COUNT;
+      daily.scores[t] = n;
+      saveDaily();
+      const gain = perfect ? 75 : n * 5;
+      if (gain) addCoins(gain);
+      scoreText = `${n} / ${DAILY_COUNT}`;
+      if (perfect) { emoji = "🏆"; title = "Défi du jour : sans-faute !"; msg = "10 sur 10 sans la moindre erreur. Respect."; }
+      else { emoji = n >= 7 ? "😱" : n >= 4 ? "😬" : "🙈"; title = `Défi du jour : éliminé à la question ${n + 1}`; msg = "Une erreur et c'est fini. Nouveau défi demain !"; }
+      recordText = `📅 ${gain ? `+${gain} 🪙 · ` : ""}Série : ${daily.streak} jour${daily.streak > 1 ? "s" : ""} 🔥 · Prochain défi demain`;
     } else if (p === "hilo") {
       const n = state.score;
       emoji = n >= 10 ? "🔮" : n >= 5 ? "↕️" : "🙈";
@@ -1507,8 +1514,9 @@
       review.appendChild(li);
     });
 
+    $("replay-btn").classList.toggle("hidden", p === "daily");
     show("end");
-    const good = p === "party" || p === "daily" || (p === "sudden" ? state.score >= 10 : p === "rush" ? state.score >= 10 : pct >= 60);
+    const good = p === "party" || (p === "daily" && state.score >= 7) || (p === "sudden" ? state.score >= 10 : p === "rush" ? state.score >= 10 : pct >= 60);
     Sounds.play("end", good || state.newTrophies.length > 0);
     if (p === "party" || pct >= 80 && p !== "sudden" && p !== "rush" || state.score >= 15 && (p === "sudden" || p === "rush")) confetti();
     // Révélation automatique si le Trophée CR7 Ultime vient d'être débloqué
@@ -2462,6 +2470,7 @@
     state.inGame = false;
     renderNewTrophies(state.newTrophies);
     $("review-wrap").classList.add("hidden");
+    $("replay-btn").classList.remove("hidden");
     renderWallet();
     show("end");
     celebrateFresh(state.newTrophies);
@@ -2667,6 +2676,7 @@
     state.inGame = false;
     renderNewTrophies(state.newTrophies);
     $("review-wrap").classList.add("hidden");
+    $("replay-btn").classList.remove("hidden");
     show("end");
     celebrateFresh(state.newTrophies);
     Sounds.play("end", true);
@@ -3494,7 +3504,7 @@
 
   // ---------- Mise à jour automatique ----------
   // À l'ouverture, on compare la version de l'app avec celle publiée en ligne.
-  const APP_VERSION = "7.5";
+  const APP_VERSION = "7.6";
   function checkForUpdate() {
     if (!location.protocol.startsWith("http")) return;
     fetch(`version.json?t=${Date.now()}`, { cache: "no-store" })
@@ -3526,7 +3536,7 @@
       ["classic", "🎯", "Classique", "Le quiz habituel, avec filtres", "#1fa85a"],
       ["sudden", "💀", "Mort subite", "Une erreur et c'est fini", "#3a3a3a"],
       ["rush", "⏳", "Contre-la-montre", "60 secondes chrono", "#e0453a"],
-      ["daily", "📅", "Défi du jour", "Les mêmes 10 questions pour tous", "#2f7de1"],
+      ["daily", "📅", "Défi du jour", "10 questions, zéro erreur, 1 essai par jour", "#2f7de1"],
       ["boss", "🥳", "Battre La Fête", "Elle a 76 % de réussite", "#ff2d95"],
       ["review", "📚", "Révision", "Rejoue tes erreurs", "#7a5af8"],
     ] },
@@ -3556,8 +3566,8 @@
     $("w-tro").textContent = `${TROPHIES.filter((t) => unlocked[t.id]).length}/${TROPHIES.length}`;
     const done = daily.scores[todayStr()];
     $("w-daily-txt").textContent = done !== undefined
-      ? `✅ Relevé aujourd'hui : ${done}/${DAILY_COUNT}${daily.streak > 1 ? ` · série de ${daily.streak} jours 🔥` : ""}`
-      : `10 questions · +75 🪙${daily.streak && daily.last === yesterdayStr() ? ` · série de ${daily.streak} 🔥` : ""}`;
+      ? `✅ Relevé aujourd'hui : ${done}/${DAILY_COUNT} · reviens demain${daily.streak > 1 ? ` · série de ${daily.streak} jours 🔥` : ""}`
+      : `10 questions · zéro erreur · jusqu'à +75 🪙${daily.streak && daily.last === yesterdayStr() ? ` · série de ${daily.streak} 🔥` : ""}`;
     $("w-daily").classList.toggle("done", done !== undefined);
     const wrap = $("w-modes");
     wrap.innerHTML = "";
@@ -3585,7 +3595,7 @@
     Sounds.play("start");
     show("home");
   };
-  $("w-daily").onclick = () => { goMode("daily"); start(); };
+  $("w-daily").onclick = () => { goMode("daily"); if (daily.scores[todayStr()] === undefined) start(); };
 
   renderFilters();
   renderBest();
