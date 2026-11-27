@@ -3500,7 +3500,7 @@
 
   // ---------- Mise à jour automatique ----------
   // À l'ouverture, on compare la version de l'app avec celle publiée en ligne.
-  const APP_VERSION = "1.3";
+  const APP_VERSION = "1.4";
   function checkForUpdate() {
     if (!location.protocol.startsWith("http")) return;
     fetch(`version.json?t=${Date.now()}`, { cache: "no-store" })
@@ -3527,99 +3527,208 @@
   document.addEventListener("visibilitychange", () => { if (!document.hidden) checkForUpdate(); });
 
   // ---------- Transfert de partie entre appareils (code à copier-coller, sans serveur) ----------
-  const SYNC_PREFIX = "FETE";
-  const HASHED_KEYS = ["fqf-seen", "fqf-ever", "fqf-missed"];
-  const qHash = (str) => { let h = 2166136261; for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); } return (h >>> 0).toString(36); };
-  const b64url = (bytes) => { let bin = ""; for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000)); return btoa(bin).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, ""); };
+  // Code court : la progression est codée en binaire (un bit par trophée, carte, maillot…),
+  // puis écrite avec 32 caractères faciles à lire (sans I, L, O ni U).
+  const B32 = "0123456789ABCDEFGHJKMNPQRSTVWXYZ";
+  const SYNC_V = 2;
+  const qHash = (str) => { let h = 2166136261; for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; };
+  const DAY0 = Date.UTC(2024, 0, 1);
+  const dayNum = (iso) => Math.max(0, Math.round((Date.UTC(+iso.slice(0, 4), +iso.slice(5, 7) - 1, +iso.slice(8, 10)) - DAY0) / 86400000));
+  const dayIso = (n) => { const d = new Date(DAY0 + n * 86400000); return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}-${String(d.getUTCDate()).padStart(2, "0")}`; };
+  // Listes de référence : les deux appareils doivent avoir la même version du jeu
+  const syncLists = () => ({
+    tro: TROPHIES.map((t) => t.id),
+    kits: [...LEGENDS.map((l) => l.id), ...COLLECTOR.map((c) => c.id), ...CLUB_PACKS.map((p) => p.kitId)],
+    celebs: [...CELEBS.map((c) => c.id), ...CLUB_PACKS.map((p) => p.celebId)],
+    extras: EXTRA_CARDS.map((x) => x.uid),
+    stats: Object.keys(STAT_DEFAULTS),
+  });
+  const syncSchema = () => qHash(JSON.stringify(syncLists())) & 0xffff;
+  const AV_KEYS = ["b", "p", "c", "s", "n", "name", "sn", "t", "nc", "stars", "c2", "face"];
+  function writer() {
+    const out = [];
+    const w = {
+      byte: (v) => out.push(v & 255),
+      uint(n) { n = Math.max(0, Math.floor(Number(n) || 0)); while (n >= 128) { out.push((n % 128) | 128); n = Math.floor(n / 128); } out.push(n); },
+      bits(list, has) { for (let i = 0; i < list.length; i += 8) { let v = 0; for (let j = 0; j < 8 && i + j < list.length; j++) if (has(list[i + j])) v |= 1 << j; out.push(v); } },
+      str(x) { const b = new TextEncoder().encode(String(x)); w.uint(b.length); b.forEach((v) => out.push(v)); },
+      val(x) { // valeur d'avatar : vide, couleur, nombre ou texte
+        if (x === undefined || x === null) w.byte(0);
+        else if (x === "") w.byte(1);
+        else if (typeof x === "string" && /^#[0-9a-f]{6}$/i.test(x)) { w.byte(2); [1, 3, 5].forEach((i) => w.byte(parseInt(x.slice(i, i + 2), 16))); }
+        else if (typeof x === "number") { w.byte(4); w.uint(x); }
+        else { w.byte(3); w.str(x); }
+      },
+    };
+    return [w, out];
+  }
+  function reader(bytes) {
+    let i = 0;
+    const r = {
+      byte: () => { if (i >= bytes.length) throw new Error("format"); return bytes[i++]; },
+      uint() { let n = 0, m = 1, b; do { b = r.byte(); n += (b & 127) * m; m *= 128; } while (b & 128); return n; },
+      bits(list) { const got = []; for (let k = 0; k < list.length; k += 8) { const v = r.byte(); for (let j = 0; j < 8 && k + j < list.length; j++) if (v & (1 << j)) got.push(list[k + j]); } return got; },
+      str() { const n = r.uint(); const b = bytes.slice(i, i + n); if (b.length < n) throw new Error("format"); i += n; return new TextDecoder().decode(b); },
+      val() {
+        const t = r.byte();
+        if (t === 0) return undefined; if (t === 1) return "";
+        if (t === 2) return "#" + [r.byte(), r.byte(), r.byte()].map((v) => v.toString(16).padStart(2, "0")).join("");
+        if (t === 4) return r.uint();
+        return r.str();
+      },
+      done: () => i === bytes.length,
+    };
+    return r;
+  }
+  // Les suites de zéros (compteurs pas encore utilisés) sont raccourcies : 0 puis leur nombre
+  const rleZip = (arr) => { const o = []; for (let i = 0; i < arr.length;) { if (arr[i] === 0) { let n = 0; while (i < arr.length && arr[i] === 0 && n < 255) { n++; i++; } o.push(0, n); } else o.push(arr[i++]); } return o; };
+  const rleUnzip = (arr) => { const o = []; for (let i = 0; i < arr.length; i++) { if (arr[i] === 0) { const n = arr[++i]; if (!n) throw new Error("format"); for (let k = 0; k < n; k++) o.push(0); } else o.push(arr[i]); } return new Uint8Array(o); };
+  const toB32 = (bytes) => { let bits = 0, val = 0, s = ""; bytes.forEach((b) => { val = (val << 8) | b; bits += 8; while (bits >= 5) { s += B32[(val >>> (bits - 5)) & 31]; bits -= 5; } val &= (1 << bits) - 1; }); if (bits) s += B32[(val << (5 - bits)) & 31]; return s; };
+  const fromB32 = (s) => { const out = []; let bits = 0, val = 0; for (const ch of s) { const v = B32.indexOf(ch); if (v < 0) throw new Error("format"); val = (val << 5) | v; bits += 5; if (bits >= 8) { out.push((val >>> (bits - 8)) & 255); bits -= 8; val &= (1 << bits) - 1; } } return new Uint8Array(out); };
+  const readJSON2 = (k, def) => { try { return JSON.parse(localStorage.getItem(k)) ?? def; } catch { return def; } };
+  function exportCode() {
+    const L = syncLists(), [w, out] = writer();
+    w.byte(SYNC_V); w.uint(syncSchema()); w.uint(dayNum(todayStr()));
+    w.uint(coins);
+    w.bits(L.tro, (id) => !!unlocked[id]);
+    L.stats.forEach((k) => w.uint(stats[k]));
+    w.bits(L.kits, (id) => ownedKits.has(id));
+    w.bits(L.celebs, (id) => ownedCelebs.has(id));
+    w.bits(L.extras, (uid) => ownedExtras.has(uid));
+    w.uint(L.celebs.indexOf(storage.get("fqf-celeb") || "") + 1);
+    ["fifty", "time", "skip", "life"].forEach((k) => w.uint(jokers[k]));
+    w.uint(boostLeft()); w.uint(storage.get("fqf-boss-wins"));
+    AV_KEYS.forEach((k) => w.val(avatar[k]));
+    const dl = daily.last ? dayNum(daily.last) + 1 : 0;
+    w.uint(dl); w.uint(daily.streak); w.uint(daily.best);
+    const ds = daily.scores[todayStr()]; w.uint(ds === undefined ? 0 : ds + 1);
+    const bests = [];
+    for (let k = 0; k < localStorage.length; k++) { const key = localStorage.key(k); if (key && key.startsWith("fqf-best")) bests.push(key); }
+    w.uint(bests.length); bests.forEach((key) => { w.str(key.slice(8)); w.uint(storage.get(key)); });
+    let sum = 0; out.slice().forEach((v) => { sum = (sum * 31 + v) % 1021; }); w.uint(sum);
+    return toB32(rleZip(out)).replace(/(.{5})(?=.)/g, "$1-");
+  }
+  // Lit un code (court, ou ancien format long) et renvoie un résumé + la façon de l'appliquer
+  async function decodeCode(raw) {
+    const txt = String(raw || "").trim();
+    if (/^FETE[01]-/.test(txt.replace(/\s+/g, ""))) return decodeLongCode(txt.replace(/\s+/g, ""));
+    const clean = txt.toUpperCase().replace(/[^0-9A-Z]/g, "").replace(/O/g, "0").replace(/[IL]/g, "1");
+    if (clean.length < 20) throw new Error("format");
+    const bytes = rleUnzip(fromB32(clean));
+    const ck = (arr) => { let x = 0; arr.forEach((v) => { x = (x * 31 + v) % 1021; }); return x; };
+    // la somme de contrôle (1 ou 2 octets) termine le code
+    const body = [bytes.length - 1, bytes.length - 2].map((cut) => {
+      if (cut < 1) return null;
+      try { const rr = reader(bytes.slice(cut)); const v = rr.uint(); return rr.done() && ck(bytes.slice(0, cut)) === v ? bytes.slice(0, cut) : null; } catch { return null; }
+    }).find(Boolean);
+    if (!body) throw new Error("format");
+    const r = reader(body);
+    if (r.byte() !== SYNC_V) throw new Error("format");
+    if (r.uint() !== syncSchema()) throw new Error("version");
+    const at = dayIso(r.uint());
+    const L = syncLists(), d = {};
+    d.coins = r.uint();
+    d.tro = r.bits(L.tro);
+    d.stats = {}; L.stats.forEach((k) => { d.stats[k] = r.uint(); });
+    d.kits = r.bits(L.kits); d.celebs = r.bits(L.celebs); d.extras = r.bits(L.extras);
+    const ce = r.uint(); d.celeb = ce ? L.celebs[ce - 1] : "";
+    d.jokers = {}; ["fifty", "time", "skip", "life"].forEach((k) => { d.jokers[k] = r.uint(); });
+    d.boost = r.uint(); d.boss = r.uint();
+    d.avatar = {}; AV_KEYS.forEach((k) => { const v = r.val(); if (v !== undefined) d.avatar[k] = v; });
+    const dl = r.uint(); d.daily = { last: dl ? dayIso(dl - 1) : "", streak: r.uint(), best: r.uint(), scores: {} };
+    const ds = r.uint(); if (ds && d.daily.last) d.daily.scores[d.daily.last] = ds - 1;
+    d.bests = {}; const nb = r.uint(); for (let k = 0; k < nb; k++) { const key = "fqf-best" + r.str(); d.bests[key] = r.uint(); }
+    const cards = CARDS.filter((c) => d.tro.includes(c.trophy)).length;
+    return {
+      at,
+      summary: `<b>${d.avatar.name ? String(d.avatar.name).replace(/[<>&]/g, "") : "Joueur"}</b> · 🪙 ${d.coins.toLocaleString("fr-FR")} · 🏆 ${d.tro.length}/${TROPHIES.length} · 🃏 ${cards}/${CARDS.length}${d.extras.length ? ` + ${d.extras.length} hors série` : ""}`,
+      apply() {
+        const tro = {}; d.tro.forEach((id) => { tro[id] = (readJSON2("fqf-trophies", {}) || {})[id] || at; });
+        const set = {
+          "fqf-coins": String(d.coins), "fqf-trophies": JSON.stringify(tro),
+          "fqf-stats": JSON.stringify({ ...STAT_DEFAULTS, ...d.stats }),
+          "fqf-kits-owned": JSON.stringify(d.kits), "fqf-celebs": JSON.stringify(d.celebs), "fqf-celeb": d.celeb,
+          "fqf-extras": JSON.stringify(d.extras), "fqf-jokers": JSON.stringify(d.jokers),
+          "fqf-boost": String(d.boost), "fqf-boss-wins": String(d.boss), "fqf-avatar": JSON.stringify(d.avatar),
+          "fqf-daily": JSON.stringify(d.daily), "fqf-cr7-topup": "1",
+          // pas de pluie de « NEW » sur les cartes déjà vues ailleurs
+          "fqf-cards-seen": JSON.stringify([...CARDS.filter((c) => d.tro.includes(c.trophy)).map((c) => c.id), ...d.extras]),
+          "fqf-test-full1": "1", "fqf-test-100k": "1", "fqf-test-alltro3": "1",
+        };
+        for (let k = localStorage.length - 1; k >= 0; k--) { const key = localStorage.key(k); if (key && key.startsWith("fqf-best")) localStorage.removeItem(key); }
+        Object.entries({ ...set, ...Object.fromEntries(Object.entries(d.bests).map(([k, v]) => [k, String(v)])) }).forEach(([k, v]) => localStorage.setItem(k, v));
+      },
+    };
+  }
+  // Ancien format (version 1.2) : toujours accepté
   const unb64url = (str) => { const bin = atob(str.replace(/-/g, "+").replace(/_/g, "/")); const out = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i); return out; };
-  const canZip = typeof CompressionStream !== "undefined" && typeof DecompressionStream !== "undefined";
-  const zip = async (bytes, mode) => new Uint8Array(await new Response(new Blob([bytes]).stream().pipeThrough(mode === "in" ? new CompressionStream("deflate-raw") : new DecompressionStream("deflate-raw"))).arrayBuffer());
-  function readSave() {
-    const d = {};
-    for (let i = 0; i < localStorage.length; i++) {
-      const k = localStorage.key(i);
-      if (k && k.startsWith("fqf-")) d[k] = localStorage.getItem(k);
-    }
-    // Les questions déjà vues sont enregistrées en version courte (empreinte) pour alléger le code
-    HASHED_KEYS.forEach((k) => {
-      if (!d[k]) return;
-      try { d[k] = JSON.parse(d[k]).map((key) => (ALL_BY_KEY.has(key) ? `#${qHash(key)}` : key)); } catch { delete d[k]; }
-    });
-    return d;
-  }
-  async function exportCode() {
-    const json = JSON.stringify({ v: 1, app: APP_VERSION, at: todayStr(), d: readSave() });
-    const raw = new TextEncoder().encode(json);
-    return canZip ? `${SYNC_PREFIX}1-${b64url(await zip(raw, "in"))}` : `${SYNC_PREFIX}0-${b64url(raw)}`;
-  }
-  async function decodeCode(code) {
-    const m = String(code || "").replace(/\s+/g, "").match(/^FETE([01])-([A-Za-z0-9_-]+)$/);
+  async function decodeLongCode(code) {
+    const m = code.match(/^FETE([01])-([A-Za-z0-9_-]+)$/);
     if (!m) throw new Error("format");
     let bytes = unb64url(m[2]);
-    if (m[1] === "1") { if (!canZip) throw new Error("zip"); bytes = await zip(bytes, "out"); }
+    if (m[1] === "1") {
+      if (typeof DecompressionStream === "undefined") throw new Error("zip");
+      bytes = new Uint8Array(await new Response(new Blob([bytes]).stream().pipeThrough(new DecompressionStream("deflate-raw"))).arrayBuffer());
+    }
     const obj = JSON.parse(new TextDecoder().decode(bytes));
     if (!obj || obj.v !== 1 || typeof obj.d !== "object") throw new Error("format");
-    return obj;
-  }
-  // Résumé lisible d'une sauvegarde (pour vérifier avant de remplacer)
-  function saveSummary(d) {
+    const d = { ...obj.d };
+    const byHash = new Map([...ALL_BY_KEY.keys()].map((k) => [qHash(k).toString(36), k]));
+    ["fqf-seen", "fqf-ever", "fqf-missed"].forEach((k) => {
+      if (Array.isArray(d[k])) d[k] = JSON.stringify(d[k].map((x) => (x.startsWith("#") ? byHash.get(x.slice(1)) : x)).filter(Boolean));
+    });
     const js = (k, def) => { try { return JSON.parse(d[k]) ?? def; } catch { return def; } };
-    const tro = Object.keys(js("fqf-trophies", {})).length;
-    const cards = CARDS.filter((c) => js("fqf-trophies", {})[c.trophy]).length;
-    const hs = (js("fqf-extras", []) || []).length;
-    const av = js("fqf-avatar", {});
-    return `<b>${av.name ? av.name.replace(/[<>&]/g, "") : "Joueur"}</b> · 🪙 ${Number(d["fqf-coins"] || 0).toLocaleString("fr-FR")} · 🏆 ${tro}/${TROPHIES.length} · 🃏 ${cards}/${CARDS.length}${hs ? ` + ${hs} hors série` : ""}`;
+    const tro = js("fqf-trophies", {}), av = js("fqf-avatar", {}), ex = js("fqf-extras", []) || [];
+    return {
+      at: obj.at,
+      summary: `<b>${av.name ? String(av.name).replace(/[<>&]/g, "") : "Joueur"}</b> · 🪙 ${Number(d["fqf-coins"] || 0).toLocaleString("fr-FR")} · 🏆 ${Object.keys(tro).length}/${TROPHIES.length} · 🃏 ${CARDS.filter((c) => tro[c.trophy]).length}/${CARDS.length}${ex.length ? ` + ${ex.length} hors série` : ""}`,
+      apply() {
+        for (let k = localStorage.length - 1; k >= 0; k--) { const key = localStorage.key(k); if (key && key.startsWith("fqf-")) localStorage.removeItem(key); }
+        Object.entries(d).forEach(([k, v]) => { if (k.startsWith("fqf-") && typeof v === "string") localStorage.setItem(k, v); });
+      },
+    };
   }
   function openSync() {
     Sounds.unlock();
-    $("sync-sum").innerHTML = `Ta partie ici : ${saveSummary(readSave())}`;
+    const cards = CARDS.filter(cardOwned).length;
+    $("sync-sum").innerHTML = `Ta partie ici : <b>${avatar.name ? avatar.name.replace(/[<>&]/g, "") : "Joueur"}</b> · 🪙 ${coins.toLocaleString("fr-FR")} · 🏆 ${TROPHIES.filter((t) => unlocked[t.id]).length}/${TROPHIES.length} · 🃏 ${cards}/${CARDS.length}${ownedExtras.size ? ` + ${ownedExtras.size} hors série` : ""}`;
+    $("sync-code").textContent = exportCode();
     $("sync-input").value = "";
     $("sync-preview").classList.add("hidden");
     resetImportBtn();
     show("sync");
   }
   async function copySync(share) {
-    let code;
-    try { code = await exportCode(); } catch { toast("Impossible de créer le code sur cet appareil"); return; }
+    const code = exportCode();
+    $("sync-code").textContent = code;
     Sounds.play("click");
     if (share && navigator.share) {
-      try { await navigator.share({ text: code }); return; } catch (e) { if (e && e.name === "AbortError") return; }
+      try { await navigator.share({ text: `Mon code La Fête Quiz :\n${code}` }); return; } catch (e) { if (e && e.name === "AbortError") return; }
     }
     try { await navigator.clipboard.writeText(code); toast("📋 Code copié ! Colle-le dans le jeu sur ton autre appareil."); }
-    catch {
-      // Dernier recours : afficher le code pour le copier à la main
-      $("sync-input").value = code; $("sync-input").select();
-      toast("Sélectionne le code ci-dessous et copie-le");
-    }
+    catch { toast("Sélectionne le code affiché et copie-le"); }
   }
   let pendingImport = null;
   function resetImportBtn() { pendingImport = null; $("sync-import").textContent = "📥 Récupérer ma partie"; $("sync-import").classList.remove("armed"); }
   async function importSync() {
     if (pendingImport) {
       // Deuxième appui : on remplace la partie de cet appareil
-      const d = { ...pendingImport.d };
-      const byHash = new Map([...ALL_BY_KEY.keys()].map((k) => [qHash(k), k]));
-      HASHED_KEYS.forEach((k) => {
-        if (!Array.isArray(d[k])) return;
-        d[k] = JSON.stringify(d[k].map((x) => (x.startsWith("#") ? byHash.get(x.slice(1)) : x)).filter(Boolean));
-      });
-      const old = [];
-      for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (k && k.startsWith("fqf-")) old.push(k); }
-      try {
-        old.forEach((k) => localStorage.removeItem(k));
-        Object.entries(d).forEach(([k, v]) => { if (k.startsWith("fqf-") && typeof v === "string") localStorage.setItem(k, v); });
-      } catch { toast("Impossible d'enregistrer la partie sur cet appareil"); return; }
+      try { pendingImport.apply(); } catch { toast("Impossible d'enregistrer la partie sur cet appareil"); return; }
       Sounds.play("legend");
       toast("✅ Partie récupérée ! Rechargement…");
       setTimeout(() => location.reload(), 900);
       return;
     }
-    let obj;
-    try { obj = await decodeCode($("sync-input").value); }
-    catch (e) { toast(e && e.message === "zip" ? "Cet appareil est trop ancien pour lire ce code" : "Code invalide : vérifie que tu l'as collé en entier"); return; }
-    pendingImport = obj;
+    let res;
+    try { res = await decodeCode($("sync-input").value); }
+    catch (e) {
+      toast(e && e.message === "version" ? "Mets le jeu à jour sur les deux appareils, puis refais un code"
+        : e && e.message === "zip" ? "Cet appareil est trop ancien pour lire ce code" : "Code invalide : vérifie qu'il est complet");
+      return;
+    }
+    pendingImport = res;
     document.querySelectorAll(".shop-toast").forEach((x) => x.remove());
-    $("sync-preview").innerHTML = `Partie trouvée (code du ${obj.at.split("-").reverse().join("/")}) :<br>${saveSummary(obj.d)}`;
+    $("sync-preview").innerHTML = `Partie trouvée (code du ${res.at.split("-").reverse().join("/")}) :<br>${res.summary}`;
     $("sync-preview").classList.remove("hidden");
     $("sync-import").textContent = "⚠️ Touche encore pour remplacer la partie d'ici";
     $("sync-import").classList.add("armed");
