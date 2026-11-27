@@ -132,6 +132,7 @@
     geoCountryPerfect: 0, worldBest: 0, derbyCorrect: 0, whoamiFirst: 0, careerCorrect: 0, orderCorrect: 0, namesCorrect: 0, hiloBest: 0,
     bossBeaten: 0, duelGames: 0, leagueSeasons: 0, avatarMade: 0, kitsBought: 0,
     suddenBest: 0, rushBest: 0, dailyBestStreak: 0, partyGames: 0, reviewFixed: 0, purchases: 0, jokersUsed: 0,
+    hsTotal: 0, hsItems: 0, hsStades: 0, hsWeek: 0, clubPacks: 0,
   };
   let stats = { ...STAT_DEFAULTS };
   try { stats = { ...STAT_DEFAULTS, ...JSON.parse(storage.get(STATS_KEY) || "{}") }; } catch { /* valeurs par défaut */ }
@@ -442,33 +443,10 @@
   const BOSS_PROB = 0.76;
   // Variantes du mode Cartes
   let geoVar = ["europe", "france", "pays", "monde"].includes(storage.get("fqf-geo")) ? storage.get("fqf-geo") : "europe";
-  const GEO_INFO = {
-    europe: "🇪🇺 10 clubs à placer sur la carte d'Europe. Plus ton épingle est proche du stade, plus tu marques (1 000 pts max par club). Un doigt pour déplacer la carte, deux doigts pour zoomer.",
-    france: "🇫🇷 Tour de France : 10 clubs de Ligue 1 et Ligue 2 à placer sur la carte de France. Plus tu es précis, plus tu marques.",
-    pays: "🧭 Pays mystère : on te donne un club, touche son pays sur la carte. 1 000 pts par bonne réponse.",
-    monde: "🌍 Coupe du monde : pays organisateurs et origines des stars, sur la carte du monde. Zoome à deux doigts pour les petits pays !",
-  };
   document.querySelectorAll("#geo-vars .chip").forEach((c) => {
     c.onclick = () => { geoVar = c.dataset.geo; storage.set("fqf-geo", geoVar); updatePlayUI(); };
   });
 
-  const PLAY_INFO = {
-    classic: "🎯 Le quiz classique : choisis ton thème, le nombre de questions et la difficulté.",
-    sudden: "💀 Toutes les questions de ta sélection, jusqu'à la première erreur. Combien de bonnes réponses d'affilée ?",
-    rush: "⏳ 60 secondes au total. Bonne réponse : <b>+2 s</b>. Erreur : <b>−3 s</b>. Pas de temps limite par question.",
-    daily: "",
-    kits: "👕 Un maillot, quatre clubs… ou l'inverse ! Une quarantaine de maillots bien reconnaissables, aux couleurs de leur tenue domicile. Le drapeau du pays t'aide un peu.",
-    geo: "",
-    derby: "⚔️ On te donne un club, trouve son grand rival ! La carte te montre ensuite le derby.",
-    whoami: "🕵️ Des indices s'affichent un par un. Trouve le joueur le plus tôt possible : moins d'indices = plus de pièces (jusqu'à +12 🪙).",
-    career: "🧳 Une suite de clubs, un seul joueur. Qui a eu ce parcours ?",
-    names: "✍️ On te donne le nom de famille d'un joueur (des années 80 à aujourd'hui), écris son prénom ! Pas de panique pour l'orthographe : accents et petites fautes sont acceptés.",
-    hilo: "↕️ Qui a le plus de titres, de Ballons d'Or, quel club est le plus ancien… Une nouvelle comparaison à chaque manche. Une erreur et c'est fini !",
-    boss: "",
-    duel: "🤺 Posez le téléphone à plat entre vous deux. Chacun a ses boutons de son côté : le premier qui trouve la bonne réponse marque le point. Une erreur et tu es bloqué pour la question !",
-    party: "🎉 Passez-vous le téléphone ! Chacun répond à son tour, le meilleur score gagne. (Sans jokers ni pièces.)",
-    review: "",
-  };
   // Familles de jeux (onglets)
   const famOf = (play) => document.querySelector(`#play-chips .mode[data-play="${play}"]`)?.closest(".fam")?.dataset.fam || "quiz";
   function showFam(fam) {
@@ -522,6 +500,12 @@
         : "📚 Aucune erreur à revoir pour l'instant. Les questions ratées dans les autres modes arriveront ici.";
     }
     $("play-info").innerHTML = info;
+    if (p === "daily" && doneToday !== undefined) {
+      const b = document.createElement("button");
+      b.type = "button"; b.className = "btn share-btn small"; b.textContent = "📤 Partager mon défi";
+      b.onclick = () => shareDaily();
+      $("play-info").appendChild(b);
+    }
     $("play-info").classList.toggle("hidden", !info);
     $("party-setup").classList.toggle("hidden", p !== "party" && p !== "duel");
     $("party-add").classList.toggle("hidden", p === "duel");
@@ -721,12 +705,33 @@
   }
   const KIT_BY_NAME = new Map(CLUBS.map((c) => [c.name, c.kit]));
 
+  const mapsReady = () => typeof EUROPE_MAP !== "undefined";
+  let mapsLoading = null;
+  function loadMaps() {
+    if (mapsReady()) return Promise.resolve();
+    if (!mapsLoading) {
+      mapsLoading = new Promise((ok, ko) => {
+        const sc = document.createElement("script");
+        sc.src = `geo-map.js?v=${APP_VERSION}`;
+        sc.onload = () => (mapsReady() ? ok() : ko());
+        sc.onerror = () => { mapsLoading = null; sc.remove(); ko(); };
+        document.head.appendChild(sc);
+      });
+    }
+    return mapsLoading;
+  }
   function start() {
     Sounds.unlock();
     const p = state.play;
     clearTimeout(state.autoNext);
     clearInterval(state.rushTick);
 
+    // La carte (le plus gros fichier) n'est chargée que pour les modes qui en ont besoin
+    if ((p === "geo" || p === "derby") && !mapsReady()) {
+      $("start-btn").disabled = true;
+      loadMaps().then(() => { updateStartState(); start(); }).catch(() => { updateStartState(); toast("Carte indisponible : vérifie ta connexion"); });
+      return;
+    }
     if (p === "geo") { startGeo(); return; }
     if (p === "duel") { startDuel(); return; }
     if (p === "daily") {
@@ -738,7 +743,7 @@
       daily.last = t;
       daily.scores[t] = 0;
       const keys = Object.keys(daily.scores).sort();
-      while (keys.length > 60) delete daily.scores[keys.shift()];
+      while (keys.length > 60) { const k = keys.shift(); delete daily.scores[k]; if (daily.marks) delete daily.marks[k]; }
       saveDaily();
       stats.dailyBestStreak = Math.max(stats.dailyBestStreak, daily.streak);
       saveStats();
@@ -1040,12 +1045,6 @@
     $("q-streak").textContent = `${state.streak} 🔥`;
   }
 
-  // ---------- Jokers ----------
-  const JOKERS = [
-    { id: "fifty", icon: "🌓", label: "50/50", name: "50/50", desc: "Enlève 2 mauvaises réponses.", price: 50 },
-    { id: "time", icon: "⏱️", label: "+10 s", name: "Temps bonus", desc: "Ajoute 10 secondes au chrono.", price: 35 },
-    { id: "skip", icon: "⏭️", label: "Passe", name: "Passe", desc: "Remplace la question par une autre.", price: 60 },
-  ];
   function jokerUsable(id) {
     const q = state.list[state.index];
     if (state.answered || state.usedHere.has(id) || !(jokers[id] > 0)) return false;
@@ -1295,7 +1294,13 @@
     $("validate-btn").classList.add("hidden");
     const next = $("next-btn");
     let dies = (state.play === "sudden" || state.play === "hilo" || state.play === "daily") && !ok;
-    if (state.play === "daily" && ok) { daily.scores[todayStr()] = state.score; saveDaily(); }
+    if (state.play === "daily") {
+      const t = todayStr();
+      if (!daily.marks) daily.marks = {};
+      daily.marks[t] = (daily.marks[t] || "") + (ok ? "🟩" : "🟥");
+      if (ok) daily.scores[t] = state.score;
+      saveDaily();
+    }
     if (dies && jokers.life > 0 && state.play !== "daily") {
       jokers.life--;
       saveJokers();
@@ -1515,6 +1520,7 @@
     });
 
     $("replay-btn").classList.toggle("hidden", p === "daily");
+    $("share-btn").classList.toggle("hidden", p !== "daily");
     show("end");
     const good = p === "party" || (p === "daily" && state.score >= 7) || (p === "sudden" ? state.score >= 10 : p === "rush" ? state.score >= 10 : pct >= 60);
     Sounds.play("end", good || state.newTrophies.length > 0);
@@ -2197,7 +2203,7 @@
   // ---------- Cartes : Tour d'Europe, Tour de France, Pays mystère, Coupe du monde ----------
   const GEO_COUNT = 10;
   const mercY = (lat) => Math.log(Math.tan(Math.PI / 4 + (lat * Math.PI) / 360));
-  let M = EUROPE_MAP;
+  let M = null;
   const project = (lat, lon) => [(lon - M.lon0) * Math.PI / 180 * M.k, (mercY(M.lat1) - mercY(lat)) * M.k];
   const unproject = (x, y) => {
     const m = mercY(M.lat1) - y / M.k;
@@ -2471,6 +2477,7 @@
     renderNewTrophies(state.newTrophies);
     $("review-wrap").classList.add("hidden");
     $("replay-btn").classList.remove("hidden");
+    $("share-btn").classList.add("hidden");
     renderWallet();
     show("end");
     celebrateFresh(state.newTrophies);
@@ -2677,6 +2684,7 @@
     renderNewTrophies(state.newTrophies);
     $("review-wrap").classList.add("hidden");
     $("replay-btn").classList.remove("hidden");
+    $("share-btn").classList.add("hidden");
     show("end");
     celebrateFresh(state.newTrophies);
     Sounds.play("end", true);
@@ -2757,45 +2765,6 @@
   }
 
   // ---------- Mon maillot (avatar) ----------
-  const PALETTE = ["#f7f7f5", "#151515", "#d71920", "#14213d", "#1f4fb4", "#74b6e6", "#118a3e", "#ffd200", "#f47a1f", "#5b2b86", "#7a1f3d", "#ff7ac8", "#00b3a4", "#8d99ae"];
-  const BASE_PATTERNS = [["plain", "Uni"], ["stripes", "Rayures"], ["hoops", "Cerceaux"], ["halves", "Moitiés"], ["band", "Bande"], ["sash", "Écharpe"], ["diag", "Diagonale"], ["chevron", "Chevron"], ["chest", "Poitrine"]];
-  const COLLECTOR = [
-    { id: "stars", name: "Étoiles", icon: "⭐", price: 200, desc: "Un maillot constellé d'étoiles." },
-    { id: "confetti", name: "Confettis La Fête", icon: "🎉", price: 250, desc: "Le motif officiel de la fête." },
-    { id: "rainbow", name: "Arc-en-ciel", icon: "🌈", price: 300, desc: "Toutes les couleurs à la fois." },
-    { id: "gold", name: "Or massif", icon: "🥇", price: 600, desc: "Réservé aux légendes." },
-  ];
-  // Maillots légendaires : couleurs, nom et numéro d'un joueur ou d'un moment mythique
-  const W = "#f7f7f5", GOLD = "#d4a017";
-  const LEGENDS = [
-    { id: "zidane98", name: "Zidane 1998", desc: "Le 10 des deux têtes en finale.", price: 600, kit: { b: "#1d3a8f", p: "plain", c: W, t: "#d71920", sn: "Zidane", n: "10", nc: W, stars: 1 } },
-    { id: "maradona86", name: "Maradona 1986", desc: "La main de Dieu et le but du siècle.", price: 600, kit: { b: W, p: "stripes", c: "#74b6e6", t: "#151515", sn: "Maradona", n: "10", nc: "#151515", stars: 2 } },
-    { id: "pele70", name: "Pelé 1970", desc: "Le Roi et sa troisième étoile.", price: 600, kit: { b: "#ffd200", p: "plain", c: "#118a3e", t: "#118a3e", sn: "Pelé", n: "10", nc: "#118a3e", stars: 3 } },
-    { id: "cr7", name: "CR7 Siuuu", desc: "Le numéro 7 le plus célèbre du monde.", price: 777, kit: { b: W, p: "plain", c: GOLD, t: GOLD, sn: "Ronaldo", n: "7", nc: GOLD } },
-    { id: "messi22", name: "Messi Qatar 2022", desc: "Enfin la Coupe du monde.", price: 800, kit: { b: W, p: "stripes", c: "#74b6e6", t: GOLD, sn: "Messi", n: "10", nc: "#151515", stars: 3 } },
-    { id: "cruyff74", name: "Cruyff 1974", desc: "Le football total en orange.", price: 500, kit: { b: "#f47a1f", p: "plain", c: "#151515", t: "#151515", sn: "Cruyff", n: "14", nc: "#151515" } },
-    { id: "platini84", name: "Platini 1984", desc: "9 buts à l'Euro, record absolu.", price: 500, kit: { b: "#1d3a8f", p: "chest", c: W, c2: "#d71920", t: W, sn: "Platini", n: "10", nc: W } },
-    { id: "papin91", name: "Papin OM 1991", desc: "Le roi des papinades, Ballon d'Or.", price: 450, kit: { b: W, p: "plain", c: "#74b6e6", t: "#74b6e6", sn: "Papin", n: "9", nc: "#3f8fd0" } },
-    { id: "r9", name: "Ronaldo 2002", desc: "Il Fenomeno, doublé en finale.", price: 600, kit: { b: "#ffd200", p: "plain", c: "#118a3e", t: "#118a3e", sn: "Ronaldo", n: "9", nc: "#1f4fb4", stars: 5 } },
-    { id: "vanbasten88", name: "Van Basten 1988", desc: "La volée impossible en finale.", price: 500, kit: { b: "#f47a1f", p: "plain", c: W, t: W, sn: "Van Basten", n: "12", nc: W } },
-    { id: "henry04", name: "Henry 2004", desc: "Les Invincibles, 49 matchs sans défaite.", price: 550, kit: { b: "#d71920", p: "plain", c: W, s: W, t: W, sn: "Henry", n: "14", nc: W } },
-    { id: "gerrard05", name: "Gerrard 2005", desc: "Le miracle d'Istanbul.", price: 500, kit: { b: "#d71920", p: "plain", c: W, t: W, sn: "Gerrard", n: "8", nc: W } },
-    { id: "drogba12", name: "Drogba 2012", desc: "La tête puis le tir au but décisif.", price: 500, kit: { b: "#034694", p: "plain", c: W, t: W, sn: "Drogba", n: "11", nc: W } },
-    { id: "kaiser74", name: "Beckenbauer 1974", desc: "Le Kaiser champion du monde.", price: 500, kit: { b: W, p: "plain", c: "#151515", t: "#151515", sn: "Kaiser", n: "5", nc: "#151515", stars: 1 } },
-    { id: "zizou02", name: "Zidane 2002", desc: "La volée de Glasgow.", price: 600, kit: { b: W, p: "plain", c: GOLD, t: GOLD, sn: "Zidane", n: "5", nc: GOLD } },
-    { id: "mbappe18", name: "Mbappé 2018", desc: "La deuxième étoile à 19 ans.", price: 650, kit: { b: "#14213d", p: "plain", c: W, t: "#d71920", sn: "Mbappé", n: "10", nc: W, stars: 2 } },
-    { id: "baggio94", name: "Baggio 1994", desc: "Le Divin Codino.", price: 450, kit: { b: "#1f6fd1", p: "plain", c: W, t: W, sn: "Baggio", n: "10", nc: W, stars: 3 } },
-    { id: "ballondor", name: "Ballon d'Or", desc: "Le maillot de la légende ultime.", price: 1500, kit: { b: "#d4a017", p: "gold", c: "#151515", t: "#151515", sn: "Légende", n: "1", nc: "#151515" } },
-    { id: "lafete", name: "La Fête", desc: "Le maillot du patron de la fête.", price: 999, kit: { b: "#ff2d95", p: "confetti", c: "#ffd23f", t: "#ffd23f", sn: "La Fête", n: "99", nc: "#fff" } },
-  ];
-  // Célébrations : la pluie de fin de partie
-  const CELEBS = [
-    { id: "balls", name: "Pluie de ballons", icon: "⚽", chars: ["⚽"], price: 150 },
-    { id: "stars", name: "Pluie d'étoiles", icon: "⭐", chars: ["⭐", "🌟", "✨"], price: 150 },
-    { id: "goats", name: "Pluie de chèvres", icon: "🐐", chars: ["🐐"], price: 250 },
-    { id: "cups", name: "Pluie de coupes", icon: "🏆", chars: ["🏆", "🥇"], price: 250 },
-    { id: "party", name: "Méga fête", icon: "🥳", chars: ["🥳", "🎉", "🎊", "🍾"], price: 300 },
-  ];
   // Célébrations des packs supporter (en plus de celles de la boutique)
   const CLUB_CELEBS = CLUB_PACKS.map((p) => ({ id: p.celebId, name: `Pluie ${p.club}`, icon: p.chars[0], chars: p.chars, price: 0, club: true }));
   const allCelebs = () => [...CELEBS, ...CLUB_CELEBS];
@@ -2811,6 +2780,15 @@
   try { ownedExtras = new Set(JSON.parse(storage.get("fqf-extras") || "[]")); } catch { ownedExtras = new Set(); }
   const saveExtras = () => storage.set("fqf-extras", JSON.stringify([...ownedExtras]));
   const extraOwned = (x) => ownedExtras.has(x.uid);
+  // Compteurs des trophées hors série
+  function syncHsStats() {
+    stats.hsItems = ITEM_CARDS.filter(extraOwned).length;
+    stats.hsStades = STADIUM_CARDS.filter(extraOwned).length;
+    stats.hsWeek = WEEKLY_CARDS.filter(extraOwned).length;
+    stats.hsTotal = stats.hsItems + stats.hsStades + stats.hsWeek;
+    stats.clubPacks = CLUB_PACKS.filter((p) => ownedKits.has(p.kitId)).length;
+    saveStats();
+  }
   let avatar = readJSON("fqf-avatar", { b: "#d71920", p: "plain", c: "#f7f7f5", s: "", n: "10", name: "" });
   const saveAvatar = () => storage.set("fqf-avatar", JSON.stringify(avatar));
   const shirtName = () => (avatar.sn !== undefined ? avatar.sn : avatar.name || "");
@@ -2927,6 +2905,26 @@
   $("av-num").oninput = () => { const v = $("av-num").value.replace(/\D/g, "").slice(0, 2); $("av-num").value = v; avatar.n = v; avatarChanged(); };
   $("avatar-btn").onclick = openAvatar;
   $("av-back").onclick = () => { renderBest(); show("home"); };
+  // Partage du Défi du jour : grille d'emojis à envoyer aux amis
+  function dailyShareText(t = todayStr()) {
+    const n = daily.scores[t] || 0;
+    const marks = Array.from((daily.marks && daily.marks[t]) || "🟩".repeat(n));
+    while (marks.length < DAILY_COUNT) marks.push("⬜");
+    const [y, m, d] = t.split("-");
+    const url = location.href.startsWith("http") && !location.href.includes("claude.ai") ? location.origin + location.pathname : "";
+    return `⚽ La Fête Quiz · Défi du ${d}/${m}\n${marks.slice(0, DAILY_COUNT).join("")} ${n}/${DAILY_COUNT}${n === DAILY_COUNT ? " 🏆" : ""}\n🔥 Série : ${daily.streak} jour${daily.streak > 1 ? "s" : ""}\nZéro erreur permise, à toi de jouer !${url ? `\n${url}` : ""}`;
+  }
+  async function shareDaily() {
+    const text = dailyShareText();
+    Sounds.play("click");
+    try {
+      if (navigator.share) { await navigator.share({ text }); return; }
+    } catch (e) { if (e && e.name === "AbortError") return; }
+    try { await navigator.clipboard.writeText(text); toast("📋 Résultat copié ! Colle-le dans ta conversation."); }
+    catch { toast("Partage impossible sur cet appareil"); }
+  }
+  $("share-btn").onclick = shareDaily;
+
   function toast(text) {
     document.querySelectorAll(".shop-toast").forEach((x) => x.remove());
     const t = document.createElement("div");
@@ -2955,6 +2953,9 @@
   const tierOfTrophy = (id) => (TROPHIES.find((t) => t.id === id) || {}).tier || "bronze";
   const trophyOf = (id) => TROPHIES.find((t) => t.id === id);
   const cardOwned = (c) => !!unlocked[c.trophy];
+  // Ordre du classeur : par rareté (les cartes ajoutées plus tard gardent leur numéro)
+  const RAR_RANK = { commune: 0, rare: 1, epique: 2, legendaire: 3, mythique: 4 };
+  const BINDER_CARDS = CARDS.map((c, i) => [c, i]).sort((a, b) => RAR_RANK[CARD_RARITY[tierOfTrophy(a[0].trophy)].id] - RAR_RANK[CARD_RARITY[tierOfTrophy(b[0].trophy)].id] || a[1] - b[1]).map(([c]) => c);
   let cardsSeen = new Set();
   try { cardsSeen = new Set(JSON.parse(storage.get("fqf-cards-seen") || "[]")); } catch { cardsSeen = new Set(); }
   const saveCardsSeen = () => storage.set("fqf-cards-seen", JSON.stringify([...cardsSeen]));
@@ -3005,7 +3006,7 @@
       const slots = ex.list.map((x) => `<div class="slot">${extraEl(x, ex.wide)}</div>`).join("") + '<div class="slot empty"></div>'.repeat(per - ex.list.length);
       return `<div class="bpage"><div class="bp-head"><span>${ex.title} ${ex.all.filter(extraOwned).length}/${ex.all.length}</span><span>Page ${p} / ${TOTAL_PAGES}</span></div><div class="bp-grid${ex.wide ? " wide" : ""}">${slots}</div></div>`;
     }
-    const list = CARDS.slice((p - 1) * PER_PAGE, p * PER_PAGE);
+    const list = BINDER_CARDS.slice((p - 1) * PER_PAGE, p * PER_PAGE);
     const rar = CARD_RARITY[tierOfTrophy(list[0].trophy)].label;
     const slots = list.map((c) => `<div class="slot">${cardEl(c)}</div>`).join("") + '<div class="slot empty"></div>'.repeat(PER_PAGE - list.length);
     return `<div class="bpage"><div class="bp-head"><span>${rar}${CARD_RARITY[tierOfTrophy(list[list.length - 1].trophy)].label !== rar ? " · " + CARD_RARITY[tierOfTrophy(list[list.length - 1].trophy)].label : ""}</span><span>Page ${p} / ${TOTAL_PAGES}</span></div><div class="bp-grid">${slots}</div></div>`;
@@ -3027,7 +3028,7 @@
     let changed = false;
     const ex = pageExtras(p);
     if (ex) ex.list.forEach((x) => { if (extraOwned(x) && !cardsSeen.has(x.uid)) { cardsSeen.add(x.uid); changed = true; } });
-    else CARDS.slice((p - 1) * PER_PAGE, p * PER_PAGE).forEach((c) => { if (cardOwned(c) && !cardsSeen.has(c.id)) { cardsSeen.add(c.id); changed = true; } });
+    else BINDER_CARDS.slice((p - 1) * PER_PAGE, p * PER_PAGE).forEach((c) => { if (cardOwned(c) && !cardsSeen.has(c.id)) { cardsSeen.add(c.id); changed = true; } });
     if (changed) { saveCardsSeen(); renderBinderButton(); }
   }
   function showPage(p) {
@@ -3195,12 +3196,6 @@
   }
 
   // ---------- Boutique ----------
-  const BONUS_ITEMS = [
-    { id: "pack", icon: "🎁", name: "Pack trio", desc: "Un exemplaire de chaque joker.", price: 120, give: { fifty: 1, time: 1, skip: 1 } },
-    { id: "mega", icon: "📦", name: "Méga pack", desc: "5 exemplaires de chaque joker.", price: 500, give: { fifty: 5, time: 5, skip: 5 } },
-    { id: "life", icon: "❤️", name: "Seconde chance", desc: "En Mort subite et Plus ou moins, annule ta première erreur. Utilisée automatiquement.", price: 80, give: { life: 1 } },
-    { id: "boost", icon: "🚀", name: "Pièces x2", desc: "Tes 3 prochaines parties rapportent deux fois plus de pièces.", price: 200 },
-  ];
   const boostLeft = () => Number(storage.get("fqf-boost") || 0);
   function pay(price) {
     if (coins < price) return false;
@@ -3212,6 +3207,7 @@
   }
   function afterBuy(text, sound = "correct") {
     Sounds.play(sound);
+    syncHsStats();
     const fresh = checkTrophies();
     celebrateFresh(fresh);
     renderShop();
@@ -3504,7 +3500,7 @@
 
   // ---------- Mise à jour automatique ----------
   // À l'ouverture, on compare la version de l'app avec celle publiée en ligne.
-  const APP_VERSION = "1.0";
+  const APP_VERSION = "1.1";
   function checkForUpdate() {
     if (!location.protocol.startsWith("http")) return;
     fetch(`version.json?t=${Date.now()}`, { cache: "no-store" })
@@ -3531,29 +3527,6 @@
   document.addEventListener("visibilitychange", () => { if (!document.hidden) checkForUpdate(); });
 
   // ---------- Écran d'ouverture ----------
-  const MODE_CARDS = [
-    { group: "Quiz", items: [
-      ["classic", "🎯", "Classique", "Le quiz habituel, avec filtres", "#1fa85a"],
-      ["sudden", "💀", "Mort subite", "Une erreur et c'est fini", "#3a3a3a"],
-      ["rush", "⏳", "Contre-la-montre", "60 secondes chrono", "#e0453a"],
-      ["daily", "📅", "Défi du jour", "10 questions, zéro erreur, 1 essai par jour", "#2f7de1"],
-      ["boss", "🥳", "Battre La Fête", "Elle a 76 % de réussite", "#ff2d95"],
-      ["review", "📚", "Révision", "Rejoue tes erreurs", "#7a5af8"],
-    ] },
-    { group: "Jeux foot", items: [
-      ["kits", "👕", "Maillots", "Reconnais les clubs", "#d71920"],
-      ["geo", "🗺️", "Cartes", "Europe, France, monde", "#0d6e9e"],
-      ["derby", "⚔️", "Derbys", "Trouve le grand rival", "#b8860b"],
-      ["whoami", "🕵️", "Qui suis-je ?", "Indice après indice", "#5b2b86"],
-      ["career", "🧳", "Parcours", "Devine le joueur", "#0f6b34"],
-      ["names", "✍️", "Trouve le prénom", "Écris le prénom du joueur", "#f47a1f"],
-      ["hilo", "↕️", "Plus ou moins", "Lequel a le plus ?", "#00a19a"],
-    ] },
-    { group: "À plusieurs", items: [
-      ["party", "🎉", "Soirée", "2 à 6 joueurs, avec ligue", "#ff7a00"],
-      ["duel", "🤺", "Duel", "Face à face sur un téléphone", "#14213d"],
-    ] },
-  ];
   function goMode(play) {
     Sounds.unlock();
     Sounds.play("click");
@@ -3612,6 +3585,9 @@
   } else if (!storage.get("fqf-cr7-topup")) storage.set("fqf-cr7-topup", "1");
 
   // Trophées déjà mérités au lancement (ex. tout débloqué) : révélation en entrant dans le jeu
+  syncHsStats();
+  // Précharge la carte une fois le jeu affiché, sans ralentir le démarrage
+  setTimeout(() => { loadMaps().catch(() => {}); }, 4000);
   const initFresh = checkTrophies();
   if (initFresh.length) {
     const prev = $("enter-btn").onclick;

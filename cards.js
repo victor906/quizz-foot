@@ -75,6 +75,14 @@ const CARDS_RAW = [
   // ---- Mythiques
   ["cr7-ultime", "Cristiano Ronaldo", "🇵🇹", "ATT", 99, { face: "cr7" }, "5 Ballons d'Or, 5 Ligues des champions, recordman de buts en sélection. Siuuu !"],
   ["secret-fete", "La Fête", "🥳", "ROI", 100, { face: "fete" }, "Le roi de la fête. Personne ne lui résiste, pas même CR7."],
+  // ---- Cartes ajoutées avec les trophées hors série (rangées par rareté dans le classeur)
+  ["hs-1", "Michael Owen", "🏴󠁧󠁢󠁥󠁮󠁧󠁿", "ATT", 87, { b: CK.r, c: CK.w, n: "10", sn: "Owen" }, "Ballon d'Or 2001, à seulement 21 ans."],
+  ["hs-items-10", "Pavel Nedvěd", "🇨🇿", "MIL", 89, { b: CK.w, p: "stripes", c: CK.k, n: "11", sn: "Nedvěd" }, "Ballon d'Or 2003, le moteur infatigable de la Juventus."],
+  ["hs-stades-3", "Andriy Shevchenko", "🇺🇦", "ATT", 89, { b: CK.r, p: "stripes", c: CK.k, n: "7", sn: "Shevchenko" }, "Ballon d'Or 2004 et buteur légendaire de l'AC Milan."],
+  ["hs-week-5", "Fabio Cannavaro", "🇮🇹", "DEF", 89, { b: "#1f6fd1", c: CK.w, n: "5", sn: "Cannavaro" }, "Ballon d'Or 2006, capitaine de l'Italie championne du monde."],
+  ["hs-clubs-3", "Manuel Neuer", "🇩🇪", "GB", 89, { b: "#2fbf71", c: CK.k, n: "1", sn: "Neuer" }, "Champion du monde 2014, l'inventeur du gardien libéro."],
+  ["hs-items-all", "Iker Casillas", "🇪🇸", "GB", 92, { b: CK.y, c: CK.r, n: "1", sn: "Casillas" }, "Capitaine champion du monde 2010 et double champion d'Europe."],
+  ["hs-stades-all", "Lothar Matthäus", "🇩🇪", "MIL", 92, { b: CK.w, c: CK.k, n: "10", sn: "Matthäus" }, "Ballon d'Or 1990, capitaine de l'Allemagne championne du monde."],
 ];
 const CARDS = CARDS_RAW.map(([trophy, name, flag, pos, note, kit, fact], i) => ({ id: i + 1, trophy, name, flag, pos, note, kit, fact }));
 
@@ -153,7 +161,8 @@ const FACE_OF = {
   "Ronaldinho": [5, "ronnie", "k"], "Thierry Henry": [5, "bald", "k"], "Marco van Basten": [2, "short", "br"],
   "Karim Benzema": [3, "buzz", "k", "full"], "Pelé": [5, "short", "k"], "Johan Cruyff": [2, "long", "br"],
   "Lionel Messi": [2, "short", "br", "full"], "Diego Maradona": [3, "curly", "k"], "Zinédine Zidane": [2, "receding", "br"],
-  "Cristiano Ronaldo": [3, "quiff", "k"], "L'arbitre": [2, "bald", "k"], "Le coach": [1, "slick", "gr", "stubble"],
+  "Cristiano Ronaldo": [3, "quiff", "k"], "Michael Owen": [2, "short", "br"], "Pavel Nedvěd": [1, "long", "bl"], "Andriy Shevchenko": [1, "short", "lb"],
+  "Fabio Cannavaro": [2, "short", "k"], "Manuel Neuer": [1, "short", "bl"], "Iker Casillas": [2, "short", "k", "stubble"], "Lothar Matthäus": [2, "short", "br"], "L'arbitre": [2, "bald", "k"], "Le coach": [1, "slick", "gr", "stubble"],
 };
 // Tête dessinée en coordonnées locales (centre 0,0, rayon 17), tournée avec le corps
 function faceSvg(card, cx, cy, rot, happy, uid) {

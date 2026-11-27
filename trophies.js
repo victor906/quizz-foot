@@ -91,6 +91,14 @@ TROPHIES.push(
   { id: "kit-buy", icon: "🛍️", name: "Collectionneur", desc: "Acheter un maillot collector", tier: "argent", goal: 1, value: (s) => s.kitsBought },
   { id: "shop-1", icon: "🛒", name: "Premier achat", desc: "Acheter un joker à la boutique", tier: "bronze", goal: 1, value: (s) => s.purchases },
   { id: "joker-10", icon: "🃏", name: "Joueur de cartes", desc: "Utiliser 10 jokers", tier: "argent", goal: 10, value: (s) => s.jokersUsed },
+  // Cartes hors série (boutique)
+  { id: "hs-1", icon: "🎴", name: "Hors série", desc: "Obtenir une première carte hors série", tier: "bronze", goal: 1, value: (s) => s.hsTotal },
+  { id: "hs-items-10", icon: "🧰", name: "Vestiaire garni", desc: "Collectionner 10 cartes objets de match", tier: "argent", goal: 10, value: (s) => s.hsItems },
+  { id: "hs-stades-3", icon: "🏟️", name: "Tour des stades", desc: "Collectionner 3 cartes stades", tier: "argent", goal: 3, value: (s) => s.hsStades },
+  { id: "hs-week-5", icon: "⭐", name: "Fidèle du lundi", desc: "Collectionner 5 éditions de la semaine", tier: "argent", goal: 5, value: (s) => s.hsWeek },
+  { id: "hs-clubs-3", icon: "📦", name: "Supporter multi-clubs", desc: "Acheter 3 packs supporter de club", tier: "argent", goal: 3, value: (s) => s.clubPacks },
+  { id: "hs-items-all", icon: "🎒", name: "Tout le matériel", desc: "Collectionner les 18 cartes objets de match", tier: "or", goal: 18, value: (s) => s.hsItems },
+  { id: "hs-stades-all", icon: "🗺️", name: "Groundhopper", desc: "Collectionner les 12 cartes stades", tier: "or", goal: 12, value: (s) => s.hsStades },
 );
 
 // Pièces gagnées à chaque trophée débloqué

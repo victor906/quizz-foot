@@ -1,0 +1,3 @@
+Police Oswald — Copyright 2016 The Oswald Project Authors (https://github.com/googlefonts/OswaldFont)
+Distribuée sous licence SIL Open Font License 1.1 : https://openfontlicense.org
+Fichiers obtenus depuis Google Fonts (sous-ensembles latin et latin étendu).

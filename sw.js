@@ -1,6 +1,6 @@
 // Service worker : met le quiz en cache pour qu'il marche sans connexion.
 // Change la version à chaque mise à jour des fichiers pour forcer le rafraîchissement.
-const CACHE = "foot-quizz-1.0";
+const CACHE = "foot-quizz-1.1";
 const FILES = [
   "./",
   "index.html",
@@ -18,10 +18,13 @@ const FILES = [
   "trophies.js",
   "sounds.js",
   "legend.js",
+  "shop-data.js",
   "app.js",
   "manifest.webmanifest",
   "icons/apple-touch-icon-v3.png",
   "icons/tete-fete.png",
+  "fonts/oswald-latin.woff2",
+  "fonts/oswald-latin-ext.woff2",
   "icons/icon-192-v3.png",
   "icons/icon-512-v3.png",
 ];
