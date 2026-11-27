@@ -2148,7 +2148,7 @@
   function confetti() {
     if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const colors = ["#ffd23f", "#ffffff", "#1fa85a", "#3b82f6", "#e0453a"];
-    const celeb = CELEBS.find((x) => x.id === storage.get("fqf-celeb") && ownedCelebs.has(x.id));
+    const celeb = allCelebs().find((x) => x.id === storage.get("fqf-celeb") && ownedCelebs.has(x.id));
     for (let i = 0; i < (celeb ? 45 : 80); i++) {
       const c = document.createElement("div");
       c.className = "confetti" + (celeb ? " emoji" : "");
@@ -2786,6 +2786,10 @@
     { id: "cups", name: "Pluie de coupes", icon: "🏆", chars: ["🏆", "🥇"], price: 250 },
     { id: "party", name: "Méga fête", icon: "🥳", chars: ["🥳", "🎉", "🎊", "🍾"], price: 300 },
   ];
+  // Célébrations des packs supporter (en plus de celles de la boutique)
+  const CLUB_CELEBS = CLUB_PACKS.map((p) => ({ id: p.celebId, name: `Pluie ${p.club}`, icon: p.chars[0], chars: p.chars, price: 0, club: true }));
+  const allCelebs = () => [...CELEBS, ...CLUB_CELEBS];
+  const CLUB_KITS = CLUB_PACKS.map((p) => ({ id: p.kitId, name: `Maillot ${p.club}`, kit: p.kit }));
   let ownedKits = new Set();
   try { ownedKits = new Set(JSON.parse(storage.get("fqf-kits-owned") || "[]")); } catch { ownedKits = new Set(); }
   const saveOwned = () => storage.set("fqf-kits-owned", JSON.stringify([...ownedKits]));
@@ -2867,7 +2871,7 @@
     $("av-preview").lastChild.textContent = avatar.name || "Ton pseudo";
     // Maillots légendaires possédés
     const lw = $("av-legends");
-    const mine = LEGENDS.filter((l) => ownedKits.has(l.id));
+    const mine = [...LEGENDS, ...CLUB_KITS].filter((l) => ownedKits.has(l.id));
     lw.innerHTML = "";
     $("av-legends-wrap").classList.toggle("hidden", !mine.length);
     mine.forEach((l) => {
@@ -2927,13 +2931,15 @@
   const CARD_PAGES = Math.ceil(CARDS.length / PER_PAGE);
   const WIDE_PER_PAGE = 6;
   const ITEM_PAGES = Math.ceil(ITEM_CARDS.length / PER_PAGE);
+  const WEEK_PAGES = Math.ceil(WEEKLY_CARDS.length / PER_PAGE);
   const STADE_PAGES = Math.ceil(STADIUM_CARDS.length / WIDE_PER_PAGE);
-  const TOTAL_PAGES = CARD_PAGES + ITEM_PAGES + STADE_PAGES;
+  const TOTAL_PAGES = CARD_PAGES + ITEM_PAGES + WEEK_PAGES + STADE_PAGES;
   // Cartes visibles sur une page donnée (collection principale, objets, puis stades)
   function pageExtras(p) {
     if (p <= CARD_PAGES) return null;
     if (p <= CARD_PAGES + ITEM_PAGES) { const i = p - CARD_PAGES - 1; return { wide: false, list: ITEM_CARDS.slice(i * PER_PAGE, (i + 1) * PER_PAGE), title: "Hors série · 🎴 Objets", all: ITEM_CARDS }; }
-    const i = p - CARD_PAGES - ITEM_PAGES - 1;
+    if (p <= CARD_PAGES + ITEM_PAGES + WEEK_PAGES) { const i = p - CARD_PAGES - ITEM_PAGES - 1; return { wide: false, list: WEEKLY_CARDS.slice(i * PER_PAGE, (i + 1) * PER_PAGE), title: "Hors série · ⭐ Semaine", all: WEEKLY_CARDS }; }
+    const i = p - CARD_PAGES - ITEM_PAGES - WEEK_PAGES - 1;
     return { wide: true, list: STADIUM_CARDS.slice(i * WIDE_PER_PAGE, (i + 1) * WIDE_PER_PAGE), title: "Hors série · 🏟️ Stades", all: STADIUM_CARDS };
   }
   const tierOfTrophy = (id) => (TROPHIES.find((t) => t.id === id) || {}).tier || "bronze";
@@ -2947,6 +2953,7 @@
 
   function renderBinderButton() {
     const n = CARDS.filter(cardOwned).length;
+    try { renderShopBadge(); } catch {}
     const hs = EXTRA_CARDS.filter(extraOwned).length;
     $("binder-sub").textContent = `${n} / ${CARDS.length} cartes${hs ? ` · ${hs} hors série` : ""}`;
     const fresh = CARDS.filter((c) => cardOwned(c) && !cardsSeen.has(c.id)).length + EXTRA_CARDS.filter((x) => extraOwned(x) && !cardsSeen.has(x.uid)).length;
@@ -2978,7 +2985,7 @@
         <div class="cv-title">COLLECTION<br><b>LA FÊTE</b></div>
         <div class="cv-sub">Cartes des légendes du foot</div>
         <div class="cv-count">${n} / ${CARDS.length}</div>
-        <div class="cv-extra">Cartes hors série : ${EXTRA_CARDS.filter(extraOwned).length} / ${EXTRA_CARDS.length}<br>🎴 ${ITEM_CARDS.filter(extraOwned).length} / ${ITEM_CARDS.length} objets · 🏟️ ${STADIUM_CARDS.filter(extraOwned).length} / ${STADIUM_CARDS.length} stades</div>
+        <div class="cv-extra">Cartes hors série : ${EXTRA_CARDS.filter(extraOwned).length} / ${EXTRA_CARDS.length}<br>🎴 ${ITEM_CARDS.filter(extraOwned).length} / ${ITEM_CARDS.length} objets · ⭐ ${WEEKLY_CARDS.filter(extraOwned).length} / ${WEEKLY_CARDS.length} semaine · 🏟️ ${STADIUM_CARDS.filter(extraOwned).length} / ${STADIUM_CARDS.length} stades</div>
         <div class="cv-open">Touche ▶ ou glisse pour ouvrir</div>
       </div>`;
     }
@@ -3060,7 +3067,7 @@
       const list = CARDS.filter((c) => CARD_RARITY[tierOfTrophy(c.trophy)].id === id);
       const lab = Object.values(CARD_RARITY).find((x) => x.id === id);
       return `<span class="bh-r r-${id}">${lab.gem} ${list.filter(cardOwned).length}/${list.length}</span>`;
-    }).join("") + `<span class="bh-r bh-hs">Hors série 🎴 ${ITEM_CARDS.filter(extraOwned).length}/${ITEM_CARDS.length} · 🏟️ ${STADIUM_CARDS.filter(extraOwned).length}/${STADIUM_CARDS.length}</span>`;
+    }).join("") + `<span class="bh-r bh-hs">Hors série 🎴 ${ITEM_CARDS.filter(extraOwned).length}/${ITEM_CARDS.length} · ⭐ ${WEEKLY_CARDS.filter(extraOwned).length}/${WEEKLY_CARDS.length} · 🏟️ ${STADIUM_CARDS.filter(extraOwned).length}/${STADIUM_CARDS.length}</span>`;
     showPage(0);
     show("binder");
   }
@@ -3103,10 +3110,10 @@
     const t = ITEM_TIERS[x.tier];
     zoomView({
       cls: `t-${x.tier} xz`, owned, wide: x.kind === "stade", front: owned ? extraFront(x) : extraBack(x),
-      rar: `${t.gem} ${x.kind === "stade" ? "Stade" : "Objet de match"} · ${t.label}`,
+      rar: `${t.gem} ${x.kind === "stade" ? "Stade" : x.weekly ? "Édition de la semaine" : "Objet de match"} · ${t.label}`,
       name: x.kind === "stade" ? `${x.flag} ${x.name}` : x.name,
       fact: x.kind === "stade" ? `${x.city} · ${x.cap} places · ouvert en ${x.year}. ${x.fact}` : x.fact,
-      how: owned ? "🛒 Achetée dans la boutique" : `🔒 Disponible en boutique pour ${x.price} 🪙`,
+      how: owned ? "🛒 Achetée dans la boutique" : x.weekly ? "🔒 Édition de la semaine : guette la boutique hebdo, elle reviendra !" : `🔒 Disponible en boutique pour ${x.price} 🪙`,
       hint: fresh ? "✨ Nouvelle carte dans ton classeur ! Touche-la pour la retourner" : null,
       sound: fresh ? "" : "click",
     });
@@ -3201,7 +3208,7 @@
     if (note) h.querySelector("p").textContent = note;
     wrap.appendChild(h);
   }
-  function shopCard(wrap, { ico, name, desc, own, price, label, owned, onClick, cls = "" }) {
+  function shopCard(wrap, { ico, name, desc, own, price, label, owned, onClick, cls = "", disabled }) {
     const card = document.createElement("div");
     card.className = `shop-item ${cls}${owned ? " owned" : ""}`;
     card.innerHTML = `<div class="si-ico"></div><div class="si-body"><b class="si-name"></b><span class="si-desc"></span>${own ? '<span class="si-own"></span>' : ""}</div>
@@ -3212,7 +3219,7 @@
     if (own) card.querySelector(".si-own").innerHTML = own;
     const btn = card.querySelector(".si-buy");
     btn.textContent = label || `🪙 ${price}`;
-    btn.disabled = !label && coins < price;
+    btn.disabled = disabled !== undefined ? disabled : !label && coins < price;
     btn.onclick = onClick;
     wrap.appendChild(card);
   }
@@ -3220,6 +3227,7 @@
     renderWallet();
     const wrap = $("shop-items");
     wrap.innerHTML = "";
+    renderWeeklyShop(wrap);
     shopSection(wrap, "🃏 Jokers", "À utiliser pendant les parties, un de chaque par question.");
     JOKERS.forEach((it) => shopCard(wrap, { ico: it.icon, name: it.name, desc: it.desc, price: it.price, own: `Tu en as <b>${jokers[it.id] || 0}</b>`,
       onClick: () => { if (!pay(it.price)) return; jokers[it.id] = (jokers[it.id] || 0) + 1; saveJokers(); afterBuy(`✅ ${it.name} ajouté !`); } }));
@@ -3262,7 +3270,7 @@
     shopSection(wrap, "🎉 Célébrations", "Remplace les confettis de fin de partie par une pluie à ton style.");
     setTimeout(buildShopTabs, 0);
     const eq = storage.get("fqf-celeb") || "";
-    CELEBS.forEach((c) => {
+    [...CELEBS, ...CLUB_CELEBS.filter((c) => ownedCelebs.has(c.id))].forEach((c) => {
       const own = ownedCelebs.has(c.id);
       shopCard(wrap, { ico: c.icon, name: c.name, desc: c.chars.join(" "), price: c.price, owned: own,
         own: own ? (eq === c.id ? "✅ Équipée" : "Dans ta collection") : "", label: own ? (eq === c.id ? "Retirer" : "Équiper") : "",
@@ -3275,6 +3283,100 @@
         } });
     });
     renderExtraShop(wrap);
+  }
+  // ---------- Boutique de la semaine : change chaque lundi à minuit ----------
+  function weekStart(d = new Date()) {
+    const m = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    m.setDate(m.getDate() - ((m.getDay() + 6) % 7));
+    return m;
+  }
+  const weekKey = () => todayStr(weekStart());
+  const weekIndex = () => Math.round((weekStart() - new Date(2024, 0, 1)) / (7 * 86400000));
+  function weekLeft() {
+    const next = weekStart(); next.setDate(next.getDate() + 7);
+    const ms = next - new Date(), d = Math.floor(ms / 86400000), h = Math.floor((ms % 86400000) / 3600000);
+    return d ? `${d} j ${h} h` : `${h} h ${Math.max(1, Math.floor((ms % 3600000) / 60000))} min`;
+  }
+  const PROMO = 0.7;
+  function weeklyOffer() {
+    const w = weekIndex(), rnd = seeded(`semaine-${weekKey()}`);
+    const n = WEEKLY_CARDS.length / 2;
+    const cards = [WEEKLY_CARDS[(w % n) * 2], WEEKLY_CARDS[(w % n) * 2 + 1]];
+    const packs = [CLUB_PACKS[(w * 2) % CLUB_PACKS.length], CLUB_PACKS[(w * 2 + 1) % CLUB_PACKS.length]];
+    const promoPool = [...ITEM_CARDS, ...STADIUM_CARDS].filter((x) => x.price >= 250);
+    const promoCard = promoPool[Math.floor(rnd() * promoPool.length)];
+    const promoKit = LEGENDS[Math.floor(rnd() * LEGENDS.length)];
+    return { cards, packs, promoCard, promoKit };
+  }
+  const promoPrice = (p) => Math.round((p * PROMO) / 10) * 10;
+  const WEEK_JOKERS = { price: 260, give: { fifty: 3, time: 3, skip: 3, life: 1 } };
+  function renderWeeklyShop(wrap) {
+    const o = weeklyOffer();
+    shopSection(wrap, "🗓️ Boutique de la semaine", `Nouveaux articles chaque lundi · encore ${weekLeft()}`);
+    wrap.lastChild.classList.add("week-sub");
+    // Packs supporter de club
+    o.packs.forEach((p) => {
+      const own = ownedKits.has(p.kitId);
+      const parts = ["👕 maillot du club", `${p.chars.join("")} pluie de célébration`];
+      if (p.stadium) parts.push(`🏟️ carte ${p.stadium.name}`);
+      parts.push("🃏 1 joker de chaque");
+      shopCard(wrap, { ico: kitSvg(p.kit, "kit"), name: `${p.flag} Pack supporter ${p.club}`, desc: parts.join(" · "), price: p.price, owned: own,
+        cls: "kit-item legend-item week-item", own: own ? "✅ Pack acheté" : "📦 Pack de la semaine", label: own ? "Porter" : "",
+        onClick: () => {
+          if (own) { wearLegend({ kit: p.kit }); openAvatar(); return; }
+          if (!pay(p.price)) return;
+          ownedKits.add(p.kitId); saveOwned();
+          ownedCelebs.add(p.celebId); saveCelebs(); storage.set("fqf-celeb", p.celebId);
+          if (p.stadium) { ownedExtras.add(p.stadium.uid); saveExtras(); }
+          ["fifty", "time", "skip"].forEach((k) => { jokers[k] = (jokers[k] || 0) + 1; }); saveJokers();
+          wearLegend({ kit: p.kit });
+          afterBuy(`✅ Pack ${p.club} : maillot enfilé, pluie équipée${p.stadium ? ", carte stade ajoutée" : ""} !`, "legend");
+          confetti();
+        } });
+    });
+    // Éditions de la semaine (cartes hors série exclusives)
+    o.cards.forEach((x) => {
+      const own = extraOwned(x);
+      shopCard(wrap, { ico: itemArtSvg(x), name: `⭐ ${x.name}`, desc: `Carte hors série exclusive · ${ITEM_TIERS[x.tier].label} · cette semaine seulement !`, price: x.price, owned: own,
+        cls: "xcard-item week-item", own: own ? "✅ Dans ton classeur" : "⏳ Édition limitée", label: own ? "Voir" : "",
+        onClick: () => {
+          if (own) { zoomExtra(x); return; }
+          if (!pay(x.price)) return;
+          ownedExtras.add(x.uid); saveExtras();
+          afterBuy(`✅ Édition « ${x.name} » ajoutée au classeur !`, "legend");
+          zoomExtra(x, true);
+        } });
+    });
+    // Promo sur une carte hors série
+    { const x = o.promoCard, own = extraOwned(x), pr = promoPrice(x.price);
+      shopCard(wrap, { ico: x.kind === "stade" ? stadiumSvg(x) : itemArtSvg(x), name: `🔥 Promo : ${x.name}`, desc: `Carte hors série à -30 % cette semaine.`, price: pr, owned: own,
+        cls: "xcard-item week-item promo", own: own ? "✅ Déjà dans ton classeur" : `<s>🪙 ${x.price}</s> <b class="promo-tag">-30 %</b>`,
+        label: own ? "Déjà à toi" : `🪙 ${pr}`, disabled: own || coins < pr,
+        onClick: () => {
+          if (own || !pay(pr)) return;
+          ownedExtras.add(x.uid); saveExtras();
+          afterBuy(`✅ Carte « ${x.name} » ajoutée au classeur !`, "legend");
+          zoomExtra(x, true);
+        } }); }
+    // Promo sur un maillot légendaire
+    { const l = o.promoKit, own = ownedKits.has(l.id), pr = promoPrice(l.price);
+      shopCard(wrap, { ico: kitSvg(l.kit, "kit"), name: `🔥 Promo : ${l.name}`, desc: `Maillot légendaire à -30 % cette semaine. ${l.desc}`, price: pr, owned: own,
+        cls: "kit-item legend-item week-item promo", own: own ? "✅ Déjà dans ta collection" : `<s>🪙 ${l.price}</s> <b class="promo-tag">-30 %</b>`,
+        label: own ? "Porter" : `🪙 ${pr}`, disabled: own ? false : coins < pr,
+        onClick: () => {
+          if (own) { wearLegend(l); openAvatar(); return; }
+          if (!pay(pr)) return;
+          ownedKits.add(l.id); saveOwned(); stats.kitsBought++; saveStats();
+          afterBuy(`✅ ${l.name} débloqué !`, "legend");
+        } }); }
+    // Pack de jokers de la semaine
+    shopCard(wrap, { ico: "🎒", name: "Sac de jokers de la semaine", desc: "3 jokers de chaque + 1 seconde chance, à prix doux.", price: WEEK_JOKERS.price,
+      cls: "pack week-item", own: `<s>🪙 400</s> <b class="promo-tag">Bon plan</b>`,
+      onClick: () => {
+        if (!pay(WEEK_JOKERS.price)) return;
+        Object.entries(WEEK_JOKERS.give).forEach(([k, v]) => { jokers[k] = (jokers[k] || 0) + v; }); saveJokers();
+        afterBuy("✅ Sac de jokers ajouté !");
+      } });
   }
   function renderExtraShop(wrap) {
     const sec = (list, title, note) => {
@@ -3309,12 +3411,17 @@
     document.querySelectorAll("#shop-items .shop-sub").forEach((sec) => {
       const b = document.createElement("button");
       b.type = "button";
-      b.textContent = sec.dataset.tab.replace("Maillots légendaires", "Légendes").replace("Motifs collector", "Motifs").replace("Cartes objets de match", "Objets").replace("Cartes stades", "Stades");
+      b.textContent = sec.dataset.tab.replace("Maillots légendaires", "Légendes").replace("Motifs collector", "Motifs").replace("Cartes objets de match", "Objets").replace("Cartes stades", "Stades").replace("Boutique de la semaine", "Semaine");
       b.onclick = () => window.scrollTo({ top: sec.getBoundingClientRect().top + window.scrollY - 60, behavior: "smooth" });
       tabs.appendChild(b);
     });
   }
-  function openShop() { Sounds.unlock(); renderShop(); show("shop"); }
+  function openShop() { Sounds.unlock(); storage.set("fqf-week-seen", weekKey()); renderShopBadge(); renderShop(); show("shop"); }
+  function renderShopBadge() {
+    let b = document.querySelector("#shop-btn .shop-new");
+    if (!b) { b = document.createElement("span"); b.className = "shop-new"; b.textContent = "NEW"; $("shop-btn").appendChild(b); }
+    b.classList.toggle("hidden", storage.get("fqf-week-seen") === weekKey());
+  }
   $("shop-btn").onclick = openShop;
   $("shop-back").onclick = () => { renderBest(); show("home"); };
 
@@ -3379,7 +3486,7 @@
 
   // ---------- Mise à jour automatique ----------
   // À l'ouverture, on compare la version de l'app avec celle publiée en ligne.
-  const APP_VERSION = "7.3";
+  const APP_VERSION = "7.4";
   function checkForUpdate() {
     if (!location.protocol.startsWith("http")) return;
     fetch(`version.json?t=${Date.now()}`, { cache: "no-store" })

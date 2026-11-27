@@ -115,6 +115,91 @@ const STADIUMS_RAW = [
 ];
 const STADIUM_CARDS = STADIUMS_RAW.map(([id, name, city, flag, cap, year, price, look, fact], i) => ({ id, uid: `s:${id}`, name, city, flag, cap, year, price, look, fact, num: i + 1, kind: "stade", tier: itemTier(price) }));
 const EXTRA_CARDS = [...ITEM_CARDS, ...STADIUM_CARDS];
+// ---- Éditions de la semaine : cartes exclusives qui tournent dans la boutique hebdo
+Object.assign(ITEM_ART, {
+  corner: () => `<path d="M14 90 C14 70 24 60 44 60" fill="none" stroke="#fff" stroke-width="3"/><path d="M10 92 h80 M12 94 v-80" stroke="#fff" stroke-width="2" opacity=".5"/>
+    <rect x="22" y="14" width="4" height="78" rx="2" fill="#f2f2f2"/><g class="ia-wave"><path d="M26 16 h34 l-8 12 l8 12 h-34 Z" fill="#d71920"/></g><circle cx="24" cy="12" r="3" fill="#ffd23f"/>`,
+  billet: () => `<g transform="rotate(-8 50 52)"><rect x="12" y="30" width="76" height="40" rx="5" fill="#fff6d4"/><path d="M66 30 v40" stroke="#c9a200" stroke-width="1.5" stroke-dasharray="3 3"/>
+    <circle cx="66" cy="30" r="4" fill="#0f6b34"/><circle cx="66" cy="70" r="4" fill="#0f6b34"/>
+    <text x="38" y="47" text-anchor="middle" font-family="Oswald, Impact, sans-serif" font-weight="700" font-size="12" fill="#d71920">FINALE</text>
+    <text x="38" y="59" text-anchor="middle" font-family="Oswald, Impact, sans-serif" font-size="7" fill="#333">TRIBUNE A · RANG 7</text>
+    <text x="77" y="54" text-anchor="middle" font-family="Oswald, Impact, sans-serif" font-weight="700" font-size="9" fill="#333" transform="rotate(-90 77 51)">N° 0007</text>
+    <rect x="18" y="62" width="40" height="4" fill="#333" opacity=".5"/></g>`,
+  tifo: () => `<rect x="8" y="20" width="84" height="56" rx="3" fill="#1d3a8f"/>${Array.from({ length: 6 }, (_, i) => Array.from({ length: 4 }, (_, j) => `<rect x="${8 + i * 14}" y="${20 + j * 14}" width="14" height="14" fill="${(i + j) % 2 ? "#1d3a8f" : "#2a4fb8"}"/>`).join("")).join("")}
+    <path d="M50 66 C30 52 30 34 42 34 C47 34 50 38 50 40 C50 38 53 34 58 34 C70 34 70 52 50 66 Z" fill="#d71920"/>
+    ${[18, 82].map((x) => `<path d="M${x} 30 l2 5 5 0 -4 3 2 5 -5 -3 -5 3 2 -5 -4 -3 5 0 Z" fill="#ffd23f"/>`).join("")}
+    ${[14, 30, 46, 62, 78].map((x) => `<circle cx="${x + 4}" cy="86" r="5" fill="#2a2d36"/>`).join("")}`,
+  megaphone: () => `<path d="M24 42 L70 22 V78 L24 58 Z" fill="#ffd23f"/><rect x="14" y="40" width="12" height="20" rx="3" fill="#333"/><ellipse cx="70" cy="50" rx="6" ry="28" fill="#e0a800"/>
+    <path d="M32 58 l4 18 h8 l-3 -15" fill="#333"/>${[0, 1, 2].map((i) => `<path d="M${80 + i * 6} ${38 - i * 4} q6 12 0 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" opacity="${1 - i * .25}"/>`).join("")}`,
+  tactique: () => `<rect x="10" y="18" width="80" height="62" rx="4" fill="#f7f7f5" stroke="#888" stroke-width="2"/><rect x="16" y="24" width="68" height="50" fill="#2f8f47"/>
+    <path d="M50 24 v50 M16 49 h68" stroke="#fff" stroke-width=".8" opacity=".5"/><circle cx="50" cy="49" r="8" fill="none" stroke="#fff" stroke-width=".8" opacity=".5"/>
+    ${[[26, 34], [26, 64], [40, 49]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="3.5" fill="#d71920"/>`).join("")}
+    ${[[64, 36], [70, 60]].map(([x, y]) => `<path d="M${x - 3} ${y - 3} l6 6 m0 -6 l-6 6" stroke="#fff" stroke-width="2"/>`).join("")}
+    <path d="M40 49 C50 40 56 38 62 38" fill="none" stroke="#ffd23f" stroke-width="2" stroke-dasharray="3 2"/><path d="M62 38 l-5 -2 1 5 Z" fill="#ffd23f"/>
+    <rect x="80" y="82" width="12" height="4" rx="2" fill="#1d3a8f" transform="rotate(-30 86 84)"/>`,
+  montre: () => `<rect x="38" y="10" width="24" height="80" rx="6" fill="#222"/><circle cx="50" cy="50" r="24" fill="#333"/><circle cx="50" cy="50" r="19" fill="#0b1a10"/>
+    <text x="50" y="49" text-anchor="middle" font-family="Oswald, Impact, sans-serif" font-weight="700" font-size="11" fill="#2bff6a">90+3</text>
+    <text x="50" y="60" text-anchor="middle" font-family="Oswald, Impact, sans-serif" font-size="6" fill="#2bff6a" opacity=".7">TEMPS ADD.</text><rect x="73" y="46" width="4" height="8" rx="1" fill="#555"/>`,
+  plots: () => [[24, 1], [50, 1.2], [76, 1]].map(([x, k]) => `<g transform="translate(${x} 82) scale(${k})"><path d="M-14 0 L-4 -40 h8 L14 0 Z" fill="#ff7a00"/><path d="M-10 -14 h20 l-2 -8 h-16 Z" fill="#fff"/><rect x="-18" y="-2" width="36" height="5" rx="1" fill="#e05f00"/></g>`).join(""),
+  medaille: () => `<path d="M32 8 L46 46 h8 L68 8 H56 L50 30 L44 8 Z" fill="#1d3a8f"/><path d="M44 8 L50 30 L56 8" fill="#d71920"/>
+    <circle cx="50" cy="64" r="22" fill="#d4a017"/><circle cx="50" cy="64" r="17" fill="#ffd84a"/><path d="M50 52 l3.5 7.5 8 .8 -6 5.4 1.8 7.9 -7.3 -4.2 -7.3 4.2 1.8 -7.9 -6 -5.4 8 -.8 Z" fill="#d4a017"/>`,
+  retro: () => `<defs><radialGradient id="rtg" cx=".35" cy=".3" r=".8"><stop offset="0" stop-color="#fff"/><stop offset="1" stop-color="#bfc6cf"/></radialGradient></defs>
+    <circle cx="50" cy="50" r="34" fill="url(#rtg)"/><path d="M50 38 l11.4 8.3 -4.4 13.4 h-14 l-4.4 -13.4 Z" fill="#151515"/>
+    ${[[50, 16, 0], [82, 40, 72], [70, 78, 144], [30, 78, 216], [18, 40, 288]].map(([x, y, r]) => `<path d="M${x} ${y} l7 5 -2.7 8.2 h-8.6 l-2.7 -8.2 Z" fill="#151515" transform="rotate(${r} ${x} ${y + 6})"/>`).join("")}
+    <circle cx="50" cy="50" r="34" fill="none" stroke="#666" stroke-width="1"/><ellipse cx="38" cy="34" rx="8" ry="4.5" fill="#fff" opacity=".8" transform="rotate(-30 38 34)"/>
+    <text x="50" y="96" text-anchor="middle" font-family="Oswald, Impact, sans-serif" font-weight="700" font-size="8" fill="#ffd23f" letter-spacing="1">RÉTRO 1970</text>`,
+  chasuble: () => `<path d="M30 14 h12 c2 8 14 8 16 0 h12 l4 74 H26 Z" fill="#c6ff1a"/>${Array.from({ length: 7 }, (_, i) => Array.from({ length: 5 }, (_, j) => `<circle cx="${34 + j * 8}" cy="${32 + i * 8}" r="1.6" fill="#7aa300"/>`).join("")).join("")}
+    <path d="M26 88 h48" stroke="#7aa300" stroke-width="3"/><text x="50" y="64" text-anchor="middle" font-family="Oswald, Impact, sans-serif" font-weight="700" font-size="18" fill="#3a5200">12</text>`,
+  programme: () => `<g transform="rotate(6 50 50)"><rect x="22" y="12" width="56" height="76" rx="2" fill="#0f6b34"/><rect x="22" y="12" width="56" height="20" fill="#ffd23f"/>
+    <text x="50" y="26" text-anchor="middle" font-family="Oswald, Impact, sans-serif" font-weight="700" font-size="9" fill="#0f6b34">PROGRAMME</text>
+    <circle cx="50" cy="56" r="14" fill="#fff"/><path d="M50 47 l6 4.4 -2.3 7 h-7.4 l-2.3 -7 Z" fill="#151515"/>
+    <text x="50" y="82" text-anchor="middle" font-family="Oswald, Impact, sans-serif" font-size="7" fill="#fff">JOUR DE MATCH</text></g><rect x="18" y="16" width="56" height="76" rx="2" fill="#000" opacity=".15" transform="rotate(-4 50 50)"/>`,
+  echange: () => [["#d71920", -14, -8], ["#1d3a8f", 14, 8]].map(([c, dx, r]) => `<g transform="translate(${dx} 0) rotate(${r} 50 50)"><path d="M36 22 L26 26 L16 40 L24 48 L30 42 V82 H70 V42 L76 48 L84 40 L74 26 L64 22 C60 28 40 28 36 22 Z" fill="${c}" stroke="rgba(0,0,0,.25)"/><text x="50" y="62" text-anchor="middle" font-family="Oswald, Impact, sans-serif" font-weight="700" font-size="16" fill="#fff">${dx < 0 ? 10 : 7}</text></g>`).join("") +
+    `<path d="M40 88 c6 6 14 6 20 0" fill="none" stroke="#ffd23f" stroke-width="3" stroke-linecap="round"/><path d="M58 84 l3 5 -6 0 Z" fill="#ffd23f"/>`,
+});
+const WEEKLY_RAW = [
+  ["corner", "Drapeau de corner", 150, "corner", "Un but marqué directement sur corner s'appelle un « but olympique »."],
+  ["billet", "Billet de finale", 220, "billet", "Le précieux sésame que tout supporter rêve de garder en souvenir."],
+  ["tifo", "Tifo géant", 480, "tifo", "Certains tifos couvrent toute une tribune et demandent des semaines de préparation."],
+  ["megaphone", "Mégaphone du capo", 260, "megaphone", "Le capo lance les chants et donne le rythme à tout le virage."],
+  ["tactique", "Tableau tactique", 300, "tactique", "Le schéma qui fait gagner les matchs… sur le papier."],
+  ["montre", "Montre de l'arbitre", 280, "montre", "Les montres d'arbitre vibrent quand le ballon franchit la ligne de but."],
+  ["plots", "Plots d'entraînement", 160, "plots", "Les fameux plots orange : le cauchemar des séances physiques."],
+  ["medaille", "Médaille de champion", 650, "medaille", "Remise à chaque joueur de l'équipe victorieuse d'une finale."],
+  ["retro", "Ballon rétro 1970", 700, "retro", "Le ballon noir et blanc à 32 pièces est né pour être bien visible à la télévision."],
+  ["chasuble", "Chasuble fluo", 120, "chasuble", "Indispensable pour les remplaçants qui s'échauffent le long de la ligne."],
+  ["programme", "Programme de match", 140, "programme", "Les collectionneurs gardent les programmes des grands matchs depuis des décennies."],
+  ["echange", "Maillots échangés", 800, "echange", "L'échange de maillots à la fin du match, un geste de respect entre adversaires."],
+];
+const WEEKLY_CARDS = WEEKLY_RAW.map(([id, name, price, art, fact], i) => ({ id, uid: `w:${id}`, name, price, art, fact, num: i + 1, kind: "item", weekly: true, tier: itemTier(price) }));
+EXTRA_CARDS.push(...WEEKLY_CARDS);
+
+// ---- Packs supporter de club : maillot d'avatar + pluie de célébration + carte du stade (si elle existe) + jokers
+// [id, club, drapeau, maillot, célébration, stade, prix]
+const CLUB_PACKS_RAW = [
+  ["om", "Olympique de Marseille", "🇫🇷", { b: "#f7f7f5", p: "plain", c: "#2faee0", t: "#2faee0", nc: "#2faee0" }, ["💙", "🤍", "⚽"], "velodrome", 650],
+  ["psg", "Paris Saint-Germain", "🇫🇷", { b: "#0b1f4b", p: "band", c: "#d71920", t: "#f7f7f5", nc: "#f7f7f5" }, ["❤️", "💙", "🗼"], "parc", 650],
+  ["real", "Real Madrid", "🇪🇸", { b: "#f7f7f5", p: "plain", c: "#d4a017", t: "#d4a017", nc: "#d4a017" }, ["🤍", "👑", "🏆"], "bernabeu", 750],
+  ["barca", "FC Barcelone", "🇪🇸", { b: "#a50044", p: "stripes", c: "#004d98", t: "#ffd200", nc: "#ffd200" }, ["❤️", "💙", "⭐"], "campnou", 750],
+  ["bayern", "Bayern Munich", "🇩🇪", { b: "#dc052d", p: "plain", c: "#f7f7f5", t: "#f7f7f5", nc: "#f7f7f5" }, ["❤️", "🤍", "🏆"], "allianz", 750],
+  ["liverpool", "Liverpool", "🏴󠁧󠁢󠁥󠁮󠁧󠁿", { b: "#c8102e", p: "plain", c: "#f7f7f5", t: "#f7f7f5", nc: "#f7f7f5" }, ["❤️", "🔴", "🎶"], "anfield", 700],
+  ["manu", "Manchester United", "🏴󠁧󠁢󠁥󠁮󠁧󠁿", { b: "#da291c", p: "plain", c: "#f7f7f5", t: "#151515", nc: "#f7f7f5" }, ["😈", "❤️", "⚽"], "oldtrafford", 700],
+  ["milan", "AC Milan", "🇮🇹", { b: "#d71920", p: "stripes", c: "#151515", t: "#f7f7f5", nc: "#f7f7f5" }, ["❤️", "🖤", "😈"], "sansiro", 700],
+  ["bvb", "Borussia Dortmund", "🇩🇪", { b: "#ffd200", p: "plain", c: "#151515", t: "#151515", nc: "#151515" }, ["💛", "🖤", "🐝"], "dortmund", 700],
+  ["boca", "Boca Juniors", "🇦🇷", { b: "#1d3a8f", p: "band", c: "#ffd200", t: "#ffd200", nc: "#ffd200" }, ["💙", "💛", "🎉"], "bombonera", 650],
+  ["flamengo", "Flamengo", "🇧🇷", { b: "#d71920", p: "hoops", c: "#151515", t: "#f7f7f5", nc: "#f7f7f5" }, ["❤️", "🖤", "🥁"], "maracana", 650],
+  ["juve", "Juventus", "🇮🇹", { b: "#f7f7f5", p: "stripes", c: "#151515", t: "#d4a017", nc: "#d4a017" }, ["🤍", "🖤", "🦓"], null, 450],
+  ["arsenal", "Arsenal", "🏴󠁧󠁢󠁥󠁮󠁧󠁿", { b: "#ef0107", p: "plain", c: "#f7f7f5", s: "#f7f7f5", t: "#f7f7f5", nc: "#f7f7f5" }, ["❤️", "🤍", "💥"], null, 450],
+  ["ol", "Olympique lyonnais", "🇫🇷", { b: "#f7f7f5", p: "sash", c: "#1d3a8f", t: "#d71920", nc: "#1d3a8f" }, ["🦁", "💙", "❤️"], null, 400],
+  ["lens", "RC Lens", "🇫🇷", { b: "#ffd200", p: "plain", c: "#d71920", s: "#d71920", t: "#d71920", nc: "#d71920" }, ["💛", "❤️", "🔥"], null, 400],
+  ["asse", "AS Saint-Étienne", "🇫🇷", { b: "#118a3e", p: "plain", c: "#f7f7f5", t: "#f7f7f5", nc: "#f7f7f5" }, ["💚", "🤍", "⭐"], null, 400],
+  ["nantes", "FC Nantes", "🇫🇷", { b: "#ffd200", p: "plain", c: "#118a3e", t: "#118a3e", nc: "#118a3e" }, ["💛", "💚", "🐤"], null, 400],
+];
+const CLUB_PACKS = CLUB_PACKS_RAW.map(([id, club, flag, kit, chars, stadium, price]) => ({
+  id, club, flag, kit: { ...kit, sn: "", n: "" }, chars, stadium: STADIUM_CARDS.find((x) => x.id === stadium) || null, price,
+  kitId: `club-${id}`, celebId: `club-${id}`,
+}));
+
 
 // Stade en vue « télé » (viewBox 280×200)
 function stadiumSvg(st) {
@@ -206,14 +291,14 @@ function extraFront(x) {
   }
   return `<div class="xc-front xi t-${x.tier}">
     <div class="xi-bg"></div><div class="xc-shine"></div>
-    <div class="xi-top"><span>OBJET DE MATCH</span><span class="xi-gem">${t.gem}</span></div>
+    <div class="xi-top"><span>${x.weekly ? "⭐ ÉDITION SEMAINE" : "OBJET DE MATCH"}</span><span class="xi-gem">${t.gem}</span></div>
     <div class="xi-art">${itemArtSvg(x)}</div>
     <div class="xi-name">${x.name}</div>
-    <div class="xi-foot"><span>${t.label}</span><span>M${String(x.num).padStart(2, "0")}</span></div>
+    <div class="xi-foot"><span>${t.label}</span><span>${x.weekly ? "H" : "M"}${String(x.num).padStart(2, "0")}</span></div>
   </div>`;
 }
 // Emplacement vide : silhouette + prix
 function extraBack(x) {
   const art = x.kind === "stade" ? '<span class="xb-emoji">🏟️</span>' : itemArtSvg(x);
-  return `<div class="xc-back ${x.kind === "stade" ? "xs" : "xi"}"><div class="xb-art">${art}</div><div class="xb-name">${x.name}</div><div class="xb-price">🪙 ${x.price} · Boutique</div></div>`;
+  return `<div class="xc-back ${x.kind === "stade" ? "xs" : "xi"}"><div class="xb-art">${art}</div><div class="xb-name">${x.name}</div><div class="xb-price">${x.weekly ? "⭐ Boutique de la semaine" : `🪙 ${x.price} · Boutique`}</div></div>`;
 }
