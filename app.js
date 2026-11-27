@@ -3004,6 +3004,8 @@
     $("bd-page").textContent = binder.page === 0 ? "Couverture" : `Page ${binder.page} / ${TOTAL_PAGES}`;
     $("bd-prev").disabled = binder.page === 0;
     $("bd-next").disabled = binder.page === TOTAL_PAGES;
+    const sec = sectionOf(binder.page);
+    document.querySelectorAll("#binder-tabs button").forEach((b) => b.classList.toggle("on", b.dataset.sec === sec));
   }
   function wireCards(root) {
     root.querySelectorAll(".tcg-card").forEach((b) => {
@@ -3027,9 +3029,15 @@
     markPageSeen(p);
   }
   // Tourner la page : la feuille pivote autour de la reliure
+  // Onglets : première page de chaque partie du classeur
+  const SECTION_START = { legends: 1, items: CARD_PAGES + 1, week: CARD_PAGES + ITEM_PAGES + 1, stades: CARD_PAGES + ITEM_PAGES + WEEK_PAGES + 1 };
+  const sectionOf = (p) => (p >= SECTION_START.stades ? "stades" : p >= SECTION_START.week ? "week" : p >= SECTION_START.items ? "items" : p >= 1 ? "legends" : "");
+  document.querySelectorAll("#binder-tabs button").forEach((b) => {
+    b.onclick = () => { const to = SECTION_START[b.dataset.sec]; if (to !== binder.page) turn(to - binder.page); };
+  });
   function turn(dir) {
     const to = binder.page + dir;
-    if (binder.busy || to < 0 || to > TOTAL_PAGES) return;
+    if (binder.busy || to < 0 || to > TOTAL_PAGES || !dir) return;
     binder.busy = true;
     Sounds.play("click");
     const stage = $("binder-stage");
@@ -3486,7 +3494,7 @@
 
   // ---------- Mise à jour automatique ----------
   // À l'ouverture, on compare la version de l'app avec celle publiée en ligne.
-  const APP_VERSION = "7.4";
+  const APP_VERSION = "7.5";
   function checkForUpdate() {
     if (!location.protocol.startsWith("http")) return;
     fetch(`version.json?t=${Date.now()}`, { cache: "no-store" })

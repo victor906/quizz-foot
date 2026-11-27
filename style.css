@@ -2179,3 +2179,8 @@ body.turn-wait #screen-quiz { visibility: hidden; }
 .shop-btn { position: relative; }
 .shop-new { position: absolute; top: -8px; right: -6px; background: #ff2d95; color: #fff; font-weight: 900; font-size: .68rem; padding: 2px 7px; border-radius: 99px; animation: bonus-wiggle 1.2s ease-in-out infinite; }
 .shop-new.hidden { display: none; }
+/* v7.5 — onglets du classeur */
+.binder-tabs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin: 0 0 10px; }
+.binder-tabs button { border: 0; border-radius: 12px; padding: 9px 4px; font: inherit; font-weight: 800; font-size: .8rem; background: rgba(255,255,255,.9); color: var(--ink); cursor: pointer; box-shadow: 0 3px 0 rgba(0,0,0,.18); white-space: nowrap; }
+.binder-tabs button.on { background: #ffd23f; box-shadow: 0 3px 0 #b8860b, 0 0 0 2px #fff inset; }
+.binder-tabs button:active { transform: translateY(2px); box-shadow: 0 1px 0 rgba(0,0,0,.18); }
