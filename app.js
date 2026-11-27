@@ -2792,6 +2792,11 @@
   let ownedCelebs = new Set();
   try { ownedCelebs = new Set(JSON.parse(storage.get("fqf-celebs") || "[]")); } catch { ownedCelebs = new Set(); }
   const saveCelebs = () => storage.set("fqf-celebs", JSON.stringify([...ownedCelebs]));
+  // Cartes objets de match et stades achetées
+  let ownedExtras = new Set();
+  try { ownedExtras = new Set(JSON.parse(storage.get("fqf-extras") || "[]")); } catch { ownedExtras = new Set(); }
+  const saveExtras = () => storage.set("fqf-extras", JSON.stringify([...ownedExtras]));
+  const extraOwned = (x) => ownedExtras.has(x.uid);
   let avatar = readJSON("fqf-avatar", { b: "#d71920", p: "plain", c: "#f7f7f5", s: "", n: "10", name: "" });
   const saveAvatar = () => storage.set("fqf-avatar", JSON.stringify(avatar));
   const shirtName = () => (avatar.sn !== undefined ? avatar.sn : avatar.name || "");
@@ -2920,6 +2925,17 @@
   // ---------- Classeur de cartes à collectionner ----------
   const PER_PAGE = 9;
   const CARD_PAGES = Math.ceil(CARDS.length / PER_PAGE);
+  const WIDE_PER_PAGE = 6;
+  const ITEM_PAGES = Math.ceil(ITEM_CARDS.length / PER_PAGE);
+  const STADE_PAGES = Math.ceil(STADIUM_CARDS.length / WIDE_PER_PAGE);
+  const TOTAL_PAGES = CARD_PAGES + ITEM_PAGES + STADE_PAGES;
+  // Cartes visibles sur une page donnée (collection principale, objets, puis stades)
+  function pageExtras(p) {
+    if (p <= CARD_PAGES) return null;
+    if (p <= CARD_PAGES + ITEM_PAGES) { const i = p - CARD_PAGES - 1; return { wide: false, list: ITEM_CARDS.slice(i * PER_PAGE, (i + 1) * PER_PAGE), title: "🎴 Objets de match" }; }
+    const i = p - CARD_PAGES - ITEM_PAGES - 1;
+    return { wide: true, list: STADIUM_CARDS.slice(i * WIDE_PER_PAGE, (i + 1) * WIDE_PER_PAGE), title: "🏟️ Stades légendaires" };
+  }
   const tierOfTrophy = (id) => (TROPHIES.find((t) => t.id === id) || {}).tier || "bronze";
   const trophyOf = (id) => TROPHIES.find((t) => t.id === id);
   const cardOwned = (c) => !!unlocked[c.trophy];
@@ -2932,7 +2948,7 @@
   function renderBinderButton() {
     const n = CARDS.filter(cardOwned).length;
     $("binder-sub").textContent = `${n} / ${CARDS.length} cartes`;
-    const fresh = CARDS.filter((c) => cardOwned(c) && !cardsSeen.has(c.id)).length;
+    const fresh = CARDS.filter((c) => cardOwned(c) && !cardsSeen.has(c.id)).length + EXTRA_CARDS.filter((x) => extraOwned(x) && !cardsSeen.has(x.uid)).length;
     $("binder-new").classList.toggle("hidden", !fresh);
     $("binder-new").textContent = fresh > 1 ? `${fresh} NEW` : "NEW";
   }
@@ -2945,6 +2961,13 @@
       ${owned && !cardsSeen.has(c.id) ? '<span class="tcg-new">NEW</span>' : ""}
     </button>`;
   }
+  function extraEl(x, wide) {
+    const owned = extraOwned(x);
+    return `<button type="button" class="tcg-card x-card${wide ? " wide" : ""}" data-extra="${x.uid}">
+      ${owned ? extraFront(x) : extraBack(x)}
+      ${owned && !cardsSeen.has(x.uid) ? '<span class="tcg-new">NEW</span>' : ""}
+    </button>`;
+  }
   function pageHtml(p) {
     if (p === 0) {
       const n = CARDS.filter(cardOwned).length;
@@ -2954,26 +2977,37 @@
         <div class="cv-title">COLLECTION<br><b>LA FÊTE</b></div>
         <div class="cv-sub">Cartes des légendes du foot</div>
         <div class="cv-count">${n} / ${CARDS.length}</div>
+        <div class="cv-extra">🎴 ${ITEM_CARDS.filter(extraOwned).length} / ${ITEM_CARDS.length} objets · 🏟️ ${STADIUM_CARDS.filter(extraOwned).length} / ${STADIUM_CARDS.length} stades</div>
         <div class="cv-open">Touche ▶ ou glisse pour ouvrir</div>
       </div>`;
+    }
+    const ex = pageExtras(p);
+    if (ex) {
+      const per = ex.wide ? WIDE_PER_PAGE : PER_PAGE;
+      const slots = ex.list.map((x) => `<div class="slot">${extraEl(x, ex.wide)}</div>`).join("") + '<div class="slot empty"></div>'.repeat(per - ex.list.length);
+      return `<div class="bpage"><div class="bp-head"><span>${ex.title}</span><span>Page ${p} / ${TOTAL_PAGES}</span></div><div class="bp-grid${ex.wide ? " wide" : ""}">${slots}</div></div>`;
     }
     const list = CARDS.slice((p - 1) * PER_PAGE, p * PER_PAGE);
     const rar = CARD_RARITY[tierOfTrophy(list[0].trophy)].label;
     const slots = list.map((c) => `<div class="slot">${cardEl(c)}</div>`).join("") + '<div class="slot empty"></div>'.repeat(PER_PAGE - list.length);
-    return `<div class="bpage"><div class="bp-head"><span>${rar}${CARD_RARITY[tierOfTrophy(list[list.length - 1].trophy)].label !== rar ? " · " + CARD_RARITY[tierOfTrophy(list[list.length - 1].trophy)].label : ""}</span><span>Page ${p} / ${CARD_PAGES}</span></div><div class="bp-grid">${slots}</div></div>`;
+    return `<div class="bpage"><div class="bp-head"><span>${rar}${CARD_RARITY[tierOfTrophy(list[list.length - 1].trophy)].label !== rar ? " · " + CARD_RARITY[tierOfTrophy(list[list.length - 1].trophy)].label : ""}</span><span>Page ${p} / ${TOTAL_PAGES}</span></div><div class="bp-grid">${slots}</div></div>`;
   }
   function binderLabel() {
-    $("bd-page").textContent = binder.page === 0 ? "Couverture" : `Page ${binder.page} / ${CARD_PAGES}`;
+    $("bd-page").textContent = binder.page === 0 ? "Couverture" : `Page ${binder.page} / ${TOTAL_PAGES}`;
     $("bd-prev").disabled = binder.page === 0;
-    $("bd-next").disabled = binder.page === CARD_PAGES;
+    $("bd-next").disabled = binder.page === TOTAL_PAGES;
   }
   function wireCards(root) {
-    root.querySelectorAll(".tcg-card").forEach((b) => { b.onclick = () => zoomCard(CARDS[Number(b.dataset.card) - 1]); });
+    root.querySelectorAll(".tcg-card").forEach((b) => {
+      b.onclick = () => b.dataset.extra ? zoomExtra(EXTRA_CARDS.find((x) => x.uid === b.dataset.extra)) : zoomCard(CARDS[Number(b.dataset.card) - 1]);
+    });
   }
   function markPageSeen(p) {
     if (p === 0) return;
     let changed = false;
-    CARDS.slice((p - 1) * PER_PAGE, p * PER_PAGE).forEach((c) => { if (cardOwned(c) && !cardsSeen.has(c.id)) { cardsSeen.add(c.id); changed = true; } });
+    const ex = pageExtras(p);
+    if (ex) ex.list.forEach((x) => { if (extraOwned(x) && !cardsSeen.has(x.uid)) { cardsSeen.add(x.uid); changed = true; } });
+    else CARDS.slice((p - 1) * PER_PAGE, p * PER_PAGE).forEach((c) => { if (cardOwned(c) && !cardsSeen.has(c.id)) { cardsSeen.add(c.id); changed = true; } });
     if (changed) { saveCardsSeen(); renderBinderButton(); }
   }
   function showPage(p) {
@@ -2987,7 +3021,7 @@
   // Tourner la page : la feuille pivote autour de la reliure
   function turn(dir) {
     const to = binder.page + dir;
-    if (binder.busy || to < 0 || to > CARD_PAGES) return;
+    if (binder.busy || to < 0 || to > TOTAL_PAGES) return;
     binder.busy = true;
     Sounds.play("click");
     const stage = $("binder-stage");
@@ -3052,36 +3086,60 @@
     const tier = tierOfTrophy(c.trophy);
     const r = CARD_RARITY[tier];
     const t = trophyOf(c.trophy);
-    const secretLocked = !owned && tier === "secret";
     const d = owned ? unlocked[c.trophy] : "";
+    zoomView({
+      cls: `r-${r.id}`, owned, front: owned ? cardFront(c, tier, headImg()) : cardBack(true),
+      rar: `${r.gem} ${r.label}`, name: owned ? `${c.flag} ${c.name}` : "Carte mystère",
+      fact: owned ? c.fact : "Qui se cache derrière cette carte ?",
+      how: owned ? `Débloquée avec le trophée « ${t.name} » le ${d.split("-").reverse().join("/")}`
+        : tier === "secret" ? "🔒 Débloque… absolument tout." : `🔒 Débloque le trophée « ${t.name} » : ${t.desc.charAt(0).toLowerCase() + t.desc.slice(1)}.`,
+      sound: owned && (r.id === "legendaire" || r.id === "mythique") ? "legend" : "click",
+    });
+  }
+  // Carte objet ou stade (hors collection)
+  function zoomExtra(x, fresh = false) {
+    const owned = extraOwned(x);
+    const t = ITEM_TIERS[x.tier];
+    zoomView({
+      cls: `t-${x.tier} xz`, owned, wide: x.kind === "stade", front: owned ? extraFront(x) : extraBack(x),
+      rar: `${t.gem} ${x.kind === "stade" ? "Stade" : "Objet de match"} · ${t.label}`,
+      name: x.kind === "stade" ? `${x.flag} ${x.name}` : x.name,
+      fact: x.kind === "stade" ? `${x.city} · ${x.cap} places · ouvert en ${x.year}. ${x.fact}` : x.fact,
+      how: owned ? "🛒 Achetée dans la boutique" : `🔒 Disponible en boutique pour ${x.price} 🪙`,
+      hint: fresh ? "✨ Nouvelle carte dans ton classeur ! Touche-la pour la retourner" : null,
+      sound: fresh ? "" : "click",
+    });
+    if (owned && !cardsSeen.has(x.uid)) { cardsSeen.add(x.uid); saveCardsSeen(); renderBinderButton(); }
+  }
+  // Affichage en grand commun : inclinaison 3D au doigt, reflets, et on la retourne d'un toucher
+  function zoomView({ cls, owned, front, rar, name, fact, how, sound, wide = false, hint = null }) {
     const ov = document.createElement("div");
     ov.className = "tcg-zoom";
     ov.innerHTML = `<div class="tz-bg"></div>
-      <div class="tz-wrap"><div class="tz-card r-${r.id}${owned ? "" : " is-locked"}">
-        <div class="tz-face tz-front">${owned ? cardFront(c, tier, headImg()) : cardBack(true)}</div>
-        <div class="tz-face tz-rear"><div class="tcg-info r-${r.id}">
-          <div class="ti-rar">${r.gem} ${r.label}</div>
+      <div class="tz-wrap${wide ? " wide" : ""}"><div class="tz-card ${cls}${owned ? "" : " is-locked"}">
+        <div class="tz-face tz-front">${front}</div>
+        <div class="tz-face tz-rear"><div class="tcg-info ${cls}">
+          <div class="ti-rar"></div>
           <div class="ti-name"></div>
           <div class="ti-fact"></div>
           <div class="ti-how"></div>
         </div></div>
       </div></div>
-      <p class="tz-hint">${owned ? "Touche la carte pour la retourner · incline-la avec le doigt" : "Carte pas encore débloquée"}</p>
+      <p class="tz-hint"></p>
       <button class="btn tz-close" type="button">Fermer</button>`;
-    ov.querySelector(".ti-name").textContent = owned ? `${c.flag} ${c.name}` : "Carte mystère";
-    ov.querySelector(".ti-fact").textContent = owned ? c.fact : "Qui se cache derrière cette carte ?";
-    ov.querySelector(".ti-how").textContent = owned
-      ? `Débloquée avec le trophée « ${t.name} » le ${d.split("-").reverse().join("/")}`
-      : secretLocked ? "🔒 Débloque… absolument tout." : `🔒 Débloque le trophée « ${t.name} » : ${t.desc.charAt(0).toLowerCase() + t.desc.slice(1)}.`;
+    ov.querySelector(".ti-rar").textContent = rar;
+    ov.querySelector(".ti-name").textContent = name;
+    ov.querySelector(".ti-fact").textContent = fact;
+    ov.querySelector(".ti-how").textContent = how;
+    ov.querySelector(".tz-hint").textContent = hint || (owned ? "Touche la carte pour la retourner · incline-la avec le doigt" : "Carte pas encore débloquée");
     document.body.appendChild(ov);
     requestAnimationFrame(() => ov.classList.add("in"));
     const card = ov.querySelector(".tz-card");
     if (!owned) card.classList.add("flipped", "show-rear");
-    Sounds.play(owned && (r.id === "legendaire" || r.id === "mythique") ? "legend" : "click");
+    if (sound) Sounds.play(sound);
     const close = () => { ov.classList.remove("in"); setTimeout(() => ov.remove(), 250); };
     ov.querySelector(".tz-bg").onclick = close;
     ov.querySelector(".tz-close").onclick = close;
-    let moved = false;
     const tilt = (x, y) => {
       const b = card.getBoundingClientRect();
       const px = Math.min(1, Math.max(0, (x - b.left) / b.width)), py = Math.min(1, Math.max(0, (y - b.top) / b.height));
@@ -3090,7 +3148,7 @@
       card.style.setProperty("--mx", `${px * 100}%`);
       card.style.setProperty("--my", `${py * 100}%`);
     };
-    card.addEventListener("pointermove", (e) => { moved = true; tilt(e.clientX, e.clientY); });
+    card.addEventListener("pointermove", (e) => tilt(e.clientX, e.clientY));
     card.addEventListener("pointerleave", () => { card.style.setProperty("--rx", "0deg"); card.style.setProperty("--ry", "0deg"); });
     let flipT = 0;
     card.addEventListener("click", () => {
@@ -3215,6 +3273,28 @@
           confetti();
         } });
     });
+    renderExtraShop(wrap);
+  }
+  function renderExtraShop(wrap) {
+    const sec = (list, title, note) => {
+      shopSection(wrap, title, note);
+      list.forEach((x) => {
+        const own = extraOwned(x);
+        const ico = x.kind === "stade" ? stadiumSvg(x) : itemArtSvg(x);
+        shopCard(wrap, { ico, name: x.kind === "stade" ? `${x.flag} ${x.name}` : x.name, desc: x.kind === "stade" ? `${x.city} · ${x.cap} places · ${ITEM_TIERS[x.tier].label}` : `${ITEM_TIERS[x.tier].gem} ${ITEM_TIERS[x.tier].label} · ${x.fact}`,
+          price: x.price, owned: own, cls: `xcard-item ${x.tier === "premium" ? "prem" : x.tier === "prestige" ? "pres" : ""}`,
+          own: own ? "✅ Dans ton classeur" : "", label: own ? "Voir" : "",
+          onClick: () => {
+            if (own) { zoomExtra(x); return; }
+            if (!pay(x.price)) return;
+            ownedExtras.add(x.uid); saveExtras();
+            afterBuy(`✅ Carte « ${x.name} » ajoutée au classeur !`, "legend");
+            zoomExtra(x, true);
+          } });
+      });
+    };
+    sec(ITEM_CARDS, "🎴 Cartes objets de match", "Hors collection principale : des cartes à collectionner dans ton classeur.");
+    sec(STADIUM_CARDS, "🏟️ Cartes stades", "Les stades légendaires, en cartes paysage pour ton classeur.");
   }
   // Onglets pour aller directement à une section de la boutique
   function buildShopTabs() {
@@ -3228,7 +3308,7 @@
     document.querySelectorAll("#shop-items .shop-sub").forEach((sec) => {
       const b = document.createElement("button");
       b.type = "button";
-      b.textContent = sec.dataset.tab.replace("Maillots légendaires", "Légendes").replace("Motifs collector", "Motifs");
+      b.textContent = sec.dataset.tab.replace("Maillots légendaires", "Légendes").replace("Motifs collector", "Motifs").replace("Cartes objets de match", "Objets").replace("Cartes stades", "Stades");
       b.onclick = () => window.scrollTo({ top: sec.getBoundingClientRect().top + window.scrollY - 60, behavior: "smooth" });
       tabs.appendChild(b);
     });
@@ -3298,7 +3378,7 @@
 
   // ---------- Mise à jour automatique ----------
   // À l'ouverture, on compare la version de l'app avec celle publiée en ligne.
-  const APP_VERSION = "7.1";
+  const APP_VERSION = "7.2";
   function checkForUpdate() {
     if (!location.protocol.startsWith("http")) return;
     fetch(`version.json?t=${Date.now()}`, { cache: "no-store" })

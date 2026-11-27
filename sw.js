@@ -1,6 +1,6 @@
 // Service worker : met le quiz en cache pour qu'il marche sans connexion.
 // Change la version à chaque mise à jour des fichiers pour forcer le rafraîchissement.
-const CACHE = "foot-quizz-7.1";
+const CACHE = "foot-quizz-7.2";
 const FILES = [
   "./",
   "index.html",
@@ -14,6 +14,7 @@ const FILES = [
   "geo-map.js",
   "games-data.js",
   "cards.js",
+  "items.js",
   "trophies.js",
   "sounds.js",
   "legend.js",

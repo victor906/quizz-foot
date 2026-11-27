@@ -117,11 +117,14 @@ const PLAYER_POSES = {
   pose: { h: [100, 40], sL: [86, 64], sR: [114, 64], eL: [66, 92], wL: [88, 118], eR: [134, 92], wR: [112, 118], pL: [92, 124], pR: [108, 124], kL: [86, 172], aL: [84, 216], tL: [70, 222], kR: [122, 168], aR: [130, 208], tR: [146, 204], ball: [150, 210] },
   keeper: { h: [150, 70], sL: [128, 82], sR: [134, 98], eL: [150, 58], wL: [170, 44], eR: [160, 102], wR: [180, 88], pL: [80, 104], pR: [84, 120], kL: [50, 92], aL: [24, 106], tL: [12, 98], kR: [54, 140], aR: [30, 160], tR: [18, 154], ball: [186, 56], gloves: 1 },
   tackle: { h: [46, 92], sL: [56, 112], sR: [64, 106], eL: [40, 140], wL: [30, 164], eR: [44, 82], wR: [30, 64], pL: [90, 170], pR: [98, 164], kL: [124, 192], aL: [156, 204], tL: [168, 196], kR: [130, 166], aR: [162, 176], tR: [176, 172], ball: [186, 184] },
+  referee: { h: [100, 40], sL: [86, 64], sR: [114, 64], eL: [72, 92], wL: [88, 116], eR: [124, 40], wR: [128, 14], pL: [92, 124], pR: [108, 124], kL: [88, 170], aL: [86, 214], tL: [72, 220], kR: [114, 170], aR: [116, 214], tR: [130, 220] },
+  coach: { h: [96, 40], sL: [84, 64], sR: [110, 64], eL: [70, 92], wL: [86, 116], eR: [134, 72], wR: [160, 62], pL: [88, 124], pR: [104, 124], kL: [84, 170], aL: [82, 214], tL: [68, 220], kR: [110, 170], aR: [114, 214], tR: [128, 220] },
   bicycle: { h: [70, 168], sL: [80, 148], sR: [88, 150], eL: [56, 160], wL: [36, 176], eR: [110, 170], wR: [128, 186], pL: [110, 104], pR: [116, 110], kL: [92, 70], aL: [104, 34], tL: [98, 20], kR: [142, 84], aR: [158, 46], tR: [166, 32], ball: [176, 20] },
 };
 const POSE_BY_POS = { ATT: ["shoot", "volley", "celebrate", "header", "dribble", "bicycle"], MIL: ["dribble", "pose", "shoot", "celebrate", "volley"], DEF: ["header", "tackle", "pose", "celebrate"], GB: ["keeper"] };
 const POSE_OF = { "Pelé": "bicycle", "Lionel Messi": "dribble", "Diego Maradona": "dribble", "Zinédine Zidane": "volley", "Johan Cruyff": "dribble", "Cristiano Ronaldo": "siuu", "La Fête": "celebrate", "Éric Cantona": "pose", "Marco van Basten": "volley", "Ronaldinho": "dribble", "Didier Drogba": "header", "Franz Beckenbauer": "pose", "Lev Yachine": "keeper", "Kylian Mbappé": "celebrate", "Thierry Henry": "celebrate", "David Beckham": "shoot", "Andrés Iniesta": "shoot", "Paolo Maldini": "tackle", "Sergio Ramos": "header", "N'Golo Kanté": "tackle" };
 function poseOf(card) {
+  if (card.poseKey) return card.poseKey;
   if (POSE_OF[card.name]) return POSE_OF[card.name];
   const list = POSE_BY_POS[card.pos] || POSE_BY_POS.ATT;
   return list[card.id % list.length];
@@ -150,7 +153,7 @@ const FACE_OF = {
   "Ronaldinho": [5, "ronnie", "k"], "Thierry Henry": [5, "bald", "k"], "Marco van Basten": [2, "short", "br"],
   "Karim Benzema": [3, "buzz", "k", "full"], "Pelé": [5, "short", "k"], "Johan Cruyff": [2, "long", "br"],
   "Lionel Messi": [2, "short", "br", "full"], "Diego Maradona": [3, "curly", "k"], "Zinédine Zidane": [2, "receding", "br"],
-  "Cristiano Ronaldo": [3, "quiff", "k"],
+  "Cristiano Ronaldo": [3, "quiff", "k"], "L'arbitre": [2, "bald", "k"], "Le coach": [1, "slick", "gr", "stubble"],
 };
 // Tête dessinée en coordonnées locales (centre 0,0, rayon 17), tournée avec le corps
 function faceSvg(card, cx, cy, rot, happy, uid) {
@@ -253,7 +256,9 @@ function playerSvg(card, headSrc) {
       <path d="M${sL[0] - 3} ${sL[1]} L${sR[0] + 3} ${sR[1]}" stroke="${trim}" stroke-width="3" stroke-linecap="round"/>
       ${ln([pL[0] - 4, pL[1] + 2], [pR[0] + 4, pR[1] + 2], 9, shorts)}
       <text x="${cx}" y="${cy + 7}" text-anchor="middle" font-family="Oswald, Impact, sans-serif" font-weight="700" font-size="20" fill="${numCol}" transform="rotate(${ang} ${cx} ${cy})">${k.n || ""}</text>
+      ${k.suit ? `<path d="M${(sL[0] + sR[0]) / 2 - 7} ${sL[1] - 1} L${(sL[0] + sR[0]) / 2} ${sL[1] + 22} L${(sL[0] + sR[0]) / 2 + 7} ${sL[1] - 1} Z" fill="#fff"/><path d="M${(sL[0] + sR[0]) / 2} ${sL[1] + 2} l-3 4 l3 20 l3 -20 Z" fill="#d71920"/>` : ""}
       ${leg(P.pR, P.kR, P.aR, P.tR)}${arm(P.sR, P.eR, P.wR)}
+      ${k.hold ? `<rect x="${P.wR[0] - 6}" y="${P.wR[1] - 20}" width="13" height="18" rx="2" fill="${k.hold}" stroke="rgba(0,0,0,.3)" transform="rotate(8 ${P.wR[0]} ${P.wR[1]})"/>` : ""}
       ${head}
     </g>
     ${ball}
