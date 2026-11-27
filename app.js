@@ -3505,6 +3505,39 @@
       b.onclick = () => window.scrollTo({ top: sec.getBoundingClientRect().top + window.scrollY - 60, behavior: "smooth" });
       tabs.appendChild(b);
     });
+    collapseShop();
+  }
+  // Listes longues : on montre les 3 premiers articles et un bouton « Voir plus »
+  const SHOP_PEEK = 3;
+  const shopOpen = new Set();
+  function collapseShop() {
+    const groups = [];
+    [...$("shop-items").children].forEach((el) => {
+      if (el.classList.contains("shop-sub") || el.classList.contains("shop-subhead")) groups.push({ key: el.textContent.trim().slice(0, 40), items: [] });
+      else if (el.classList.contains("shop-item") && groups.length) groups[groups.length - 1].items.push(el);
+    });
+    groups.forEach(({ key, items }) => {
+      if (items.length <= SHOP_PEEK + 1) return;
+      const extra = items.slice(SHOP_PEEK);
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "btn shop-more";
+      const paint = () => {
+        const open = shopOpen.has(key);
+        extra.forEach((el) => el.classList.toggle("shop-hidden", !open));
+        btn.textContent = open ? "Voir moins ▴" : `Voir plus (${extra.length}) ▾`;
+      };
+      btn.onclick = () => {
+        const wasOpen = shopOpen.has(key);
+        if (wasOpen) shopOpen.delete(key); else shopOpen.add(key);
+        Sounds.play("click");
+        paint();
+        // en refermant, on revient au début de la liste
+        if (wasOpen) window.scrollTo({ top: items[0].getBoundingClientRect().top + window.scrollY - 140, behavior: "smooth" });
+      };
+      items[items.length - 1].after(btn);
+      paint();
+    });
   }
   function openShop() { Sounds.unlock(); storage.set("fqf-week-seen", weekKey()); renderShopBadge(); renderShop(); show("shop"); }
   function renderShopBadge() {
@@ -3576,7 +3609,7 @@
 
   // ---------- Mise à jour automatique ----------
   // À l'ouverture, on compare la version de l'app avec celle publiée en ligne.
-  const APP_VERSION = "1.8";
+  const APP_VERSION = "1.9";
   function checkForUpdate() {
     if (!location.protocol.startsWith("http")) return;
     fetch(`version.json?t=${Date.now()}`, { cache: "no-store" })
