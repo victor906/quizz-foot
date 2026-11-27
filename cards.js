@@ -118,6 +118,69 @@ function poseOf(card) {
   const list = POSE_BY_POS[card.pos] || POSE_BY_POS.ATT;
   return list[card.id % list.length];
 }
+
+// ---- Visages cartoon : [teint 1-6, coiffure, couleur des cheveux, barbe]
+const SKIN = ["#f8dcc8", "#efc6a6", "#dca77f", "#bf8158", "#935f3e", "#65402a"];
+const HAIRC = { k: "#1d1714", br: "#4e3220", lb: "#86603a", bl: "#dcb45c", gr: "#a9a9a9" };
+const FACE_OF = {
+  "Jean-Pierre Papin": [2, "short", "br"], "Wayne Rooney": [2, "buzz", "br"], "Sadio Mané": [6, "buzz", "k", "stubble"],
+  "Didier Deschamps": [2, "short", "br"], "Frank Lampard": [1, "short", "br"], "Sergio Ramos": [3, "slick", "k", "full"],
+  "Éric Cantona": [2, "short", "k"], "Mohamed Salah": [4, "curly", "k", "full"], "N'Golo Kanté": [6, "buzz", "k"],
+  "David Beckham": [1, "quiff", "bl", "stubble"], "Franck Ribéry": [2, "buzz", "br"], "Antoine Griezmann": [2, "short", "bl"],
+  "Lilian Thuram": [6, "bald", "k"], "Samuel Eto'o": [6, "buzz", "k"], "Marcel Desailly": [6, "bald", "k"],
+  "Eden Hazard": [2, "short", "br", "stubble"], "Fabien Barthez": [2, "bald", "k"], "Robert Lewandowski": [2, "short", "br"],
+  "Raymond Kopa": [2, "slick", "k"], "Erling Haaland": [1, "bun", "bl"], "Francesco Totti": [2, "short", "lb"],
+  "Gianluigi Buffon": [2, "long", "br", "stubble"], "Andrea Pirlo": [2, "long", "br", "full"], "Luka Modrić": [1, "long", "lb"],
+  "Lev Yachine": [1, "short", "k"], "Kaká": [3, "short", "br"], "George Best": [1, "long", "k", "full"],
+  "Bobby Charlton": [1, "receding", "lb"], "Didier Drogba": [6, "short", "k", "goatee"], "Steven Gerrard": [1, "buzz", "lb"],
+  "Zlatan Ibrahimović": [3, "bun", "k", "full"], "Just Fontaine": [2, "slick", "k"], "Garrincha": [4, "short", "k"],
+  "Romário": [4, "buzz", "k"], "Roberto Baggio": [2, "bun", "k", "goatee"], "Luís Figo": [2, "slick", "br"],
+  "George Weah": [6, "buzz", "k"], "Gerd Müller": [2, "short", "k"], "Paolo Maldini": [2, "long", "k"],
+  "Eusébio": [5, "short", "k"], "Michel Platini": [2, "curly", "br"], "Andrés Iniesta": [1, "receding", "br"],
+  "Xavi": [2, "short", "k", "stubble"], "Ronaldo (R9)": [4, "bald", "k"], "Alfredo Di Stéfano": [2, "receding", "br"],
+  "Franz Beckenbauer": [1, "short", "br"], "Kylian Mbappé": [5, "bald", "k"], "Ferenc Puskás": [2, "slick", "k"],
+  "Ronaldinho": [5, "ronnie", "k"], "Thierry Henry": [5, "bald", "k"], "Marco van Basten": [2, "short", "br"],
+  "Karim Benzema": [3, "buzz", "k", "full"], "Pelé": [5, "short", "k"], "Johan Cruyff": [2, "long", "br"],
+  "Lionel Messi": [2, "short", "br", "full"], "Diego Maradona": [3, "curly", "k"], "Zinédine Zidane": [2, "receding", "br"],
+  "Cristiano Ronaldo": [3, "quiff", "k"],
+};
+// Tête dessinée en coordonnées locales (centre 0,0, rayon 17), tournée avec le corps
+function faceSvg(card, cx, cy, rot, happy, uid) {
+  const [tone, style, hc, beard] = FACE_OF[card.name] || [2, "short", "br"];
+  const sk = SKIN[tone - 1], h = HAIRC[hc] || HAIRC.br, R = 17;
+  const dark = tone >= 5;
+  const line = dark ? "#2a1a10" : "#3a2418";
+  let back = "", front = "";
+  const cap = (top, side) => `<path d="M${-R - 1} ${side} C${-R - 1} ${top - 2} ${R + 1} ${top - 2} ${R + 1} ${side} C${R - 3} ${top + 6} ${-R + 3} ${top + 6} ${-R - 1} ${side} Z" fill="${h}"/>`;
+  switch (style) {
+    case "short": front = cap(-R - 3, -3) + `<path d="M${-R + 2} -7 Q-4 -11 6 -9 Q12 -9 ${R - 1} -5" fill="none" stroke="${h}" stroke-width="3"/>`; break;
+    case "buzz": front = `<path d="M${-R} -2 C${-R} -24 ${R} -24 ${R} -2 C${R - 4} -10 ${-R + 4} -10 ${-R} -2 Z" fill="${h}" opacity=".8"/>`; break;
+    case "bald": front = `<ellipse cx="-6" cy="-11" rx="5" ry="2.6" fill="#fff" opacity=".22"/>`; break;
+    case "receding": front = `<path d="M${-R - 1} 0 C${-R - 1} -14 -10 -19 -8 -14 C-12 -10 ${-R + 2} -6 ${-R + 1} 1 Z M${R + 1} 0 C${R + 1} -14 10 -19 8 -14 C12 -10 ${R - 2} -6 ${R - 1} 1 Z" fill="${h}"/>`; break;
+    case "slick": front = cap(-R - 4, -4) + `<path d="M-5 ${-R - 2} Q-2 -12 ${R} -8" fill="none" stroke="rgba(255,255,255,.25)" stroke-width="1.5"/>`; break;
+    case "quiff": front = cap(-R - 2, -4) + `<path d="M-12 -12 C-14 -30 10 -34 16 -18 C10 -22 2 -22 -4 -14 Z" fill="${h}"/>`; break;
+    case "curly": { const c = [-15, -9, -3, 3, 9, 15].map((x, i) => `<circle cx="${x}" cy="${-14 - (i % 2) * 3 - (Math.abs(x) < 10 ? 3 : 0)}" r="6.5" fill="${h}"/>`).join(""); front = c + `<circle cx="-17" cy="-6" r="5" fill="${h}"/><circle cx="17" cy="-6" r="5" fill="${h}"/>`; break; }
+    case "long": back = `<path d="M${-R - 3} -6 C${-R - 4} 10 ${-R - 2} 20 ${-R + 4} 22 L${R - 4} 22 C${R + 2} 20 ${R + 4} 10 ${R + 3} -6 Z" fill="${h}"/>`; front = cap(-R - 3, -1) + `<path d="M-2 ${-R - 1} Q-10 -8 ${-R} 2" fill="none" stroke="${h}" stroke-width="4"/>`; break;
+    case "bun": front = cap(-R - 3, -3) + `<circle cx="0" cy="${-R - 6}" r="6" fill="${h}"/>`; break;
+    case "ronnie": back = `<path d="M${-R - 5} -4 C${-R - 8} 14 ${-R} 24 ${-R + 6} 22 L${R - 6} 22 C${R} 24 ${R + 8} 14 ${R + 5} -4 Z" fill="${h}"/>` + [-18, -12, 12, 18].map((x) => `<circle cx="${x}" cy="12" r="5" fill="${h}"/>`).join("");
+      front = [-14, -7, 0, 7, 14].map((x) => `<circle cx="${x}" cy="${-15 - (Math.abs(x) < 8 ? 3 : 0)}" r="6.5" fill="${h}"/>`).join("") + `<path d="M${-R - 1} -9 Q0 -15 ${R + 1} -9" fill="none" stroke="#fff" stroke-width="3.2"/>`; break;
+  }
+  let fb = "";
+  if (beard === "full") fb = `<path d="M${-R + 1} 0 C${-R + 1} 14 -8 ${R + 2} 0 ${R + 2} C8 ${R + 2} ${R - 1} 14 ${R - 1} 0 C${R - 4} 7 8 9 0 9 C-8 9 ${-R + 4} 7 ${-R + 1} 0 Z" fill="${h}"/><path d="M-5 8.5 Q0 6.5 5 8.5" stroke="${h}" stroke-width="2.6" fill="none"/>`;
+  else if (beard === "stubble") fb = `<path d="M${-R + 1} 1 C${-R + 1} 14 -8 ${R + 1} 0 ${R + 1} C8 ${R + 1} ${R - 1} 14 ${R - 1} 1 C${R - 4} 8 8 10 0 10 C-8 10 ${-R + 4} 8 ${-R + 1} 1 Z" fill="${h}" opacity=".3"/>`;
+  else if (beard === "goatee") fb = `<path d="M-4 13 Q0 ${R + 3} 4 13 Z" fill="${h}"/><path d="M-5 8.5 Q0 6.5 5 8.5" stroke="${h}" stroke-width="2.2" fill="none"/>`;
+  const mouth = happy
+    ? `<path d="M-5.5 9 Q0 17 5.5 9 Z" fill="#5a1a1a"/><path d="M-4 9.6 L4 9.6" stroke="#fff" stroke-width="1.6"/>`
+    : `<path d="M-5 10 Q0 14 5 10" fill="none" stroke="${line}" stroke-width="1.6" stroke-linecap="round"/>`;
+  const eyes = [-6.5, 6.5].map((x) => `<ellipse cx="${x}" cy="1" rx="2.3" ry="2.8" fill="#1a1110"/><circle cx="${x + .8}" cy=".1" r=".8" fill="#fff"/>`).join("");
+  const brows = `<path d="M-10 -5 Q-6.5 ${happy ? -8 : -7} -3 -5.5 M3 -5.5 Q6.5 ${happy ? -8 : -7} 10 -5" fill="none" stroke="${style === "bald" || hc === "bl" ? line : h}" stroke-width="2" stroke-linecap="round"/>`;
+  return `<g transform="translate(${cx} ${cy}) rotate(${rot})">${back}
+    <circle cx="${-R}" cy="2" r="3.6" fill="${sk}"/><circle cx="${R}" cy="2" r="3.6" fill="${sk}"/>
+    <circle r="${R}" fill="${sk}"/><circle r="${R}" fill="url(#${uid}-fs)"/>
+    ${fb}${eyes}${brows}<path d="M0 2 Q-1.6 6 0 6.6" fill="none" stroke="${line}" stroke-opacity=".45" stroke-width="1.3"/>
+    <ellipse cx="-10" cy="7" rx="3" ry="1.8" fill="#ff7a7a" opacity="${dark ? .12 : .22}"/><ellipse cx="10" cy="7" rx="3" ry="1.8" fill="#ff7a7a" opacity="${dark ? .12 : .22}"/>
+    ${mouth}${front}</g>`;
+}
 function playerSvg(card, headSrc) {
   const isCr7 = card.kit.face === "cr7", isFete = card.kit.face === "fete";
   const k = isCr7 ? { b: "#c8102e", c: "#0b6b3a", s: "#0b6b3a", n: "7" } : isFete ? { b: "#ff2d95", c: "#ffd23f", n: "1" } : card.kit;
@@ -127,7 +190,8 @@ function playerSvg(card, headSrc) {
   const jersey = k.b, trim = k.c || "#fff";
   const shorts = k.s || (light(jersey) ? (light(trim) ? "#151515" : trim) : (light(trim) ? trim : "#151515"));
   const socks = jersey;
-  const skin = `url(#${uid}-sk)`;
+  const tone = (FACE_OF[card.name] || [2])[0];
+  const skin = isFete ? "#efc6a6" : SKIN[tone - 1];
   const keeper = card.pos === "GB" || P.gloves;
   const glove = keeper ? (light(trim) ? trim : "#d9f99d") : null;
   const lerp = (a, b, t) => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t];
@@ -154,13 +218,18 @@ function playerSvg(card, headSrc) {
   else if (k.p === "chest") pattern = [-15, -5, 5, 15].flatMap((dx, i) => [-30, -20, -10, 0, 10, 20, 30].map((dy, j) => (i + j) % 2 ? `<rect x="${cx + dx - 5}" y="${cy + dy - 5}" width="10" height="10" fill="${trim}" transform="rotate(${ang} ${cx} ${cy})"/>` : "")).join("");
   const numCol = light(jersey) ? "#151515" : "#fff";
   const ball = P.ball ? `<g class="pl-ball"><circle cx="${P.ball[0]}" cy="${P.ball[1]}" r="10" fill="#fff" stroke="#222" stroke-width="1.2"/><path d="M${P.ball[0]} ${P.ball[1] - 4} l3.8 2.8 -1.5 4.4 h-4.6 l-1.5 -4.4 z" fill="#222"/><path d="M${P.ball[0] - 10} ${P.ball[1] - 1} l4 1 M${P.ball[0] + 10} ${P.ball[1] - 1} l-4 1 M${P.ball[0] - 5} ${P.ball[1] + 9} l2 -3.5 M${P.ball[0] + 5} ${P.ball[1] + 9} l-2 -3.5 M${P.ball[0]} ${P.ball[1] - 10} v5" stroke="#222" stroke-width="1.2"/></g>` : "";
+  // tête plus grosse, décalée dans l'axe du cou
+  const base = [(sL[0] + sR[0]) / 2, (sL[1] + sR[1]) / 2];
+  const dx = P.h[0] - base[0], dy = P.h[1] - base[1], dl = Math.hypot(dx, dy) || 1;
+  const hc = [base[0] + dx / dl * (dl + 4), base[1] + dy / dl * (dl + 4)];
+  const happy = ["celebrate", "siuu", "dribble", "pose"].includes(poseOf(card));
   const head = isFete
-    ? `<image href="${headSrc}" x="${P.h[0] - 22}" y="${P.h[1] - 34}" width="44" height="58" preserveAspectRatio="xMidYMid meet"/>`
-    : `<circle cx="${P.h[0]}" cy="${P.h[1]}" r="12.5" fill="${skin}"/>`;
+    ? `<image href="${headSrc}" x="${hc[0] - 22}" y="${hc[1] - 34}" width="44" height="58" preserveAspectRatio="xMidYMid meet"/>`
+    : faceSvg(card, hc[0], hc[1], Math.atan2(dx, -dy) * 180 / Math.PI, happy, uid);
   const groundY = Math.max(P.aL[1], P.aR[1], P.tL[1], P.tR[1]) + 6;
   return `<svg class="card-player" viewBox="0 0 200 240" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
     <defs>
-      <linearGradient id="${uid}-sk" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3a4058"/><stop offset="1" stop-color="#151827"/></linearGradient>
+      <radialGradient id="${uid}-fs" cx=".38" cy=".3" r=".75"><stop offset=".55" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".22"/></radialGradient>
       <clipPath id="${uid}-to"><path d="${torso}"/></clipPath>
       <radialGradient id="${uid}-spot" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#fff" stop-opacity=".55"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>
     </defs>
