@@ -3076,7 +3076,7 @@
     document.body.appendChild(ov);
     requestAnimationFrame(() => ov.classList.add("in"));
     const card = ov.querySelector(".tz-card");
-    if (!owned) card.classList.add("flipped");
+    if (!owned) card.classList.add("flipped", "show-rear");
     Sounds.play(owned && (r.id === "legendaire" || r.id === "mythique") ? "legend" : "click");
     const close = () => { ov.classList.remove("in"); setTimeout(() => ov.remove(), 250); };
     ov.querySelector(".tz-bg").onclick = close;
@@ -3092,7 +3092,17 @@
     };
     card.addEventListener("pointermove", (e) => { moved = true; tilt(e.clientX, e.clientY); });
     card.addEventListener("pointerleave", () => { card.style.setProperty("--rx", "0deg"); card.style.setProperty("--ry", "0deg"); });
-    card.addEventListener("click", () => { if (owned) { card.classList.toggle("flipped"); Sounds.play("click"); } });
+    let flipT = 0;
+    card.addEventListener("click", () => {
+      if (!owned) return;
+      // Retournement piloté en JS : iOS Safari gère mal backface-visibility avec les effets animés de la carte
+      const back = card.classList.toggle("flipped");
+      card.classList.add("flipping");
+      clearTimeout(flipT);
+      setTimeout(() => card.classList.toggle("show-rear", back), 260);
+      flipT = setTimeout(() => card.classList.remove("flipping"), 560);
+      Sounds.play("click");
+    });
   }
 
   // Nouvelles cartes gagnées en même temps que des trophées
@@ -3288,7 +3298,7 @@
 
   // ---------- Mise à jour automatique ----------
   // À l'ouverture, on compare la version de l'app avec celle publiée en ligne.
-  const APP_VERSION = "6.8";
+  const APP_VERSION = "6.9";
   function checkForUpdate() {
     if (!location.protocol.startsWith("http")) return;
     fetch(`version.json?t=${Date.now()}`, { cache: "no-store" })

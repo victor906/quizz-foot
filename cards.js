@@ -81,13 +81,7 @@ const CARDS = CARDS_RAW.map(([trophy, name, flag, pos, note, kit, fact], i) => (
 // Dessin d'une carte (face avant)
 function cardFront(card, tier, headSrc) {
   const r = CARD_RARITY[tier] || CARD_RARITY.bronze;
-  let art;
-  if (card.kit.face === "cr7") art = cr7FaceSvg("card-face");
-  else if (card.kit.face === "fete") art = `<img class="card-face card-fete" src="${headSrc}" alt="" />`;
-  else {
-    const k = card.kit;
-    art = kitSvg({ b: k.b, p: k.p, c: k.c, s: k.s, t: k.c, n: k.n, sn: k.sn, stars: k.stars, nc: k.b === "#f7f7f5" || k.b === "#ffd200" ? "#151515" : "#fff" }, "card-kit");
-  }
+  const art = playerSvg(card, headSrc);
   return `<div class="tcg-front r-${r.id}">
     <div class="tcg-bg"></div><div class="tcg-holo"></div><div class="tcg-shine"></div>
     <div class="tcg-top"><span class="tcg-note">${card.note}</span><span class="tcg-pos">${card.pos}</span><span class="tcg-flag">${card.flag}</span></div>
@@ -101,3 +95,89 @@ function cardFront(card, tier, headSrc) {
 function cardBack(locked) {
   return `<div class="tcg-back${locked ? " locked" : ""}"><div class="tb-ring"><span class="tb-logo">LA FÊTE</span><span class="tb-sub">${locked ? "?" : "QUIZ"}</span></div></div>`;
 }
+
+// ---- Illustration : joueur stylisé (silhouette sans visage) en action, aux couleurs de son maillot
+// Squelette par pose : h tête, sL/sR épaules, eL/eR coudes, wL/wR mains, pL/pR hanches, kL/kR genoux, aL/aR chevilles, tL/tR pointes, ball.
+// Le côté L est dessiné derrière, le côté R devant.
+const PLAYER_POSES = {
+  shoot: { h: [86, 40], sL: [74, 64], sR: [100, 62], eL: [58, 84], wL: [46, 104], eR: [118, 74], wR: [134, 60], pL: [80, 122], pR: [98, 120], kL: [74, 168], aL: [70, 212], tL: [86, 218], kR: [128, 150], aR: [160, 168], tR: [174, 160], ball: [184, 170] },
+  volley: { h: [70, 64], sL: [76, 84], sR: [92, 76], eL: [64, 104], wL: [44, 112], eR: [112, 62], wR: [126, 42], pL: [104, 130], pR: [116, 126], kL: [94, 174], aL: [98, 216], tL: [114, 220], kR: [150, 112], aR: [176, 84], tR: [186, 70], ball: [194, 60] },
+  dribble: { h: [98, 40], sL: [86, 64], sR: [110, 64], eL: [70, 82], wL: [62, 100], eR: [130, 80], wR: [146, 70], pL: [90, 122], pR: [106, 122], kL: [70, 160], aL: [52, 196], tL: [46, 212], kR: [120, 168], aR: [114, 212], tR: [130, 218], ball: [146, 210] },
+  header: { h: [100, 44], sL: [86, 70], sR: [112, 70], eL: [66, 64], wL: [52, 50], eR: [134, 66], wR: [150, 54], pL: [92, 132], pR: [108, 132], kL: [84, 172], aL: [94, 210], tL: [108, 214], kR: [116, 176], aR: [108, 218], tR: [122, 224], ball: [112, 22] },
+  celebrate: { h: [100, 42], sL: [86, 66], sR: [114, 66], eL: [66, 46], wL: [58, 22], eR: [134, 46], wR: [142, 22], pL: [92, 126], pR: [108, 126], kL: [84, 172], aL: [82, 216], tL: [70, 222], kR: [120, 170], aR: [124, 216], tR: [138, 222] },
+  siuu: { h: [100, 30], sL: [86, 54], sR: [114, 54], eL: [64, 76], wL: [46, 94], eR: [136, 76], wR: [154, 94], pL: [92, 114], pR: [108, 114], kL: [76, 150], aL: [80, 188], tL: [68, 196], kR: [124, 150], aR: [120, 188], tR: [132, 196] },
+  pose: { h: [100, 40], sL: [86, 64], sR: [114, 64], eL: [66, 92], wL: [88, 118], eR: [134, 92], wR: [112, 118], pL: [92, 124], pR: [108, 124], kL: [86, 172], aL: [84, 216], tL: [70, 222], kR: [122, 168], aR: [130, 208], tR: [146, 204], ball: [150, 210] },
+  keeper: { h: [150, 70], sL: [128, 82], sR: [134, 98], eL: [150, 58], wL: [170, 44], eR: [160, 102], wR: [180, 88], pL: [80, 104], pR: [84, 120], kL: [50, 92], aL: [24, 106], tL: [12, 98], kR: [54, 140], aR: [30, 160], tR: [18, 154], ball: [186, 56], gloves: 1 },
+  tackle: { h: [46, 92], sL: [56, 112], sR: [64, 106], eL: [40, 140], wL: [30, 164], eR: [44, 82], wR: [30, 64], pL: [90, 170], pR: [98, 164], kL: [124, 192], aL: [156, 204], tL: [168, 196], kR: [130, 166], aR: [162, 176], tR: [176, 172], ball: [186, 184] },
+  bicycle: { h: [70, 168], sL: [80, 148], sR: [88, 150], eL: [56, 160], wL: [36, 176], eR: [110, 170], wR: [128, 186], pL: [110, 104], pR: [116, 110], kL: [92, 70], aL: [104, 34], tL: [98, 20], kR: [142, 84], aR: [158, 46], tR: [166, 32], ball: [176, 20] },
+};
+const POSE_BY_POS = { ATT: ["shoot", "volley", "celebrate", "header", "dribble", "bicycle"], MIL: ["dribble", "pose", "shoot", "celebrate", "volley"], DEF: ["header", "tackle", "pose", "celebrate"], GB: ["keeper"] };
+const POSE_OF = { "Pelé": "bicycle", "Lionel Messi": "dribble", "Diego Maradona": "dribble", "Zinédine Zidane": "volley", "Johan Cruyff": "dribble", "Cristiano Ronaldo": "siuu", "La Fête": "celebrate", "Éric Cantona": "pose", "Marco van Basten": "volley", "Ronaldinho": "dribble", "Didier Drogba": "header", "Franz Beckenbauer": "pose", "Lev Yachine": "keeper", "Kylian Mbappé": "celebrate", "Thierry Henry": "celebrate", "David Beckham": "shoot", "Andrés Iniesta": "shoot", "Paolo Maldini": "tackle", "Sergio Ramos": "header", "N'Golo Kanté": "tackle" };
+function poseOf(card) {
+  if (POSE_OF[card.name]) return POSE_OF[card.name];
+  const list = POSE_BY_POS[card.pos] || POSE_BY_POS.ATT;
+  return list[card.id % list.length];
+}
+function playerSvg(card, headSrc) {
+  const isCr7 = card.kit.face === "cr7", isFete = card.kit.face === "fete";
+  const k = isCr7 ? { b: "#c8102e", c: "#0b6b3a", s: "#0b6b3a", n: "7" } : isFete ? { b: "#ff2d95", c: "#ffd23f", n: "1" } : card.kit;
+  const P = PLAYER_POSES[poseOf(card)];
+  const uid = "pl" + card.id + "-" + (++playerSvg.n);
+  const light = (c) => /^#(f|e|d|c)/i.test(c) || c === "#ffd200" || c === "#ffd23f";
+  const jersey = k.b, trim = k.c || "#fff";
+  const shorts = k.s || (light(jersey) ? (light(trim) ? "#151515" : trim) : (light(trim) ? trim : "#151515"));
+  const socks = jersey;
+  const skin = `url(#${uid}-sk)`;
+  const keeper = card.pos === "GB" || P.gloves;
+  const glove = keeper ? (light(trim) ? trim : "#d9f99d") : null;
+  const lerp = (a, b, t) => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t];
+  const ln = (a, b, w, col, extra = "") => `<line x1="${a[0]}" y1="${a[1]}" x2="${b[0]}" y2="${b[1]}" stroke="${col}" stroke-width="${w}" stroke-linecap="round"${extra}/>`;
+  const arm = (s, e, w) => {
+    const sl = lerp(s, e, 0.55);
+    return ln(s, e, 11, skin) + ln(e, w, 9.5, skin) +
+      (keeper ? `<circle cx="${w[0]}" cy="${w[1]}" r="7" fill="${glove}" stroke="rgba(0,0,0,.35)" stroke-width="1"/>` : `<circle cx="${w[0]}" cy="${w[1]}" r="5" fill="${skin}"/>`) +
+      ln(s, sl, 15, jersey) + ln(lerp(s, e, 0.47), sl, 15.5, trim).replace("round", "butt");
+  };
+  const leg = (p, kn, a, t) => {
+    const so = lerp(kn, a, 0.22);
+    return ln(p, kn, 16, skin) + ln(kn, a, 13, skin) + ln(so, a, 13.5, socks) + ln(lerp(so, a, 0.85), lerp(so, a, 0.95), 13.5, trim) +
+      ln(a, t, 9, "#111") + ln(p, lerp(p, kn, 0.55), 20, shorts);
+  };
+  // torse
+  const [sL, sR, pL, pR] = [P.sL, P.sR, P.pL, P.pR];
+  const cx = (sL[0] + sR[0] + pL[0] + pR[0]) / 4, cy = (sL[1] + sR[1] + pL[1] + pR[1]) / 4;
+  const ang = -Math.atan2((pL[0] + pR[0]) / 2 - (sL[0] + sR[0]) / 2, (pL[1] + pR[1]) / 2 - (sL[1] + sR[1]) / 2) * 180 / Math.PI;
+  const torso = `M${sL[0] - 3} ${sL[1]} L${sR[0] + 3} ${sR[1]} L${pR[0] + 4} ${pR[1]} L${pL[0] - 4} ${pL[1]} Z`;
+  const neck = lerp([(sL[0] + sR[0]) / 2, (sL[1] + sR[1]) / 2], P.h, 0.45);
+  let pattern = "";
+  if (k.p === "stripes") pattern = [-12, -4, 4, 12].map((dx) => `<rect x="${cx + dx - 2.5}" y="${cy - 60}" width="5" height="120" fill="${trim}" transform="rotate(${ang} ${cx} ${cy})"/>`).join("");
+  else if (k.p === "chest") pattern = [-15, -5, 5, 15].flatMap((dx, i) => [-30, -20, -10, 0, 10, 20, 30].map((dy, j) => (i + j) % 2 ? `<rect x="${cx + dx - 5}" y="${cy + dy - 5}" width="10" height="10" fill="${trim}" transform="rotate(${ang} ${cx} ${cy})"/>` : "")).join("");
+  const numCol = light(jersey) ? "#151515" : "#fff";
+  const ball = P.ball ? `<g class="pl-ball"><circle cx="${P.ball[0]}" cy="${P.ball[1]}" r="10" fill="#fff" stroke="#222" stroke-width="1.2"/><path d="M${P.ball[0]} ${P.ball[1] - 4} l3.8 2.8 -1.5 4.4 h-4.6 l-1.5 -4.4 z" fill="#222"/><path d="M${P.ball[0] - 10} ${P.ball[1] - 1} l4 1 M${P.ball[0] + 10} ${P.ball[1] - 1} l-4 1 M${P.ball[0] - 5} ${P.ball[1] + 9} l2 -3.5 M${P.ball[0] + 5} ${P.ball[1] + 9} l-2 -3.5 M${P.ball[0]} ${P.ball[1] - 10} v5" stroke="#222" stroke-width="1.2"/></g>` : "";
+  const head = isFete
+    ? `<image href="${headSrc}" x="${P.h[0] - 22}" y="${P.h[1] - 34}" width="44" height="58" preserveAspectRatio="xMidYMid meet"/>`
+    : `<circle cx="${P.h[0]}" cy="${P.h[1]}" r="12.5" fill="${skin}"/>`;
+  const groundY = Math.max(P.aL[1], P.aR[1], P.tL[1], P.tR[1]) + 6;
+  return `<svg class="card-player" viewBox="0 0 200 240" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <defs>
+      <linearGradient id="${uid}-sk" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3a4058"/><stop offset="1" stop-color="#151827"/></linearGradient>
+      <clipPath id="${uid}-to"><path d="${torso}"/></clipPath>
+      <radialGradient id="${uid}-spot" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#fff" stop-opacity=".55"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>
+    </defs>
+    <circle cx="100" cy="112" r="96" fill="url(#${uid}-spot)" class="pl-spot"/>
+    <ellipse cx="${(P.aL[0] + P.aR[0]) / 2}" cy="${P.h[1] > 150 ? 228 : Math.min(232, groundY)}" rx="46" ry="6" fill="rgba(0,0,0,.35)"/>
+    <g class="pl-body" stroke-linejoin="round">
+      <g opacity=".82">${arm(P.sL, P.eL, P.wL)}${leg(P.pL, P.kL, P.aL, P.tL)}</g>
+      ${ln(neck, [(sL[0] + sR[0]) / 2, (sL[1] + sR[1]) / 2], 9, skin)}
+      <path d="${torso}" fill="${jersey}" stroke="${jersey}" stroke-width="8"/>
+      <g clip-path="url(#${uid}-to)">${pattern}</g>
+      <path d="M${sL[0] - 3} ${sL[1]} L${sR[0] + 3} ${sR[1]}" stroke="${trim}" stroke-width="3" stroke-linecap="round"/>
+      ${ln([pL[0] - 4, pL[1] + 2], [pR[0] + 4, pR[1] + 2], 9, shorts)}
+      <text x="${cx}" y="${cy + 7}" text-anchor="middle" font-family="Oswald, Impact, sans-serif" font-weight="700" font-size="20" fill="${numCol}" transform="rotate(${ang} ${cx} ${cy})">${k.n || ""}</text>
+      ${leg(P.pR, P.kR, P.aR, P.tR)}${arm(P.sR, P.eR, P.wR)}
+      ${head}
+    </g>
+    ${ball}
+  </svg>`;
+}
+playerSvg.n = 0;
