@@ -1230,9 +1230,9 @@
       if (ok) { pl.score++; pl.streak++; pl.best = Math.max(pl.best, pl.streak); } else pl.streak = 0;
     } else {
       // Pièces gagnées et liste des erreurs à réviser
-      if (ok) gain = q.bonus ? 15 : q.clues ? Math.max(6, 14 - 2 * state.cluesShown) : ({ f: 3, m: 5, d: 8 }[q.diff] || 3);
-      // Série : +10 toutes les 5 bonnes réponses d'affilée
-      if (ok && state.streak > 0 && state.streak % 5 === 0) gain += 10;
+      if (ok) gain = q.bonus ? 20 : q.clues ? Math.max(8, 20 - 3 * state.cluesShown) : ({ f: 5, m: 8, d: 12 }[q.diff] || 5);
+      // Série : +15 toutes les 5 bonnes réponses d'affilée
+      if (ok && state.streak > 0 && state.streak % 5 === 0) gain += 15;
       // Maillot flou : réponse rapide = bonus
       if (ok && q.kitQ && !q.answerKits && Date.now() - state.qStart < 3500) { gain += 5; state.blurBonus = true; } else state.blurBonus = false;
       if (!q.bonus && !q.noTrack) {
@@ -1484,7 +1484,7 @@
         if (p === "classic" && total >= 20 && pct === 100) stats.cr7Perfect++;
       }
       if (p === "classic" || p === "daily") {
-        if (total >= 10 && pct === 100) { stats.perfect10++; addCoins(50); }
+        if (total >= 10 && pct === 100) { stats.perfect10++; addCoins(75); }
         if (total >= 20 && pct === 100) stats.perfect20++;
       }
       if (p === "classic" && total >= 50 && pct >= 80) stats.marathon++;
@@ -2435,7 +2435,7 @@
     if (geo.mode === "europe" || geo.mode === "france") stats.geoBest = Math.max(stats.geoBest, sc);
     if (geo.mode === "pays" && nGood === geo.list.length) stats.geoCountryPerfect++;
     if (geo.mode === "monde") stats.worldBest = Math.max(stats.worldBest, sc);
-    addCoins(Math.round(sc / 100));
+    addCoins(Math.round(sc / 60));
     const boosted = consumeBoost();
     saveStats();
     state.newTrophies.push(...checkTrophies());
@@ -3132,7 +3132,7 @@
       rar: `${t.gem} ${x.kind === "stade" ? "Stade" : x.weekly ? "Édition de la semaine" : "Objet de match"} · ${t.label}`,
       name: x.kind === "stade" ? `${x.flag} ${x.name}` : x.name,
       fact: x.kind === "stade" ? `${x.city} · ${x.cap} places · ouvert en ${x.year}. ${x.fact}` : x.fact,
-      how: owned ? "🎁 Trouvée dans un booster" : x.weekly ? "🔒 Édition de la semaine : à trouver dans le Booster de la semaine ou le Méga booster" : `🔒 À trouver dans les boosters de la boutique (${x.kind === "stade" ? "Booster Stades ou Méga booster" : "Booster Vestiaire ou Méga booster"})`,
+      how: owned ? "🎁 Trouvée dans un booster" : x.weekly ? "🔒 Édition de la semaine : à trouver dans le Booster de la semaine ou le Méga booster" : "🔒 À trouver dans les boosters de la boutique",
       hint: fresh ? "✨ Nouvelle carte dans ton classeur ! Touche-la pour la retourner" : null,
       sound: fresh ? "" : "click",
     });
@@ -3331,7 +3331,6 @@
     o.packs.forEach((p) => {
       const own = ownedKits.has(p.kitId);
       const parts = ["👕 maillot du club", `${p.chars.join("")} pluie de célébration`];
-      if (p.stadium) parts.push("🎁 1 Booster Stades offert");
       parts.push("🃏 1 joker de chaque");
       shopCard(wrap, { ico: kitSvg(p.kit, "kit"), name: `${p.flag} Pack supporter ${p.club}`, desc: parts.join(" · "), price: p.price, owned: own,
         cls: "kit-item legend-item week-item", own: own ? "✅ Pack acheté" : "📦 Pack de la semaine", label: own ? "Porter" : "",
@@ -3343,7 +3342,7 @@
           ["fifty", "time", "skip"].forEach((k) => { jokers[k] = (jokers[k] || 0) + 1; }); saveJokers();
           wearLegend({ kit: p.kit });
           afterBuy(`✅ Pack ${p.club} : maillot enfilé, pluie équipée !`, "legend");
-          if (p.stadium) setTimeout(() => giveBooster(BOOSTERS.find((x) => x.id === "stades")), 700); else confetti();
+          confetti();
         } });
     });
     // Booster de la semaine : une des éditions exclusives garantie
@@ -3378,32 +3377,31 @@
   }
   // ---------- Boosters : paquets surprise de cartes hors série ----------
   const BOOSTERS = [
-    { id: "objets", name: "Booster Vestiaire", icon: "🎴", n: 3, price: 450, color: "#1b8f4e", desc: "3 cartes objets de match au hasard." },
-    { id: "stades", name: "Booster Stades", icon: "🏟️", n: 2, price: 1200, color: "#1f6fd1", desc: "2 cartes stades au hasard." },
-    { id: "mega", name: "Méga booster", icon: "💎", n: 5, price: 1500, color: "#b8860b", desc: "5 cartes hors série : objets, stades, et une chance d'édition de la semaine. Au moins 1 carte Premium ou Prestige garantie." },
+    { id: "classique", name: "Booster", icon: "🎴", n: 3, price: 300, color: "#1b8f4e", desc: "3 cartes hors série au hasard : objets de match et stades mélangés." },
+    { id: "mega", name: "Méga booster", icon: "💎", n: 6, price: 750, color: "#b8860b", desc: "6 cartes hors série, au moins 1 Premium ou Prestige garantie, et une chance d'édition de la semaine." },
   ];
-  const DUP_REFUND = 0.3;
-  const TIER_WEIGHT = { classique: 60, premium: 30, prestige: 10 };
+  const DUP_REFUND = 0.5;
+  const TIER_WEIGHT = { classique: 55, premium: 33, prestige: 12 };
   const randPick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+  const MIX = () => [...ITEM_CARDS, ...STADIUM_CARDS];
+  // Tirage : rareté d'abord, puis 3 chances sur 4 de tomber sur une carte que tu n'as pas encore
   function drawFrom(pool, minTier) {
     const tiers = Object.keys(TIER_WEIGHT).filter((t) => pool.some((x) => x.tier === t) && (!minTier || t !== "classique"));
     let r = Math.random() * tiers.reduce((n, t) => n + TIER_WEIGHT[t], 0);
     const tier = tiers.find((t) => (r -= TIER_WEIGHT[t]) < 0) || tiers[0];
-    return randPick(pool.filter((x) => x.tier === tier));
+    const inTier = pool.filter((x) => x.tier === tier);
+    const fresh = inTier.filter((x) => !ownedExtras.has(x.uid));
+    return randPick(fresh.length && Math.random() < 0.75 ? fresh : inTier);
   }
-  const weekBooster = (o) => ({ id: "semaine", name: "Booster de la semaine", icon: "⭐", n: 3, price: 600, color: "#7b3fd1", week: o.cards,
-    desc: "3 cartes : 1 édition de la semaine garantie (exclusive) + 2 objets de match." });
+  const weekBooster = (o) => ({ id: "semaine", name: "Booster de la semaine", icon: "⭐", n: 3, price: 400, color: "#7b3fd1", week: o.cards,
+    desc: "3 cartes : 1 édition de la semaine garantie (exclusive) + 2 cartes hors série." });
   function boosterDraw(b) {
+    if (b.id === "semaine") { const fresh = b.week.filter((x) => !ownedExtras.has(x.uid)); return [randPick(fresh.length ? fresh : b.week), drawFrom(MIX()), drawFrom(MIX())]; }
     const out = [];
-    if (b.id === "semaine") return [randPick(b.week), drawFrom(ITEM_CARDS), drawFrom(ITEM_CARDS)];
     for (let i = 0; i < b.n; i++) {
-      if (b.id === "objets") out.push(drawFrom(ITEM_CARDS));
-      else if (b.id === "stades") out.push(randPick(STADIUM_CARDS));
-      else {
-        const roll = Math.random();
-        const pool = roll < 0.1 ? WEEKLY_CARDS : roll < 0.3 ? STADIUM_CARDS : ITEM_CARDS;
-        out.push(pool === STADIUM_CARDS ? randPick(pool) : drawFrom(pool, i === b.n - 1 && !out.some((x) => x.tier !== "classique")));
-      }
+      const last = i === b.n - 1;
+      if (b.id === "mega" && Math.random() < 0.12) out.push(drawFrom(WEEKLY_CARDS));
+      else out.push(drawFrom(MIX(), b.id === "mega" && last && !out.some((x) => x.tier !== "classique")));
     }
     return out;
   }
@@ -3412,7 +3410,7 @@
     shopSection(wrap, "🎁 Boosters de cartes", `Le seul moyen d'obtenir les cartes hors série ! Une carte que tu as déjà est remboursée à ${Math.round(DUP_REFUND * 100)}\u00a0% de son prix.`);
     BOOSTERS.forEach((b) => {
       shopCard(wrap, { ico: boosterPack(b, "mini"), name: `${b.icon} ${b.name}`, desc: b.desc, price: b.price, cls: "booster-item",
-        own: (() => { const pool = b.id === "objets" ? ITEM_CARDS : b.id === "stades" ? STADIUM_CARDS : EXTRA_CARDS; const got = pool.filter(extraOwned).length; return `Collection : ${got}/${pool.length}`; })(),
+        own: `Collection hors série : ${EXTRA_CARDS.filter(extraOwned).length}/${EXTRA_CARDS.length}`,
         onClick: () => buyBooster(b, b.price) });
     });
   }
@@ -3578,7 +3576,7 @@
 
   // ---------- Mise à jour automatique ----------
   // À l'ouverture, on compare la version de l'app avec celle publiée en ligne.
-  const APP_VERSION = "1.5";
+  const APP_VERSION = "1.6";
   function checkForUpdate() {
     if (!location.protocol.startsWith("http")) return;
     fetch(`version.json?t=${Date.now()}`, { cache: "no-store" })

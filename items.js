@@ -196,7 +196,8 @@ const CLUB_PACKS_RAW = [
   ["nantes", "FC Nantes", "🇫🇷", { b: "#ffd200", p: "plain", c: "#118a3e", t: "#118a3e", nc: "#118a3e" }, ["💛", "💚", "🐤"], null, 400],
 ];
 const CLUB_PACKS = CLUB_PACKS_RAW.map(([id, club, flag, kit, chars, stadium, price]) => ({
-  id, club, flag, kit: { ...kit, sn: "", n: "" }, chars, stadium: STADIUM_CARDS.find((x) => x.id === stadium) || null, price,
+  id, club, flag, kit: { ...kit, sn: "", n: "" }, chars, stadium: STADIUM_CARDS.find((x) => x.id === stadium) || null,
+  price: Math.round((price * 0.6) / 10) * 10, // maillot + pluie + jokers (les cartes ne viennent que des boosters)
   kitId: `club-${id}`, celebId: `club-${id}`,
 }));
 
